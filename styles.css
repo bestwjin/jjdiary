@@ -33,8 +33,31 @@ main,
   margin-inline: auto;
 }
 
+.site-nav {
+  width: min(920px, calc(100% - 32px));
+  margin: 22px auto 0;
+  display: flex;
+  gap: 8px;
+}
+
+.site-nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+
+.site-nav a[aria-current="page"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fffdf8;
+}
+
 .hero {
-  padding: 48px 0 12px;
+  padding: 28px 0 12px;
 }
 
 .eyebrow {
@@ -263,5 +286,257 @@ h1 {
 
   .km {
     font-size: 1.55rem;
+  }
+}
+
+.cal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.month-bar,
+.day-panel,
+.calendar {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+}
+
+.month-bar h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+.month-nav {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.calendar {
+  padding: 12px;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.weekdays {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.weekdays span:first-child {
+  color: #9a4034;
+}
+
+.weekdays span:last-child {
+  color: var(--pine);
+}
+
+.day {
+  min-height: 72px;
+  border: 1px solid transparent;
+  background: #f7f3eb;
+  border-radius: 12px;
+  padding: 8px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.day.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--pine);
+}
+
+.day.is-selected {
+  background: var(--pine-soft);
+  border-color: var(--pine);
+}
+
+.day-num {
+  display: block;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.day.is-sunday .day-num {
+  color: #9a4034;
+}
+
+.day.is-saturday .day-num {
+  color: var(--pine);
+}
+
+.day-snippet {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-panel {
+  padding: 16px;
+}
+
+.day-panel h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.post {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.post p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.post time,
+.empty-day,
+.form-error,
+.flash {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.delete-post,
+.composer button,
+.dialog-actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.delete-post,
+.danger {
+  background: #9a4034;
+  color: #fffdf8;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+}
+
+.composer button {
+  align-self: flex-end;
+  background: var(--ink);
+  color: #fffdf8;
+}
+
+.flash {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+}
+
+dialog {
+  border: 0;
+  border-radius: 16px;
+  padding: 20px;
+  width: min(420px, calc(100% - 32px));
+  box-shadow: var(--shadow);
+}
+
+dialog::backdrop {
+  background: rgba(29, 26, 22, 0.35);
+}
+
+dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+dialog p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--muted);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dialog-actions .ghost {
+  background: #efeae1;
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .cal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .day {
+    min-height: 52px;
+    padding: 6px;
   }
 }
