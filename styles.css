@@ -1,0 +1,267 @@
+:root {
+  --bg: #f3efe6;
+  --paper: #fffdf8;
+  --ink: #1d1a16;
+  --muted: #625c53;
+  --line: #e4dccf;
+  --pine: #0e6b52;
+  --pine-soft: #e5f4ee;
+  --amber: #8a4b12;
+  --amber-soft: #f8ecdf;
+  --shadow: 0 16px 40px rgba(55, 42, 24, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 480px at 10% -10%, #efe4cf 0%, transparent 55%),
+    var(--bg);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  line-height: 1.5;
+}
+
+.hero,
+main,
+.notes {
+  width: min(920px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.hero {
+  padding: 48px 0 12px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--pine);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.lede {
+  max-width: 38rem;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.origin {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 0;
+}
+
+.origin div {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.origin dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.origin dd {
+  margin: 4px 0 0;
+  font-weight: 650;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.summary article {
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.summary strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.summary .figure {
+  color: var(--pine);
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 8px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.chip.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fffdf8;
+}
+
+.group {
+  margin-top: 18px;
+}
+
+.group h2 {
+  margin: 0;
+  padding: 18px 0 8px;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.school {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.school h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  letter-spacing: -0.03em;
+}
+
+.badge,
+.level {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.level {
+  background: #efeae1;
+  color: #4d473f;
+}
+
+.badge {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.meta,
+.note,
+.minutes {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.note {
+  color: #3f5d52;
+}
+
+.distance {
+  text-align: right;
+}
+
+.km {
+  margin: 0;
+  color: var(--pine);
+  font-size: 1.85rem;
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.km span {
+  margin-left: 2px;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.route {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.status {
+  color: var(--muted);
+}
+
+.notes {
+  margin-top: 28px;
+  padding: 8px 0 48px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.notes p {
+  margin: 0 0 8px;
+}
+
+@media (max-width: 720px) {
+  .origin,
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding-top: 32px;
+  }
+
+  .km {
+    font-size: 1.55rem;
+  }
+}

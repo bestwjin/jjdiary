@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>학교정보 · 다산이편한세상자이 자동차 거리</title>
+    <meta
+      name="description"
+      content="다산이편한세상자이 단지 중심에서 다산1동·다산2동 학교까지 자동차 최적경로 거리(km)입니다."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <p class="eyebrow">학교정보</p>
+      <h1>다산이편한세상자이 기준<br />차로 몇 km인지</h1>
+      <p class="lede" id="lede">
+        다산1동·다산2동 학교를 단지 중심에서 자동차 최적경로로 계산한 거리입니다.
+      </p>
+      <dl class="origin" id="origin"></dl>
+    </header>
+
+    <main>
+      <section class="summary" id="summary" aria-live="polite"></section>
+
+      <div class="toolbar" role="tablist" aria-label="학교 구분">
+        <button type="button" class="chip is-active" role="tab" aria-selected="true" data-filter="all">
+          전체
+        </button>
+        <button type="button" class="chip" role="tab" aria-selected="false" data-filter="elementary">
+          초등학교
+        </button>
+        <button type="button" class="chip" role="tab" aria-selected="false" data-filter="middle">
+          중학교
+        </button>
+        <button type="button" class="chip" role="tab" aria-selected="false" data-filter="high">
+          고등학교
+        </button>
+        <button type="button" class="chip" role="tab" aria-selected="false" data-filter="assigned">
+          배정
+        </button>
+      </div>
+
+      <div id="list"></div>
+      <p class="status" id="status" hidden></p>
+    </main>
+
+    <footer class="notes">
+      <p>
+        거리는 다산이편한세상자이 단지 중심에서 각 학교까지
+        <strong>자동차 최적경로</strong>(소요 시간이 짧은 경로)입니다. 직선거리나 도보 거리가 아닙니다.
+      </p>
+      <p>
+        학교 목록·주소·전화번호는 남양주시 청소년교육정보 학교현황의 다산1동·다산2동 학교입니다.
+        배정 표시는 공개된 학군 안내를 따른 것이며, 상세 주소와 입학 연도에 따라 달라질 수 있습니다.
+        입학 전에는 경기도구리남양주교육지원청 학구도에서 확인하세요.
+      </p>
+      <p id="method"></p>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
