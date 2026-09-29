@@ -311,3 +311,4 @@ html.theme-dark .mac-dock-item[aria-current=page]{background:transparent;color:#
 html.theme-dark .mac-dock-rule{background:rgba(255,255,255,.14)}
 html.theme-dark .mac-dock-theme{color:#e8ebff}
 html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visible{background:rgba(255,255,255,.08)}
+.todo-row.is-open .todo-title{font-weight:700}
