@@ -45,7 +45,7 @@
 .todo-delete{border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px}
 .todo-label{grid-column:1/-1;margin:8px 0 0;font-size:12px;font-weight:700;color:#4b5563}
 .todo-work{grid-column:1/-1;width:100%;min-height:120px;resize:vertical;padding:8px 10px;font-size:13px;line-height:1.5;border-radius:8px}
-#todo-files{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%}
+#todo-files{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;width:100%}
 .todo-file-cat{min-width:0;border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:6px}
 .todo-file-cat-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:#374151;margin-bottom:4px}
 .todo-file-add{border:0;background:transparent;color:#4f46e5;font-size:12px;cursor:pointer;padding:0}
@@ -56,7 +56,6 @@
 .todo-detail-body{white-space:pre-wrap;margin:2px 0 8px}
 .todo-detail-file{margin:2px 0}
 .todo-detail-name{font-weight:700}
-@media (max-width:1100px){#todo-files{grid-template-columns:1fr 1fr}}
 @media (prefers-color-scheme:dark){.todo-file-cat,.todo-detail{background:#1f2937;border-color:#374151;color:#e5e7eb}.todo-file-cat-head{color:#e5e7eb}.todo-file-row input,.todo-file-row textarea,.todo-work{background:#111827;color:#f9fafb;border-color:#374151}}
 .todo-delete:hover{color:#dc2626}
 @media (max-width:800px){.todo-form{grid-template-columns:1fr 1fr}.todo-form .todo-title-input{grid-column:1/-1}}
