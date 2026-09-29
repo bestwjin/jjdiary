@@ -96,12 +96,16 @@ async function ensureSchema(sql) {
         tag TEXT NOT NULL DEFAULT '',
         requester TEXT NOT NULL DEFAULT '',
         ai_tool TEXT NOT NULL DEFAULT '',
+        work_content TEXT NOT NULL DEFAULT '',
+        files JSONB NOT NULL DEFAULT '[]'::jsonb,
         done BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS tag TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS requester TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS ai_tool TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS work_content TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS files JSONB NOT NULL DEFAULT '[]'::jsonb`;
     })().catch((error) => {
       root.__diarySchema = null;
       throw error;
@@ -203,6 +207,22 @@ export function isDatabaseConfigured(env) {
 }
 
 const AI_TOOLS = new Set(["GPT", "CLAUDE", "CURSOR"]);
+const FILE_CATEGORIES = ["DB", "JAVA", "JSP", "XML", "기타"];
+
+export function cleanFiles(input) {
+  const raw = Array.isArray(input) ? input : [];
+  const files = [];
+  for (const item of raw.slice(0, 200)) {
+    if (!item || typeof item !== "object") continue;
+    const category = FILE_CATEGORIES.includes(item.category) ? item.category : "";
+    if (!category) continue;
+    const filename = String(item.filename || "").trim().slice(0, 200);
+    const changeNote = String(item.changeNote || "").trim().slice(0, 4000);
+    if (!filename && !changeNote) continue;
+    files.push({ category, filename, changeNote });
+  }
+  return files;
+}
 
 export function cleanTodo(input) {
   if (!input || typeof input !== "object") return null;
@@ -214,16 +234,24 @@ export function cleanTodo(input) {
     tag: String(input.tag || "").trim().slice(0, 40),
     requester: String(input.requester || "").trim().slice(0, 40),
     aiTool: AI_TOOLS.has(aiTool) ? aiTool : "",
+    workContent: String(input.workContent || "").slice(0, 20000),
+    files: cleanFiles(input.files),
   };
 }
 
 export function mapTodo(row) {
+  let files = row.files;
+  if (typeof files === "string") {
+    try { files = JSON.parse(files); } catch { files = []; }
+  }
   return {
     id: Number(row.id),
     title: row.title,
     tag: row.tag || "",
     requester: row.requester || "",
     aiTool: row.ai_tool || "",
+    workContent: row.work_content || "",
+    files: cleanFiles(files),
     done: row.done === true || row.done === "t" || row.done === "true",
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at || ""),
   };
@@ -231,7 +259,7 @@ export function mapTodo(row) {
 
 export async function listTodos(env) {
   return withDb(env, async (sql) => {
-    const rows = await sql`SELECT id, title, tag, requester, ai_tool, done, created_at FROM todos ORDER BY done ASC, id DESC`;
+    const rows = await sql`SELECT id, title, tag, requester, ai_tool, work_content, files, done, created_at FROM todos ORDER BY done ASC, id DESC`;
     return rows.map(mapTodo);
   });
 }
@@ -241,8 +269,10 @@ export async function createTodo(env, input) {
   if (!todo) return null;
   const id = Date.now();
   return withDb(env, async (sql) => {
-    const rows = await sql`INSERT INTO todos (id, title, tag, requester, ai_tool) VALUES (${id}, ${todo.title}, ${todo.tag}, ${todo.requester}, ${todo.aiTool})
-      RETURNING id, title, tag, requester, ai_tool, done, created_at`;
+    const files = JSON.stringify(todo.files);
+    const rows = await sql`INSERT INTO todos (id, title, tag, requester, ai_tool, work_content, files)
+      VALUES (${id}, ${todo.title}, ${todo.tag}, ${todo.requester}, ${todo.aiTool}, ${todo.workContent}, ${files}::jsonb)
+      RETURNING id, title, tag, requester, ai_tool, work_content, files, done, created_at`;
     return mapTodo(rows[0]);
   });
 }
@@ -253,15 +283,17 @@ export async function updateTodo(env, id, input) {
   return withDb(env, async (sql) => {
     if (typeof input.done === "boolean" && input.title == null) {
       const rows = await sql`UPDATE todos SET done = ${input.done} WHERE id = ${todoId}
-        RETURNING id, title, tag, requester, ai_tool, done, created_at`;
+        RETURNING id, title, tag, requester, ai_tool, work_content, files, done, created_at`;
       return rows[0] ? mapTodo(rows[0]) : null;
     }
     const todo = cleanTodo(input);
     if (!todo) return null;
+    const files = JSON.stringify(todo.files);
     const rows = await sql`UPDATE todos
-      SET title = ${todo.title}, tag = ${todo.tag}, requester = ${todo.requester}, ai_tool = ${todo.aiTool}
+      SET title = ${todo.title}, tag = ${todo.tag}, requester = ${todo.requester}, ai_tool = ${todo.aiTool},
+          work_content = ${todo.workContent}, files = ${files}::jsonb
       WHERE id = ${todoId}
-      RETURNING id, title, tag, requester, ai_tool, done, created_at`;
+      RETURNING id, title, tag, requester, ai_tool, work_content, files, done, created_at`;
     return rows[0] ? mapTodo(rows[0]) : null;
   });
 }

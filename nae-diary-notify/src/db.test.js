@@ -38,6 +38,10 @@ assert.equal(mapRow({
 
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 ", aiTool: "claude" }).aiTool, "CLAUDE");
 assert.equal(cleanTodo({ title: "준비물", aiTool: "기타" }).aiTool, "");
+assert.deepEqual(cleanTodo({
+  title: "수정",
+  files: [{ category: "JAVA", filename: " A.java ", changeNote: " 조회 추가 " }, { category: "CSS", filename: "a.css", changeNote: "x" }],
+}).files, [{ category: "JAVA", filename: "A.java", changeNote: "조회 추가" }]);
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).tag, "입학");
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).requester, "김선생");
 assert.equal(cleanTodo({ title: "   " }), null);

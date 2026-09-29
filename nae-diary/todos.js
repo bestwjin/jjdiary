@@ -15,8 +15,11 @@
   var tagInput = document.getElementById("todo-tag");
   var requesterInput = document.getElementById("todo-requester");
   var aiInput = document.getElementById("todo-ai");
+  var workInput = document.getElementById("todo-work");
+  var filesRoot = document.getElementById("todo-files");
   var submitButton = document.getElementById("todo-submit");
   var cancelButton = document.getElementById("todo-cancel");
+  var fileCategories = ["DB", "JAVA", "JSP", "XML", "기타"];
 
   function showError(message) {
     error.hidden = !message;
@@ -48,8 +51,70 @@
     tagInput.value = "";
     requesterInput.value = "";
     aiInput.value = "";
+    workInput.value = "";
+    renderFileEditor([]);
     submitButton.textContent = "추가";
     cancelButton.hidden = true;
+  }
+
+  function addFileRow(listEl, filename, changeNote) {
+    var row = document.createElement("div");
+    row.className = "todo-file-row";
+    var name = document.createElement("input");
+    name.type = "text";
+    name.placeholder = "파일명";
+    name.maxLength = 200;
+    name.value = filename || "";
+    var note = document.createElement("textarea");
+    note.placeholder = "수정내용";
+    note.maxLength = 4000;
+    note.value = changeNote || "";
+    var remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "todo-file-add";
+    remove.textContent = "삭제";
+    remove.addEventListener("click", function () { row.remove(); });
+    row.append(name, note, remove);
+    listEl.appendChild(row);
+  }
+
+  function renderFileEditor(files) {
+    filesRoot.replaceChildren();
+    fileCategories.forEach(function (category) {
+      var block = document.createElement("section");
+      block.className = "todo-file-cat";
+      block.dataset.category = category;
+      var head = document.createElement("div");
+      head.className = "todo-file-cat-head";
+      var label = document.createElement("span");
+      label.textContent = category;
+      var add = document.createElement("button");
+      add.type = "button";
+      add.className = "todo-file-add";
+      add.textContent = "추가";
+      var rows = document.createElement("div");
+      add.addEventListener("click", function () { addFileRow(rows, "", ""); });
+      head.append(label, add);
+      var matched = (files || []).filter(function (file) { return file.category === category; });
+      if (matched.length) matched.forEach(function (file) { addFileRow(rows, file.filename, file.changeNote); });
+      else addFileRow(rows, "", "");
+      block.append(head, rows);
+      filesRoot.appendChild(block);
+    });
+  }
+
+  function readFiles() {
+    var files = [];
+    filesRoot.querySelectorAll(".todo-file-cat").forEach(function (block) {
+      block.querySelectorAll(".todo-file-row").forEach(function (row) {
+        var fields = row.querySelectorAll("input, textarea");
+        var filename = fields[0].value.trim();
+        var changeNote = fields[1].value.trim();
+        if (!filename && !changeNote) return;
+        files.push({ category: block.dataset.category, filename: filename, changeNote: changeNote });
+      });
+    });
+    return files;
   }
 
   function render() {
@@ -110,6 +175,37 @@
       remove.addEventListener("click", function () { removeTodo(todo); });
       actions.append(edit, remove);
       row.append(check, main, actions);
+      if (todo.workContent || (todo.files && todo.files.length)) {
+        var detail = document.createElement("div");
+        detail.className = "todo-detail";
+        detail.hidden = true;
+        if (todo.workContent) {
+          var workLabel = document.createElement("div");
+          workLabel.className = "todo-detail-name";
+          workLabel.textContent = "작업내용";
+          var workBody = document.createElement("div");
+          workBody.className = "todo-detail-body";
+          workBody.textContent = todo.workContent;
+          detail.append(workLabel, workBody);
+        }
+        fileCategories.forEach(function (category) {
+          var matched = (todo.files || []).filter(function (file) { return file.category === category; });
+          if (!matched.length) return;
+          var catLabel = document.createElement("div");
+          catLabel.className = "todo-detail-name";
+          catLabel.textContent = category;
+          detail.appendChild(catLabel);
+          matched.forEach(function (file) {
+            var fileLine = document.createElement("div");
+            fileLine.className = "todo-detail-file";
+            fileLine.textContent = (file.filename || "(파일명 없음)") + (file.changeNote ? " — " + file.changeNote : "");
+            detail.appendChild(fileLine);
+          });
+        });
+        line.addEventListener("click", function () { detail.hidden = !detail.hidden; });
+        line.style.cursor = "pointer";
+        row.appendChild(detail);
+      }
       list.appendChild(row);
     });
   }
@@ -120,6 +216,8 @@
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
     aiInput.value = todo.aiTool || "";
+    workInput.value = todo.workContent || "";
+    renderFileEditor(todo.files || []);
     submitButton.textContent = "수정 완료";
     cancelButton.hidden = false;
     input.focus();
@@ -168,7 +266,14 @@
     var title = input.value.trim();
     if (!title) return;
     showError("");
-    var body = { title: title, tag: tagInput.value.trim(), requester: requesterInput.value.trim(), aiTool: aiInput.value };
+    var body = {
+      title: title,
+      tag: tagInput.value.trim(),
+      requester: requesterInput.value.trim(),
+      aiTool: aiInput.value,
+      workContent: workInput.value,
+      files: readFiles(),
+    };
     var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
       method: editingId ? "PUT" : "POST",
       headers: headers,
@@ -193,6 +298,8 @@
     resetForm();
     input.focus();
   });
+
+  renderFileEditor([]);
 
   load().catch(function () {
     showError("할일 목록을 불러오지 못했습니다.");
