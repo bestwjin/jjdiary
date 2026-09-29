@@ -123,7 +123,8 @@ h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .mac-dock-rule{width:16px;height:1px;margin:6px 0;background:#e1e2e7}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:transparent;color:#3a3a44;box-shadow:none}
 .mac-dock-item[aria-current=page]{color:#3a3a44;background:transparent;box-shadow:none}
-.mac-dock-item[aria-current=page] .mac-dock-icon svg{border-radius:10px;outline:2px solid #2a2a30;outline-offset:0}
+.mac-dock-item[aria-current=page] .mac-dock-icon svg{outline:none}
+.mac-dock-item[aria-current=page]::after{content:"";position:absolute;right:-2px;top:50%;width:0;height:0;transform:translateY(-50%);border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:5px solid #8d8d98}
 .mac-tip{left:calc(100% + 10px);background:#2a3160;font-size:12px;font-weight:500;padding:6px 10px;border-radius:10px;box-shadow:0 8px 20px rgba(42,49,96,.18)}
 .bg-indigo-600,.bg-blue-600,.bg-green-600{background-color:#4458c4;border-radius:10px;font-weight:600}
 .hover\:bg-indigo-700:hover,.hover\:bg-blue-700:hover,.hover\:bg-green-700:hover{background-color:#3a4cad}
@@ -173,7 +174,7 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 .mac-dock-item{color:#4a4a52}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.7);color:#2a2a30}
 .mac-dock-item[aria-current=page]{background:transparent;color:#2a2a30}
-.mac-dock-item[aria-current=page] .mac-dock-icon svg{outline-color:#f4f4f5}
+.mac-dock-item[aria-current=page]::after{border-left-color:#c8c8d0}
 .bg-white.rounded-2xl,.bg-white.rounded-xl,.todo-row,.todo-row.is-open,.todo-dialog{background:#1c2238;border-color:rgba(255,255,255,.08)}
 .todo-row:hover,.todo-row.is-open:hover{background:#222846}
 .todo-title,.todo-heading,h1.text-gray-800{color:#e8ebff}
@@ -182,3 +183,5 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 .ks-btn:hover{background:#2a3358}
 .cal-day:hover{background:#222846;border-color:rgba(255,255,255,.12);box-shadow:none}
 }
+#todo-files{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+@media (max-width:800px){#todo-files{grid-template-columns:1fr}}
