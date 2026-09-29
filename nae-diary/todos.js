@@ -414,19 +414,21 @@
     var files = todo.files || [];
     if (files.length) {
       text += (text && !text.endsWith("\n\n") ? "\n\n" : "\n") + "### 작업파일\n";
-      html += "<h3>작업파일</h3><ul>";
+      html += "<h3>작업파일</h3>";
       fileCategories.forEach(function (category) {
         var matched = files.filter(function (file) { return file.category === category; });
         if (!matched.length) return;
-        text += "\n- " + category + "\n파일명\t수정내용\n";
-        html += "<li>" + escapeHtml(category) + "<table><tbody>";
+        text += "\n- " + category + "\n";
+        html += "<p>- " + escapeHtml(category) + "</p>";
         matched.forEach(function (file) {
-          text += (file.filename || "") + "\t" + (file.changeNote || "") + "\n";
-          html += "<tr><td><code>" + escapeHtml(file.filename || "") + "</code></td><td>" + escapeHtml(file.changeNote || "").replace(/\n/g, "<br>") + "</td></tr>";
+          var name = String(file.filename || "").replace(/\t/g, " ");
+          var note = String(file.changeNote || "").replace(/\t/g, " ");
+          text += name + (note ? "\n" + note : "") + "\n";
+          html += "<p>" + escapeHtml(name);
+          if (note) html += (name ? "<br>" : "") + escapeHtml(note).replace(/\n/g, "<br>");
+          html += "</p>";
         });
-        html += "</tbody></table></li>";
       });
-      html += "</ul>";
     }
     return { html: html, text: text.trim() + "\n" };
   }
