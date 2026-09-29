@@ -11,8 +11,17 @@
   <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
     <div class="container mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
       <h1 class="todo-heading text-gray-800 dark:text-white">할일 목록</h1>
-      <p id="todo-count" class="text-gray-600 dark:text-gray-300">할일을 불러오는 중</p>
-      <form id="todo-form" class="todo-form">
+      <div class="todo-toolbar">
+        <p id="todo-count" class="text-gray-600 dark:text-gray-300">할일을 불러오는 중</p>
+        <button id="todo-open" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="button">할일 추가</button>
+      </div>
+      <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
+      <ul id="todo-list" style="flex:1;align-content:start;width:100%"></ul>
+    </div>
+  </main>
+  <dialog id="todo-dialog" class="todo-dialog">
+    <form id="todo-form" class="todo-form">
         <input id="todo-tag" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="태그" autocomplete="off"/>
         <input id="todo-requester" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="요청자" autocomplete="off"/>
         <select id="todo-ai" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
@@ -29,11 +38,7 @@
         <div class="todo-label">작업파일</div>
         <div id="todo-files"></div>
       </form>
-      <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
-      <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
-      <ul id="todo-list" style="flex:1;align-content:start;width:100%"></ul>
-    </div>
-  </main>
+  </dialog>
   <script src="/dock.js"></script>
   <script src="/todos.js"></script>
 </body>
