@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>캘린더 · jjdiary</title>
+    <meta name="description" content="날짜별 글을 남기고 삭제하는 캘린더입니다." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a href="./index.html">학교정보</a>
+      <a href="./calendar.html" aria-current="page">캘린더</a>
+    </nav>
+
+    <header class="hero">
+      <p class="eyebrow">캘린더</p>
+      <h1>달력에 남긴 글</h1>
+      <p class="lede">날짜를 고르면 그 날의 글을 보고, 필요 없는 글은 삭제할 수 있습니다.</p>
+    </header>
+
+    <main>
+      <div class="month-bar">
+        <button type="button" class="month-nav" id="prev-month">이전 달</button>
+        <h2 id="month-label"></h2>
+        <button type="button" class="month-nav" id="next-month">다음 달</button>
+      </div>
+
+      <div class="cal-layout">
+        <section class="calendar" aria-label="월간 달력">
+          <div class="weekdays" aria-hidden="true">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="days" id="days"></div>
+        </section>
+
+        <section class="day-panel" aria-labelledby="day-label">
+          <h2 id="day-label"></h2>
+          <div class="post-list" id="post-list"></div>
+          <form class="composer" id="composer">
+            <label for="post-body">이 날짜의 글</label>
+            <textarea id="post-body" name="body" maxlength="1000" required placeholder="오늘 일을 적어 두세요"></textarea>
+            <p class="form-error" id="form-error" hidden></p>
+            <button type="submit">글 남기기</button>
+          </form>
+          <p class="flash" id="flash" role="status"></p>
+        </section>
+      </div>
+    </main>
+
+    <dialog id="delete-dialog" aria-labelledby="delete-title">
+      <form method="dialog">
+        <h2 id="delete-title">이 글을 삭제할까요?</h2>
+        <p id="delete-preview"></p>
+        <div class="dialog-actions">
+          <button class="ghost" value="cancel">취소</button>
+          <button class="danger" value="confirm">삭제</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./calendar.js"></script>
+  </body>
+</html>

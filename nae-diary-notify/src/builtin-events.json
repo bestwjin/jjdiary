@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1,
+    "date": "2026-09-28",
+    "title": "상명초 설명회 접수 시작",
+    "school": "상명초등학교",
+    "time": "",
+    "type": "registration-open",
+    "description": "~ 10월 16일까지",
+    "priority": "medium"
+  },
+  {
+    "id": 3,
+    "date": "2026-10-12",
+    "title": "화랑초 설명회 접수",
+    "school": "화랑초등학교",
+    "time": "",
+    "type": "registration-open",
+    "description": "사전 신청",
+    "priority": "medium"
+  },
+  {
+    "id": 4,
+    "date": "2026-10-16",
+    "title": "상명초 설명회 접수 마감",
+    "school": "상명초등학교",
+    "time": "",
+    "type": "registration-open",
+    "description": "신청 마지막 날",
+    "priority": "medium"
+  },
+  {
+    "id": 5,
+    "date": "2026-10-16",
+    "title": "태강삼육초 설명회 접수",
+    "school": "태강삼육초등학교",
+    "time": "09:00",
+    "type": "registration-open",
+    "description": "~ 10월 31일",
+    "priority": "medium"
+  },
+  {
+    "id": 6,
+    "date": "2026-10-18",
+    "title": "금성초 설명회 접수",
+    "school": "금성초등학교",
+    "time": "",
+    "type": "registration-open",
+    "description": "홈페이지 신청",
+    "priority": "medium"
+  },
+  {
+    "id": 10,
+    "date": "2026-10-23",
+    "title": "화랑초 입학설명회 1차",
+    "school": "화랑초등학교",
+    "time": "09:30",
+    "type": "info-session",
+    "description": "설명회 + 교내투어 (200명)",
+    "priority": "medium"
+  },
+  {
+    "id": 11,
+    "date": "2026-10-24",
+    "title": "상명사대부초 설명회 1차",
+    "school": "상명사대부초등학교",
+    "time": "09:20",
+    "type": "info-session",
+    "description": "",
+    "priority": "medium"
+  },
+  {
+    "id": 12,
+    "date": "2026-10-25",
+    "title": "상명초 입학설명회",
+    "school": "상명초등학교",
+    "time": "10:00",
+    "type": "info-session",
+    "description": "",
+    "priority": "medium"
+  },
+  {
+    "id": 14,
+    "date": "2026-10-28",
+    "title": "태강삼육초 설명회",
+    "school": "태강삼육초등학교",
+    "time": "10:00",
+    "type": "info-session",
+    "description": "대면/비대면",
+    "priority": "medium"
+  },
+  {
+    "id": 15,
+    "date": "2026-10-29",
+    "title": "금성초 입학설명회",
+    "school": "금성초등학교",
+    "time": "10:00",
+    "type": "info-session",
+    "description": "",
+    "priority": "medium"
+  },
+  {
+    "id": 17,
+    "date": "2026-10-31",
+    "title": "심석초 입학설명회",
+    "school": "심석초등학교",
+    "time": "10:00",
+    "type": "info-session",
+    "description": "",
+    "priority": "medium"
+  },
+  {
+    "id": 20,
+    "date": "2026-11-04",
+    "title": "상명사대부초 설명회 2차",
+    "school": "상명사대부초등학교",
+    "time": "09:20",
+    "type": "info-session",
+    "description": "",
+    "priority": "medium"
+  },
+  {
+    "id": 30,
+    "date": "2026-11-07",
+    "title": "원서접수 시작",
+    "school": "전체 사립초",
+    "time": "09:00",
+    "type": "application",
+    "description": "~ 11/12(수) 16:30",
+    "priority": "medium"
+  },
+  {
+    "id": 31,
+    "date": "2026-11-12",
+    "title": "원서접수 마감",
+    "school": "전체 사립초",
+    "time": "16:30",
+    "type": "application",
+    "description": "최대 3개교 지원",
+    "priority": "medium"
+  },
+  {
+    "id": 32,
+    "date": "2026-11-17",
+    "title": "입학추첨",
+    "school": "전체 사립초",
+    "time": "11:00",
+    "type": "lottery",
+    "description": "서울시교육청, 유튜브 생중계",
+    "priority": "medium"
+  },
+  {
+    "id": 33,
+    "date": "2026-11-18",
+    "title": "등록 시작",
+    "school": "전체 사립초",
+    "time": "09:00",
+    "type": "registration",
+    "description": "~ 11/20(목) 16:30",
+    "priority": "medium"
+  },
+  {
+    "id": 34,
+    "date": "2026-11-20",
+    "title": "등록 마감",
+    "school": "전체 사립초",
+    "time": "16:30",
+    "type": "registration",
+    "description": "중복 등록 금지!",
+    "priority": "medium"
+  }
+]

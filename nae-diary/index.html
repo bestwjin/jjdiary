@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <script>try{var root=document.documentElement;function wantDark(){var t=localStorage.getItem("theme");return t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)}function applyTheme(){root.classList.toggle("theme-dark",wantDark())}applyTheme();new MutationObserver(function(){if(root.classList.contains("theme-dark")!==wantDark())applyTheme()}).observe(root,{attributes:true,attributeFilter:["class"]})}catch(e){}</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>내 다이어리</title>
+  <meta name="description" content="내 할일과 관련된 일들을 모아놓는 다이어리"/>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="container todo-page mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
+      <div class="todo-head">
+        <h1 class="todo-heading text-gray-800 dark:text-white">내 다이어리</h1>
+        <p id="home-count" class="text-gray-600 dark:text-gray-300">할일을 불러오는 중</p>
+      </div>
+      <p id="home-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <p id="home-empty" class="text-gray-500 dark:text-gray-400" hidden>남은 할일이 없습니다.</p>
+      <div id="home-board" hidden></div>
+    </div>
+  </main>
+  <script src="/dock.js"></script>
+  <script src="/home.js"></script>
+</body>
+</html>

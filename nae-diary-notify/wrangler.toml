@@ -1,0 +1,17 @@
+name = "nae-diary-notify"
+main = "src/index.js"
+compatibility_date = "2026-09-28"
+
+[vars]
+SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
+
+# Neon connection string. Set with:
+# wrangler secret put DATABASE_URL
+# postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+
+[[kv_namespaces]]
+binding = "DIARY"
+id = "390c3350adfe4146b52fc960a9c872a0"
+
+[triggers]
+crons = ["0 0 * * *"]
