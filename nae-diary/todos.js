@@ -79,7 +79,7 @@
       }
       if (todo.aiTool) {
         var ai = document.createElement("span");
-        ai.className = "todo-ai";
+        ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
         ai.textContent = todo.aiTool;
         line.appendChild(ai);
       }

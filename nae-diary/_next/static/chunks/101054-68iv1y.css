@@ -35,7 +35,10 @@
 .todo-delete{border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:14px}
 .todo-delete:hover{color:#dc2626}
 @media (max-width:800px){.todo-form{grid-template-columns:1fr 1fr}.todo-form .todo-title-input{grid-column:1/-1}}
-@media (prefers-color-scheme:dark){.todo-row{background:#1f2937;border-color:#374151}.todo-check{background:#111827}.todo-title{color:#f9fafb}.todo-row.is-done .todo-title{color:#6b7280}.todo-tag{background:#312e81;color:#e0e7ff}.todo-ai{background:#064e3b;color:#d1fae5}.todo-meta{color:#9ca3af}}
+@media (prefers-color-scheme:dark){.todo-row{background:#1f2937;border-color:#374151}.todo-check{background:#111827}.todo-title{color:#f9fafb}.todo-row.is-done .todo-title{color:#6b7280}.todo-tag{background:#312e81;color:#e0e7ff}.todo-meta{color:#9ca3af}}
+.todo-ai.todo-ai-gpt{background:#fff;color:#111827;border:1px solid #d1d5db}
+.todo-ai.todo-ai-claude{background:#f6c7a8;color:#7a3418;border:1px solid transparent}
+.todo-ai.todo-ai-cursor{background:#111;color:#fff;border:1px solid transparent}
 body{padding-left:118px}
 @media (max-width:640px){.mac-dock{left:8px;padding:8px 6px;gap:6px;border-radius:24px}.mac-dock-item{width:56px;height:56px}.mac-dock-icon{font-size:32px}body{padding-left:84px}}
 html,body{width:100%;min-height:100dvh}
