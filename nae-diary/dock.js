@@ -1,12 +1,28 @@
 (function () {
-  var svg = function (paths) {
-    return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>";
+  var svg = function (inner) {
+    return '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' + inner + "</svg>";
   };
-  var home = { href: "/", icon: svg('<path d="M4 10.5 12 4l8 6.5"/><path d="M6.5 9.8V20h11V9.8"/>'), label: "홈" };
+  var home = {
+    href: "/",
+    label: "홈",
+    icon: svg('<path d="M4.2 11.4 12 5.2l7.8 6.2" fill="none" stroke="#ffd7a8" stroke-width="1.7" stroke-linejoin="round"/><path d="M6.2 10.8V19h11.6v-8.2" fill="#fff"/><path d="M10.5 19v-4.1h3v4.1" fill="#f4a261"/>')
+  };
   var movable = [
-    { href: "/schools", icon: svg('<path d="M4 20V9l8-5 8 5v11"/><path d="M4 20h16"/><path d="M10 20v-5h4v5"/>'), label: "학교 정보" },
-    { href: "/calendar", icon: svg('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5v3M16 3.5v3M4 10h16"/>'), label: "입학설명회 일정" },
-    { href: "/todos", icon: svg('<path d="M9 7h11M9 12h11M9 17h11"/><path d="M4.5 7h.01M4.5 12h.01M4.5 17h.01"/>'), label: "할일 목록" },
+    {
+      href: "/schools",
+      label: "학교 정보",
+      icon: svg('<path d="M3.8 11 12 6.2 20.2 11 12 15.8z" fill="#8ec5ff"/><rect x="6.2" y="12.2" width="11.6" height="6.6" rx="1.2" fill="#fff"/><rect x="10.7" y="14.4" width="2.6" height="4.4" rx=".4" fill="#4458c4"/><path d="M12 6.2V4" stroke="#ffd166" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="3.3" r="1.15" fill="#ffd166"/>')
+    },
+    {
+      href: "/calendar",
+      label: "입학설명회 일정",
+      icon: svg('<rect x="4" y="5.2" width="16" height="14.2" rx="2.4" fill="#fff"/><path d="M4 9.4h16v-.2c0-1.3 0-2-.2-2.2A2.4 2.4 0 0 0 17.6 5.2H6.4A2.4 2.4 0 0 0 4 7.6V9.4z" fill="#ff6b6b"/><rect x="8" y="3.6" width="1.5" height="3.2" rx=".7" fill="#ffd7a8"/><rect x="14.5" y="3.6" width="1.5" height="3.2" rx=".7" fill="#ffd7a8"/><circle cx="8.6" cy="13" r="1" fill="#4458c4"/><circle cx="12" cy="13" r="1" fill="#4458c4"/><circle cx="15.4" cy="13" r="1" fill="#4458c4"/><circle cx="8.6" cy="16.2" r="1" fill="#c9d4ff"/><circle cx="12" cy="16.2" r="1" fill="#c9d4ff"/>')
+    },
+    {
+      href: "/todos",
+      label: "할일 목록",
+      icon: svg('<rect x="5" y="3.4" width="14" height="17.2" rx="2.6" fill="#fff"/><path d="M9.2 8.4h7.2M9.2 12h7.2M9.2 15.6h4.4" stroke="#d5dcf8" stroke-width="1.4" stroke-linecap="round"/><path d="M6.7 8.2 7.7 9.2 9.4 7.2" fill="none" stroke="#3dbe7a" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>')
+    },
   ];
 
   function currentPath() {
