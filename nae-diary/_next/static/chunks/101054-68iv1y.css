@@ -233,6 +233,6 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 .todo-priority-high{background:#fee2e2;color:#b91c1c}
 .todo-priority-mid{background:#fef3c7;color:#92400e}
 .todo-priority-low{background:#eef1f8;color:#5b6478}
-.mac-dock-item:hover,.mac-dock-item:focus-visible{background:#e6e6ea;border-radius:10px;box-shadow:none}
-.mac-dock-item[aria-current=page]{background:#3a3a3e;border-radius:10px;box-shadow:none;color:#fff}
-.mac-dock-item[aria-current=page]::after{content:none;border:0}
+.mac-dock-item:hover,.mac-dock-item:focus-visible{background:transparent;box-shadow:none}
+.mac-dock-item[aria-current=page]{background:transparent;box-shadow:none;color:#3a3a44}
+.mac-dock-item[aria-current=page]::after{content:"";position:absolute;left:50%;right:auto;top:auto;bottom:0;width:18px;height:4px;transform:translateX(-50%);border:0;border-radius:99px;background:#0078d4}
