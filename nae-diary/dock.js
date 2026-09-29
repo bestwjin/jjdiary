@@ -119,8 +119,8 @@
   }
 
   function setTheme(on) {
-    document.documentElement.classList.toggle("theme-dark", on);
     try { localStorage.setItem("theme", on ? "dark" : "light"); } catch (error) {}
+    document.documentElement.classList.toggle("theme-dark", on);
     var button = document.getElementById("theme-toggle");
     if (button) paintThemeButton(button);
   }
@@ -163,4 +163,8 @@
   new MutationObserver(function () {
     mount();
   }).observe(document.body, { childList: true });
+  new MutationObserver(function () {
+    var button = document.getElementById("theme-toggle");
+    if (button) paintThemeButton(button);
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 })();
