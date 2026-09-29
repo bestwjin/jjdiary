@@ -52,8 +52,17 @@
     return part("year") + "." + part("month") + "." + part("day") + " " + part("hour") + ":" + part("minute");
   }
 
+  var formButtonAnchor = form.querySelector(".todo-label");
+
+  function restoreFormButtons() {
+    form.insertBefore(submitButton, formButtonAnchor);
+    form.insertBefore(cancelButton, formButtonAnchor);
+  }
+
   function parkForm() {
+    restoreFormButtons();
     dialog.appendChild(form);
+    document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
   }
 
   function resetForm() {
@@ -206,6 +215,7 @@
   function startEdit(todo, editor) {
     if (dialog.open) dialog.close();
     document.querySelectorAll(".todo-edit").forEach(function (slot) { slot.hidden = true; });
+    document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
     editingId = todo.id;
     input.value = todo.title;
     tagInput.value = todo.tag || "";
@@ -217,6 +227,9 @@
     cancelButton.hidden = false;
     editor.hidden = false;
     editor.appendChild(form);
+    var row = editor.closest(".todo-row");
+    row.classList.add("is-open");
+    row.querySelector(".todo-actions").append(cancelButton, submitButton);
     input.focus();
   }
 

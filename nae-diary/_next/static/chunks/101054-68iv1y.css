@@ -41,6 +41,7 @@
 .todo-form input,.todo-form select,.todo-form button{padding:6px 10px;font-size:13px;line-height:1.3;border-radius:8px}
 .todo-ai{display:inline-flex;align-items:center;flex:none;padding:1px 7px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:11px;font-weight:700;line-height:1.4}
 .todo-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:5px 10px;border-radius:8px;background:#fff;border:1px solid #e5e7eb;width:100%}
+.todo-row.is-open{border-color:#357f70;background:#f4faf8;box-shadow:inset 3px 0 0 #357f70}
 #todo-list{display:flex;flex-direction:column;gap:4px}
 .todo-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
 .todo-line{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
