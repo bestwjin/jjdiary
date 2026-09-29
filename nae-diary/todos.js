@@ -229,7 +229,8 @@
     editor.appendChild(form);
     var row = editor.closest(".todo-row");
     row.classList.add("is-open");
-    row.querySelector(".todo-actions").append(cancelButton, submitButton);
+    row.querySelector(".todo-line").prepend(submitButton);
+    row.querySelector(".todo-line").prepend(cancelButton);
     input.focus();
   }
 

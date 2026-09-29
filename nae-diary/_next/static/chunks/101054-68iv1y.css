@@ -9,14 +9,14 @@
 .cal-add:hover{background:#4338ca}
 @media (prefers-color-scheme:dark){.cal-day:hover{background-color:#312e81;border-color:#818cf8;box-shadow:0 8px 20px rgba(0,0,0,.35)}.cal-add{background:rgba(99,102,241,.95)}.cal-add:hover{background:#818cf8}}
 
-.mac-dock{position:fixed;z-index:50;left:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 10px;border-radius:32px;background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.75);box-shadow:0 16px 40px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.85)}
-.mac-dock-item{position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:20px;text-decoration:none;color:inherit;transition:transform .22s cubic-bezier(.2,.8,.2,1),background-color .22s ease}
-.mac-dock-icon{font-size:42px;line-height:1;display:block}
-.mac-dock-rule{width:36px;height:1px;margin:2px 0;background:rgba(15,23,42,.16);border-radius:99px}
-.mac-dock-item:hover,.mac-dock-item:focus-visible{transform:scale(1.24);background:rgba(255,255,255,.7);outline:none}
-.mac-dock-item[aria-current=page]{background:rgba(99,102,241,.16)}
+.mac-dock{position:fixed;z-index:50;left:0;top:0;bottom:0;width:56px;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 0;border-radius:0;background:#12372f;border:0;border-right:1px solid #0e2c26;box-shadow:none}
+.mac-dock-item{position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;text-decoration:none;color:#d7ebe4;transition:background-color .16s ease,color .16s ease}
+.mac-dock-icon{font-size:18px;line-height:1;display:block}
+.mac-dock-rule{width:18px;height:1px;margin:4px 0;background:rgba(255,255,255,.18);border-radius:99px}
+.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.12);outline:none}
+.mac-dock-item[aria-current=page]{color:#c9fff7;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.07));box-shadow:inset 0 0 0 1px rgba(185,241,235,.2)}
 .mac-dock-item.is-disabled{opacity:.4;cursor:default}
-.mac-dock-item.is-disabled:hover{transform:none;background:transparent}
+.mac-dock-item.is-disabled:hover{background:transparent}
 .mac-tip{position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%) translateX(-6px);opacity:0;pointer-events:none;white-space:nowrap;background:rgba(28,28,30,.9);color:#fff;font-size:13px;font-weight:650;line-height:1.2;letter-spacing:-.01em;padding:7px 10px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.18);transition:opacity .16s ease,transform .16s ease}
 .mac-dock-item:hover .mac-tip,.mac-dock-item:focus-visible .mac-tip{opacity:1;transform:translateY(-50%) translateX(0)}
 @media (prefers-color-scheme:dark){.mac-dock{background:rgba(38,38,42,.72);border-color:rgba(255,255,255,.12);box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.1)}.mac-dock-item[aria-current=page]{background:rgba(129,140,248,.28)}.mac-dock-rule{background:rgba(255,255,255,.22)}}
@@ -90,8 +90,8 @@
 .todo-ai.todo-ai-gpt{background:#fff;color:#111827;border:1px solid #d1d5db}
 .todo-ai.todo-ai-claude{background:#f6c7a8;color:#7a3418;border:1px solid transparent}
 .todo-ai.todo-ai-cursor{background:#111;color:#fff;border:1px solid transparent}
-body{padding-left:118px}
-@media (max-width:640px){.mac-dock{left:8px;padding:8px 6px;gap:6px;border-radius:24px}.mac-dock-item{width:56px;height:56px}.mac-dock-icon{font-size:32px}body{padding-left:84px}}
+body{padding-left:56px}
+@media (max-width:640px){.mac-dock{width:48px}.mac-dock-item{width:36px;height:36px}.mac-dock-icon{font-size:16px}body{padding-left:48px}}
 html,body{width:100%;min-height:100dvh}
 body{box-sizing:border-box}
 .container{width:100%;max-width:none}
