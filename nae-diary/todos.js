@@ -256,6 +256,42 @@
     input.focus();
   }
 
+  function syncOpenRow(todo) {
+    var row = document.querySelector(".todo-row.is-open");
+    if (!row || !todo) return;
+    var line = row.querySelector(".todo-line");
+    var titleButton = line.querySelector(".todo-title");
+    titleButton.textContent = todo.title;
+    var tag = line.querySelector(".todo-tag");
+    if (todo.tag) {
+      if (!tag) {
+        tag = document.createElement("span");
+        tag.className = "todo-tag";
+        line.insertBefore(tag, line.firstChild);
+      }
+      tag.textContent = todo.tag;
+    } else if (tag) {
+      tag.remove();
+    }
+    var ai = line.querySelector(".todo-ai");
+    if (todo.aiTool) {
+      if (!ai) {
+        ai = document.createElement("span");
+        ai.className = "todo-ai";
+        line.insertBefore(ai, line.querySelector("button") || titleButton);
+      }
+      ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
+      ai.textContent = todo.aiTool;
+    } else if (ai) {
+      ai.remove();
+    }
+    var bits = [];
+    if (todo.requester) bits.push(todo.requester);
+    var created = formatCreated(todo.createdAt);
+    if (created) bits.push(created);
+    row.querySelector(".todo-meta").textContent = bits.join(" · ");
+  }
+
   async function load() {
     showError("");
     var response = await fetch(API + "/todos", { headers: headers });
@@ -318,17 +354,21 @@
     }
     var data = await response.json();
     if (editingId) {
-      todos = todos.map(function (item) { return item.id === editingId ? data.todo : item; });
-    } else {
-      todos.unshift(data.todo);
+      var current = null;
+      todos.forEach(function (item) {
+        if (item.id === editingId) current = item;
+      });
+      if (current && data.todo) Object.assign(current, data.todo);
+      syncOpenRow(current || data.todo);
+      showToast("저장되었습니다.");
+      return;
     }
-    var wasEdit = Boolean(editingId);
+    todos.unshift(data.todo);
     parkForm();
     if (dialog.open) dialog.close();
     resetForm();
     render();
-    if (wasEdit) showToast("저장되었습니다.");
-    else input.focus();
+    input.focus();
   });
 
   cancelButton.addEventListener("click", function () {
