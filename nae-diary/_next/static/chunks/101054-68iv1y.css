@@ -301,3 +301,6 @@ color-scheme:dark}
 .mac-dock-theme .mac-dock-icon svg{width:18px;height:18px}
 .mac-dock-theme:hover,.mac-dock-theme:focus-visible{background:#e7e7ec;outline:none}
 html.theme-dark .mac-dock-theme::after{content:"";position:absolute;left:50%;bottom:2px;width:14px;height:3px;transform:translateX(-50%);border-radius:99px;background:#0078d4}
+html.theme-dark .bg-gradient-to-br.from-white,html.theme-dark .bg-gradient-to-r.from-indigo-50{background-color:#1c2238;background-image:none;border-color:rgba(255,255,255,.08)}
+html.theme-dark .cal-add{background:#242b4a;color:#3dce8a;border:1px solid rgba(61,206,138,.4)}
+html.theme-dark .cal-add:hover{background:#243246;color:#63e0a4}
