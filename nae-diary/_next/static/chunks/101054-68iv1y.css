@@ -102,3 +102,81 @@ body{box-sizing:border-box}
 .min-h-screen{min-height:100dvh;width:100%;box-sizing:border-box;display:flex;flex-direction:column}
 .min-h-screen>.container{flex:1;display:flex;flex-direction:column;width:100%;max-width:none}
 .grid.grid-cols-7{flex:1;align-content:start}
+
+/* Linear / Notion light: flat canvas, hairline borders, one accent */
+body{padding-left:56px;background:#f4f4f5;color:#1c1c1f;font-family:Geist,"Geist Fallback",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.011em}
+.min-h-screen.bg-gradient-to-br{background-image:none;background-color:#f4f4f5}
+.bg-gradient-to-br.from-white,.bg-gradient-to-r.from-indigo-50{background-image:none;background-color:#fff}
+.bg-white.rounded-2xl,.bg-white.rounded-xl{border:1px solid #e7e7ea;box-shadow:none}
+.shadow-lg,.hover\:shadow-lg:hover,.hover\:shadow-xl:hover,.hover\:shadow-md:hover{box-shadow:none}
+.hover\:-translate-y-1:hover{translate:none}
+.rounded-2xl{border-radius:10px}
+.rounded-xl{border-radius:8px}
+.text-4xl,.text-5xl,.sm\:text-4xl,.text-3xl,.sm\:text-3xl{letter-spacing:-.03em;font-weight:560}
+.text-5xl{font-size:2rem;line-height:1.2}
+h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#1c1c1f}
+.mac-dock{width:56px;justify-content:flex-start;gap:2px;padding:12px 0;background:#f3f3f4;border-right:1px solid #e6e6e8;box-shadow:none}
+.mac-dock-item{width:36px;height:36px;border-radius:8px;color:#6b6b73}
+.mac-dock-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.mac-dock-icon svg{display:block}
+.mac-dock-rule{width:16px;height:1px;margin:8px 0;background:#e0e0e3}
+.mac-dock-item:hover,.mac-dock-item:focus-visible{background:#e8e8eb;color:#1c1c1f}
+.mac-dock-item[aria-current=page]{color:#1c1c1f;background:#e4e4e7;box-shadow:none}
+.mac-tip{left:calc(100% + 10px);background:#1c1c1f;font-size:12px;font-weight:500;padding:5px 8px;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.bg-indigo-600,.bg-blue-600,.bg-green-600{background-color:#5e6ad2;border-radius:6px;font-weight:500}
+.hover\:bg-indigo-700:hover,.hover\:bg-blue-700:hover,.hover\:bg-green-700:hover{background-color:#4f5bc4}
+.bg-red-600{background-color:#e5484d;border-radius:6px;font-weight:500}
+.hover\:bg-red-700:hover{background-color:#dc3d43}
+.bg-gray-500{background-color:#fff;border:1px solid #e2e2e4;border-radius:6px;font-weight:500}
+.bg-gray-500.text-white{color:#1c1c1f}
+.hover\:bg-gray-600:hover{background-color:#f4f4f5}
+.bg-indigo-100{background-color:#eeeef1}
+.text-indigo-600{color:#3f3f46}
+.focus\:ring-2:focus{--tw-ring-shadow:0 0 0 1px #5e6ad2;box-shadow:0 0 0 1px #5e6ad2}
+.cal-day:hover{background-color:#f0f0f2;border-color:#e0e0e3;box-shadow:none}
+.cal-add{border-radius:6px;font-weight:500;background:#5e6ad2;box-shadow:none}
+.cal-add:hover{background:#4f5bc4}
+.ks-btn{height:28px;padding:0 10px;border-radius:6px;border:1px solid #e2e2e4;background:#fff;color:#1c1c1f;font-size:13px;font-weight:500}
+.ks-btn:hover{background:#f4f4f5;border-color:#d4d4d8;color:#1c1c1f}
+.ks-btn-primary{background:#5e6ad2;border-color:#5e6ad2;color:#fff}
+.ks-btn-primary:hover{background:#4f5bc4;border-color:#4f5bc4;color:#fff}
+.ks-btn-quiet{height:26px;border-color:transparent;background:transparent;color:#6b6b73}
+.ks-btn-quiet:hover{background:#f0f0f2;border-color:transparent;color:#1c1c1f}
+.ks-btn-danger:hover{background:#fdf2f2;border-color:#f3d0d0;color:#c0362c}
+#todo-open.ks-btn,#todo-submit.ks-btn,#todo-cancel.ks-btn,#notion-copy.ks-btn,#notion-close.ks-btn{height:28px;padding:0 12px;font-size:13px}
+.todo-line>#todo-submit.ks-btn,.todo-line>#todo-cancel.ks-btn{height:22px;padding:0 7px;font-size:11px;border-radius:5px}
+.todo-heading{font-size:18px;font-weight:560;letter-spacing:-.02em;color:#1c1c1f}
+.todo-row{border:0;border-radius:6px;background:transparent;padding:6px 8px}
+.todo-row:hover{background:#eeeef0}
+.todo-row.is-open:hover{background:#fff}
+.todo-row.is-open{background:#fff;border:1px solid #e6e6e8;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:8px 10px 10px}
+.todo-row.is-open .todo-edit{border-top-color:#eeeef1}
+.todo-tag{border-radius:4px;background:#eeeef1;color:#3a3a42;font-weight:500}
+.todo-check{width:16px;height:16px;border-radius:4px;border:1px solid #c8c8ce}
+.todo-row.is-done .todo-check{background:#5e6ad2;border-color:#5e6ad2}
+.todo-title{color:#1c1c1f;font-size:13px}
+.todo-ai{border-radius:4px;font-weight:500}
+.todo-dialog{border:1px solid #e6e6e8;border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.12)}
+.todo-dialog::backdrop{background:rgba(20,20,22,.4)}
+.todo-form input,.todo-form select,.todo-file-row input,.todo-file-row textarea{border-color:#e2e2e4;border-radius:6px}
+.wysiwyg-bar{background:#f7f7f8;border-bottom-color:#eeeef0}
+.wysiwyg-bar button{border-color:#e2e2e4;border-radius:5px;color:#3a3a42;font-weight:500}
+.wysiwyg-bar button:hover{background:#f4f4f5;border-color:#d4d4d8}
+.todo-editor,.todo-file-cat{border-color:#e6e6e8}
+.todo-file-add{color:#5e6ad2}
+@media (max-width:640px){.mac-dock{width:44px}.mac-dock-item{width:32px;height:32px}body{padding-left:44px}}
+@media (prefers-color-scheme:dark){
+body,.min-h-screen.bg-gradient-to-br{background:#101012;color:#f4f4f5}
+.mac-dock{background:#101012;border-right-color:rgba(255,255,255,.08);box-shadow:none}
+.mac-dock-item{color:#a1a1aa}
+.mac-dock-item:hover,.mac-dock-item:focus-visible{background:#27272a;color:#f4f4f5}
+.mac-dock-item[aria-current=page]{background:#27272a;color:#fff;box-shadow:none}
+.mac-dock-rule{background:rgba(255,255,255,.12)}
+.bg-white.rounded-2xl,.bg-white.rounded-xl,.todo-row.is-open,.todo-dialog{background:#18181b;border-color:rgba(255,255,255,.08)}
+.todo-row:hover{background:#1c1c20}
+.todo-title,.todo-heading,h1.text-gray-800{color:#f4f4f5}
+.todo-tag{background:#27272a;color:#e4e4e7}
+.ks-btn{background:#18181b;border-color:rgba(255,255,255,.12);color:#f4f4f5}
+.ks-btn:hover{background:#27272a}
+.cal-day:hover{background:#1c1c20;border-color:rgba(255,255,255,.12);box-shadow:none}
+}

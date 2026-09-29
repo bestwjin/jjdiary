@@ -213,6 +213,12 @@
   }
 
   function startEdit(todo, editor) {
+    if (editingId === todo.id && !editor.hidden) {
+      editor.hidden = true;
+      parkForm();
+      resetForm();
+      return;
+    }
     if (dialog.open) dialog.close();
     document.querySelectorAll(".todo-edit").forEach(function (slot) { slot.hidden = true; });
     document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
@@ -229,8 +235,9 @@
     editor.appendChild(form);
     var row = editor.closest(".todo-row");
     row.classList.add("is-open");
-    row.querySelector(".todo-line").prepend(submitButton);
-    row.querySelector(".todo-line").prepend(cancelButton);
+    var titleButton = row.querySelector(".todo-title");
+    titleButton.before(submitButton);
+    titleButton.before(cancelButton);
     input.focus();
   }
 
