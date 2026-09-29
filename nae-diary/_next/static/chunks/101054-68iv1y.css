@@ -34,7 +34,7 @@
 .notion-preview h4{margin:16px 0 8px;font-size:16px}
 .notion-preview p,.notion-preview ul{margin:0 0 8px}
 .notion-preview table{width:100%;border-collapse:collapse;margin:4px 0 10px;font-size:13px}
-.notion-preview td{vertical-align:top;padding:3px 8px;border-bottom:1px solid #f3f4f6}
+.notion-preview td{vertical-align:top;padding:3px 8px;border-bottom:0}
 .notion-preview td:first-child{width:42%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#047857}
 .notion-preview td:last-child{color:#047857}
 .todo-dialog::backdrop{background:rgba(15,23,42,.45)}
@@ -159,7 +159,7 @@ h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .todo-row.is-done .todo-check{background:#4458c4;border-color:#4458c4}
 .todo-title{color:#2a3160;font-size:13px}
 .todo-ai{border-radius:999px;font-weight:700}
-.todo-dialog{border:0;border-radius:18px;box-shadow:0 24px 50px rgba(42,49,96,.18)}
+.todo-dialog{margin:auto;height:fit-content;border:0;border-radius:18px;box-shadow:0 24px 50px rgba(42,49,96,.18)}
 .todo-dialog::backdrop{background:rgba(42,49,96,.35)}
 .todo-form input,.todo-form select,.todo-file-row input,.todo-file-row textarea{border-color:#d9def2;border-radius:10px}
 .wysiwyg-bar{background:#f6f7fd;border-bottom-color:#e6eaf8}
