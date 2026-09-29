@@ -247,3 +247,21 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 #todo-submit.ks-btn.ks-btn-primary{color:#3dce8a;border-color:rgba(61,206,138,.4)}
 #todo-submit.ks-btn.ks-btn-primary:hover{background:#243246;border-color:rgba(61,206,138,.55);color:#63e0a4}
 }
+.min-h-screen>.container{padding-top:14px}
+h1.font-bold.text-gray-800{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.3;margin-bottom:2px}
+.text-3xl.font-bold.text-center{font-size:20px;letter-spacing:-.02em}
+.text-xl.font-bold.text-gray-800{font-size:16px;letter-spacing:-.02em}
+button.bg-indigo-600,a.bg-indigo-600,button.bg-gray-200,a.bg-gray-200,button.bg-green-600,a.bg-green-600,button.bg-blue-600,a.bg-blue-600,button.bg-gray-500,a.bg-gray-500,button.bg-red-600,a.bg-red-600{height:26px;padding:0 10px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:-.02em;line-height:1;box-shadow:none;display:inline-flex;align-items:center;justify-content:center}
+button.bg-indigo-600,a.bg-indigo-600{background:#fff;color:#3140a8;border:1px solid #3140a8}
+button.bg-indigo-600:hover,a.bg-indigo-600:hover{background:#f3f5ff;color:#24328f}
+button.bg-gray-200,a.bg-gray-200,button.bg-gray-500,a.bg-gray-500{background:#fff;color:#5c6478;border:1px solid #e3e7f4}
+button.bg-gray-200:hover,a.bg-gray-200:hover,button.bg-gray-500:hover,a.bg-gray-500:hover{background:#f7f8fc;color:#2a3160}
+button.bg-green-600,a.bg-green-600,button.bg-blue-600,a.bg-blue-600{background:#fff;color:#0c8f55;border:1px solid #b7e4cc}
+button.bg-green-600:hover,a.bg-green-600:hover,button.bg-blue-600:hover,a.bg-blue-600:hover{background:#f2fbf6;color:#087a48}
+button.bg-red-600,a.bg-red-600{background:#fff;color:#c0362c;border:1px solid #f3d0d4}
+button.bg-red-600:hover,a.bg-red-600:hover{background:#fff1f2;color:#a12c24}
+.bg-indigo-100.text-indigo-600{background:#e6e9ff;color:#343e86;border-radius:999px;font-weight:700}
+.border-indigo-200{border-color:#e3e7f6;border-width:1px}
+input.w-full.rounded-lg,select.w-full.rounded-lg{border-color:#d9def2;border-radius:10px}
+.dash-more{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:8px;border:1px solid #d5dcf6;background:#fff;color:#3140a8;font-size:12px;font-weight:600;letter-spacing:-.02em;text-decoration:none}
+.dash-more:hover{background:#f3f5ff;border-color:#c5cef2;color:#24328f;text-decoration:none}
