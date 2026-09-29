@@ -239,7 +239,11 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 #todo-open.ks-btn,#todo-submit.ks-btn,#todo-cancel.ks-btn,#notion-copy.ks-btn,#notion-close.ks-btn{height:26px;padding:0 10px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:-.02em}
 #todo-open.ks-btn,#todo-submit.ks-btn.ks-btn-primary,#notion-copy.ks-btn.ks-btn-primary{border:1px solid #d5dcf6;background:#fff;color:#3140a8;box-shadow:0 1px 2px rgba(42,49,96,.05)}
 #todo-open.ks-btn:hover,#todo-submit.ks-btn.ks-btn-primary:hover,#notion-copy.ks-btn.ks-btn-primary:hover{background:#f3f5ff;border-color:#c5cef2;color:#24328f}
+#todo-submit.ks-btn.ks-btn-primary{color:#0c8f55;border-color:#b7e4cc}
+#todo-submit.ks-btn.ks-btn-primary:hover{background:#f2fbf6;border-color:#9ed7b8;color:#087a48}
 @media (prefers-color-scheme:dark){
 #todo-open.ks-btn,#todo-submit.ks-btn.ks-btn-primary,#notion-copy.ks-btn.ks-btn-primary{background:#242b4a;border-color:rgba(255,255,255,.14);color:#dfe4ff;box-shadow:none}
 #todo-open.ks-btn:hover,#todo-submit.ks-btn.ks-btn-primary:hover,#notion-copy.ks-btn.ks-btn-primary:hover{background:#2d355c;border-color:rgba(255,255,255,.2);color:#fff}
+#todo-submit.ks-btn.ks-btn-primary{color:#3dce8a;border-color:rgba(61,206,138,.4)}
+#todo-submit.ks-btn.ks-btn-primary:hover{background:#243246;border-color:rgba(61,206,138,.55);color:#63e0a4}
 }
