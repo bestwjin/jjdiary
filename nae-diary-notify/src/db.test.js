@@ -36,7 +36,8 @@ assert.equal(mapRow({
   priority: "medium",
 }).date, "2026-09-28");
 
-assert.equal(cleanTodo({ title: "  준비물 챙기기  " }).title, "준비물 챙기기");
+assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).tag, "입학");
+assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).requester, "김선생");
 assert.equal(cleanTodo({ title: "   " }), null);
-assert.equal(mapTodo({ id: "12", title: "준비물", done: false, created_at: "2026-09-29T00:00:00.000Z" }).done, false);
+assert.equal(mapTodo({ id: "12", title: "준비물", tag: "입학", requester: "김선생", done: false, created_at: "2026-09-29T00:00:00.000Z" }).tag, "입학");
 console.log("ok");

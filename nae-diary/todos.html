@@ -19,9 +19,12 @@
       </a>
       <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">할일 목록</h1>
       <p id="todo-count" class="text-gray-600 dark:text-gray-300 mb-6">할일을 불러오는 중</p>
-      <form id="todo-form" class="flex gap-2 mb-6">
-        <input id="todo-input" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
-        <button class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
+      <form id="todo-form" class="todo-form">
+        <input id="todo-tag" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="태그" autocomplete="off"/>
+        <input id="todo-requester" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="요청자" autocomplete="off"/>
+        <input id="todo-input" class="todo-title-input w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
+        <button id="todo-submit" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
+        <button id="todo-cancel" class="px-4 py-3 rounded-lg font-semibold bg-gray-500 text-white" type="button" hidden>취소</button>
       </form>
       <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
       <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
