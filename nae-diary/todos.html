@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>할일 목록 - 내 다이어리</title>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="container mx-auto px-4 py-8" style="max-width:720px">
+      <a class="inline-flex items-center text-indigo-600 dark:text-indigo-400 mb-4" href="/">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:inline-block;vertical-align:-3px">
+          <path d="M19 12H5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="m11 18-6-6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        홈으로 돌아가기
+      </a>
+      <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">할일 목록</h1>
+      <p id="todo-count" class="text-gray-600 dark:text-gray-300 mb-6">할일을 불러오는 중</p>
+      <form id="todo-form" class="flex gap-2 mb-6">
+        <input id="todo-input" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
+        <button class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
+      </form>
+      <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
+      <ul id="todo-list" class="grid gap-3"></ul>
+    </div>
+  </main>
+  <script src="/dock.js"></script>
+  <script src="/todos.js"></script>
+</body>
+</html>

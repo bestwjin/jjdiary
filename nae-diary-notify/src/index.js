@@ -1,5 +1,5 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { createEvent, deleteEvent, isDatabaseConfigured, listEvents, migrateEvents, updateEvent } from "./db.js";
+import { createEvent, createTodo, deleteEvent, deleteTodo, isDatabaseConfigured, listEvents, listTodos, migrateEvents, updateEvent, updateTodo } from "./db.js";
 import { addDays, buildMessage, eventsOn, kstToday, normalizeEvents } from "./logic.js";
 
 const EVENTS_KEY = "events";
@@ -155,6 +155,54 @@ export default {
         const event = await updateEvent(env, eventMatch[1], body);
         if (!event) return json({ ok: false }, 404, request);
         return json({ ok: true, event }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/todos" && request.method === "GET") {
+      try {
+        const todos = await listTodos(env);
+        return json({ ok: true, todos }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/todos" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const todo = await createTodo(env, body);
+        if (!todo) return json({ ok: false }, 400, request);
+        return json({ ok: true, todo }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const todoMatch = url.pathname.match(/^\/todos\/(\d+)$/);
+    if (todoMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          await deleteTodo(env, todoMatch[1]);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const todo = await updateTodo(env, todoMatch[1], body);
+        if (!todo) return json({ ok: false }, 404, request);
+        return json({ ok: true, todo }, 200, request);
       } catch (error) {
         return dbError(error, request);
       }

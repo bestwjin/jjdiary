@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cleanEvent, mapRow } from "./db.js";
+import { cleanEvent, cleanTodo, mapRow, mapTodo } from "./db.js";
 
 assert.equal(cleanEvent({ title: "설명회", school: "상명초등학교", date: "2026-10-12T00:00:00.000Z", type: "info-session" }).date, "2026-10-12");
 assert.equal(cleanEvent({ title: "", school: "상명초등학교", date: "2026-10-12" }), null);
@@ -36,4 +36,7 @@ assert.equal(mapRow({
   priority: "medium",
 }).date, "2026-09-28");
 
+assert.equal(cleanTodo({ title: "  준비물 챙기기  " }).title, "준비물 챙기기");
+assert.equal(cleanTodo({ title: "   " }), null);
+assert.equal(mapTodo({ id: "12", title: "준비물", done: false, created_at: "2026-09-29T00:00:00.000Z" }).done, false);
 console.log("ok");

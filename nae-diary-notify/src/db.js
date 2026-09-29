@@ -90,6 +90,12 @@ async function ensureSchema(sql) {
           )
           ON CONFLICT (id) DO NOTHING`;
       }
+      await sql`CREATE TABLE IF NOT EXISTS todos (
+        id BIGINT PRIMARY KEY,
+        title TEXT NOT NULL,
+        done BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`;
     })().catch((error) => {
       root.__diarySchema = null;
       throw error;
@@ -188,4 +194,57 @@ export async function migrateEvents(env, deletedIds, custom) {
 
 export function isDatabaseConfigured(env) {
   return Boolean(env.DATABASE_URL);
+}
+
+export function cleanTodo(input) {
+  if (!input || typeof input !== "object") return null;
+  const title = String(input.title || "").trim().slice(0, 200);
+  if (!title) return null;
+  return { title };
+}
+
+export function mapTodo(row) {
+  return {
+    id: Number(row.id),
+    title: row.title,
+    done: row.done === true || row.done === "t" || row.done === "true",
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at || ""),
+  };
+}
+
+export async function listTodos(env) {
+  return withDb(env, async (sql) => {
+    const rows = await sql`SELECT id, title, done, created_at FROM todos ORDER BY done ASC, id DESC`;
+    return rows.map(mapTodo);
+  });
+}
+
+export async function createTodo(env, input) {
+  const todo = cleanTodo(input);
+  if (!todo) return null;
+  const id = Date.now();
+  return withDb(env, async (sql) => {
+    const rows = await sql`INSERT INTO todos (id, title) VALUES (${id}, ${todo.title})
+      RETURNING id, title, done, created_at`;
+    return mapTodo(rows[0]);
+  });
+}
+
+export async function updateTodo(env, id, input) {
+  const todoId = Number(id);
+  if (!Number.isInteger(todoId) || !input || typeof input.done !== "boolean") return null;
+  return withDb(env, async (sql) => {
+    const rows = await sql`UPDATE todos SET done = ${input.done} WHERE id = ${todoId}
+      RETURNING id, title, done, created_at`;
+    return rows[0] ? mapTodo(rows[0]) : null;
+  });
+}
+
+export async function deleteTodo(env, id) {
+  const todoId = Number(id);
+  if (!Number.isInteger(todoId)) return false;
+  return withDb(env, async (sql) => {
+    const rows = await sql`DELETE FROM todos WHERE id = ${todoId} RETURNING id`;
+    return rows.length > 0;
+  });
 }
