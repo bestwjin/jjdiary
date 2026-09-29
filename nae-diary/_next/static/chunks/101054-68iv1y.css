@@ -57,6 +57,9 @@
 .wysiwyg-bar{display:flex;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
 .wysiwyg-bar button{border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;color:#111827}
 .todo-work{width:100%;min-height:140px;max-height:360px;overflow:auto;padding:8px 10px;font-size:13px;line-height:1.5;outline:none}
+.todo-work ul,.notion-preview ul{list-style:disc;margin:4px 0;padding-left:1.4em}
+.todo-work ol,.notion-preview ol{list-style:decimal;margin:4px 0;padding-left:1.4em}
+.todo-work li,.notion-preview li{display:list-item}
 .todo-work:empty:before{content:attr(data-placeholder);color:#9ca3af}
 .notion-preview h3{margin:16px 0 8px;font-size:16px}
 #todo-files{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;width:100%}

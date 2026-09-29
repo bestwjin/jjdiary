@@ -446,11 +446,19 @@
     }
   });
 
+  function applyCommand(command) {
+    workInput.focus();
+    var listTag = command === "insertUnorderedList" ? "ul" : command === "insertOrderedList" ? "ol" : "";
+    document.execCommand(command, false, null);
+    if (!listTag) return;
+    if (workInput.querySelector(listTag)) return;
+    document.execCommand("insertHTML", false, "<" + listTag + "><li><br></li></" + listTag + ">");
+  }
+
   document.querySelectorAll(".wysiwyg-bar button").forEach(function (button) {
     button.addEventListener("mousedown", function (event) { event.preventDefault(); });
     button.addEventListener("click", function () {
-      workInput.focus();
-      document.execCommand(button.getAttribute("data-cmd"), false, null);
+      applyCommand(button.getAttribute("data-cmd"));
     });
   });
 
