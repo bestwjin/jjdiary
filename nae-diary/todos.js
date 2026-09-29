@@ -28,6 +28,21 @@
   var notionPayload = { html: "", text: "" };
   var fileCategories = ["DB", "JAVA", "JSP", "XML", "기타"];
 
+  function showToast(message) {
+    var toast = document.getElementById("todo-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "todo-toast";
+      toast.className = "todo-toast";
+      toast.setAttribute("role", "status");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add("is-on");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(function () { toast.classList.remove("is-on"); }, 1800);
+  }
+
   function showError(message) {
     error.hidden = !message;
     error.textContent = message || "";
@@ -312,7 +327,8 @@
     if (dialog.open) dialog.close();
     resetForm();
     render();
-    if (!wasEdit) input.focus();
+    if (wasEdit) showToast("저장되었습니다.");
+    else input.focus();
   });
 
   cancelButton.addEventListener("click", function () {
