@@ -21,6 +21,11 @@
   var cancelButton = document.getElementById("todo-cancel");
   var openButton = document.getElementById("todo-open");
   var dialog = document.getElementById("todo-dialog");
+  var notionDialog = document.getElementById("notion-dialog");
+  var notionPreview = document.getElementById("notion-preview");
+  var notionCopy = document.getElementById("notion-copy");
+  var notionClose = document.getElementById("notion-close");
+  var notionPayload = { html: "", text: "" };
   var fileCategories = ["DB", "JAVA", "JSP", "XML", "기타"];
 
   function showError(message) {
@@ -178,12 +183,17 @@
 
       var actions = document.createElement("div");
       actions.className = "todo-actions";
+      var notion = document.createElement("button");
+      notion.type = "button";
+      notion.className = "todo-delete";
+      notion.textContent = "노션";
+      notion.addEventListener("click", function () { openNotion(todo); });
       var remove = document.createElement("button");
       remove.type = "button";
       remove.className = "todo-delete";
       remove.textContent = "삭제";
       remove.addEventListener("click", function () { removeTodo(todo); });
-      actions.append(remove);
+      actions.append(notion, remove);
       var editor = document.createElement("div");
       editor.className = "todo-edit";
       editor.hidden = true;
@@ -289,6 +299,136 @@
     if (dialog.open) dialog.close();
     document.querySelectorAll(".todo-edit").forEach(function (slot) { slot.hidden = true; });
     resetForm();
+  });
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, function (char) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char];
+    });
+  }
+
+  function formatNotionDate(value) {
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    var parts = new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(date);
+    function part(type) {
+      var found = parts.find(function (item) { return item.type === type; });
+      return found ? found.value : "";
+    }
+    return part("month") + "월 " + part("day") + "일 등록.";
+  }
+
+  function workContentHtml(text) {
+    var lines = String(text || "").split(/\r?\n/);
+    var html = "";
+    var listOpen = false;
+    function closeList() {
+      if (listOpen) {
+        html += "</ul>";
+        listOpen = false;
+      }
+    }
+    lines.forEach(function (line) {
+      var trimmed = line.trim();
+      if (!trimmed) {
+        closeList();
+        return;
+      }
+      var bullet = trimmed.match(/^(?:[-*•]|→)\s*(.*)$/);
+      if (bullet) {
+        if (!listOpen) {
+          html += "<ul>";
+          listOpen = true;
+        }
+        html += "<li>" + escapeHtml(bullet[1] || trimmed) + "</li>";
+        return;
+      }
+      closeList();
+      html += "<p>" + escapeHtml(trimmed) + "</p>";
+    });
+    closeList();
+    return html;
+  }
+
+  function buildNotion(todo) {
+    var heading = (todo.tag ? "[" + todo.tag + "] " : "") + todo.title;
+    var dateLine = formatNotionDate(todo.createdAt);
+    var meta = [];
+    if (todo.requester) meta.push("요청자 " + todo.requester);
+    if (todo.aiTool) meta.push(todo.aiTool);
+    var text = heading + "\n\n" + (dateLine ? dateLine + "\n\n" : "");
+    if (meta.length) text += meta.join(" · ") + "\n\n";
+    text += (todo.workContent || "").trim();
+    var html = "<h1>" + escapeHtml(heading) + "</h1>";
+    if (dateLine) html += "<p>" + escapeHtml(dateLine) + "</p>";
+    if (meta.length) html += "<p>" + escapeHtml(meta.join(" · ")) + "</p>";
+    html += workContentHtml(todo.workContent);
+    var files = todo.files || [];
+    if (files.length) {
+      text += (text && !text.endsWith("\n\n") ? "\n\n" : "\n") + "작업파일\n";
+      html += "<h2>작업파일</h2><ul>";
+      fileCategories.forEach(function (category) {
+        var matched = files.filter(function (file) { return file.category === category; });
+        if (!matched.length) return;
+        text += "\n" + category + "\n파일명\t수정내용\n";
+        html += "<li><strong>" + escapeHtml(category) + "</strong><table><tbody>";
+        matched.forEach(function (file) {
+          text += (file.filename || "") + "\t" + (file.changeNote || "") + "\n";
+          html += "<tr><td><code>" + escapeHtml(file.filename || "") + "</code></td><td>" + escapeHtml(file.changeNote || "").replace(/\n/g, "<br>") + "</td></tr>";
+        });
+        html += "</tbody></table></li>";
+      });
+      html += "</ul>";
+    }
+    return { html: html, text: text.trim() + "\n" };
+  }
+
+  function openNotion(todo) {
+    notionPayload = buildNotion(todo);
+    notionPreview.innerHTML = notionPayload.html;
+    notionCopy.textContent = "복사";
+    notionDialog.showModal();
+  }
+
+  notionClose.addEventListener("click", function () { notionDialog.close(); });
+  notionDialog.addEventListener("click", function (event) {
+    if (event.target === notionDialog) notionDialog.close();
+  });
+  async function copyNotion() {
+    var htmlBlob = new Blob([notionPayload.html], { type: "text/html" });
+    var textBlob = new Blob([notionPayload.text], { type: "text/plain" });
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })]);
+        return;
+      } catch (error) {}
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(notionPayload.text);
+        return;
+      } catch (error) {}
+    }
+    var area = document.createElement("textarea");
+    area.value = notionPayload.text;
+    document.body.appendChild(area);
+    area.select();
+    var ok = document.execCommand("copy");
+    area.remove();
+    if (!ok) throw new Error("copy");
+  }
+
+  notionCopy.addEventListener("click", async function () {
+    try {
+      await copyNotion();
+      notionCopy.textContent = "복사됨";
+    } catch (error) {
+      notionCopy.textContent = "복사 실패";
+    }
   });
 
   openButton.addEventListener("click", openCreate);
