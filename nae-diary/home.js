@@ -82,6 +82,11 @@
       tag.textContent = todo.tag;
       line.appendChild(tag);
     }
+    var priority = document.createElement("span");
+    var level = todo.priority === "높음" || todo.priority === "낮음" ? todo.priority : "보통";
+    priority.className = "todo-priority " + (level === "높음" ? "todo-priority-high" : level === "낮음" ? "todo-priority-low" : "todo-priority-mid");
+    priority.textContent = level;
+    line.appendChild(priority);
     if (todo.aiTool) {
       var ai = document.createElement("span");
       ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
@@ -118,7 +123,16 @@
 
   function render(todos) {
     var open = todos.filter(function (todo) { return !todo.done; });
-    open.sort(function (a, b) { return b.id - a.id; });
+    open.sort(function (a, b) {
+      function rank(value) {
+        if (value === "높음") return 0;
+        if (value === "낮음") return 2;
+        return 1;
+      }
+      var diff = rank(a.priority) - rank(b.priority);
+      if (diff) return diff;
+      return b.id - a.id;
+    });
     count.innerHTML = open.length
       ? "남은 할일 <span class=\"todo-count-num\">" + open.length + "</span>개"
       : "남은 할일이 없습니다";

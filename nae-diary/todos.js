@@ -12,6 +12,7 @@
   var error = document.getElementById("todo-error");
   var form = document.getElementById("todo-form");
   var input = document.getElementById("todo-input");
+  var priorityInput = document.getElementById("todo-priority");
   var tagInput = document.getElementById("todo-tag");
   var requesterInput = document.getElementById("todo-requester");
   var aiInput = document.getElementById("todo-ai");
@@ -83,6 +84,7 @@
   function resetForm() {
     editingId = null;
     input.value = "";
+    priorityInput.value = "보통";
     tagInput.value = "";
     requesterInput.value = "";
     aiInput.value = "";
@@ -159,7 +161,66 @@
     return files;
   }
 
+  function priorityRank(value) {
+    if (value === "높음") return 0;
+    if (value === "낮음") return 2;
+    return 1;
+  }
+
+  function priorityClass(value) {
+    if (value === "높음") return "todo-priority todo-priority-high";
+    if (value === "낮음") return "todo-priority todo-priority-low";
+    return "todo-priority todo-priority-mid";
+  }
+
+  function priorityValue(value) {
+    return value === "높음" || value === "낮음" ? value : "보통";
+  }
+
+  function sortTodos() {
+    todos.sort(function (a, b) {
+      var done = Number(Boolean(a.done)) - Number(Boolean(b.done));
+      if (done) return done;
+      var rank = priorityRank(a.priority) - priorityRank(b.priority);
+      if (rank) return rank;
+      return b.id - a.id;
+    });
+  }
+
+  function paintPriority(line, priority) {
+    var value = priorityValue(priority);
+    var pill = line.querySelector(".todo-priority");
+    if (!pill) {
+      pill = document.createElement("span");
+      var tag = line.querySelector(".todo-tag");
+      var anchor = line.querySelector(".todo-ai") || line.querySelector("button") || line.querySelector(".todo-title");
+      if (tag && tag.nextSibling) line.insertBefore(pill, tag.nextSibling);
+      else if (tag) line.appendChild(pill);
+      else line.insertBefore(pill, anchor);
+    }
+    pill.className = priorityClass(value);
+    pill.textContent = value;
+  }
+
+  function placeOpenRow() {
+    sortTodos();
+    var row = document.querySelector(".todo-row.is-open");
+    if (!row) return;
+    var index = -1;
+    todos.forEach(function (item, itemIndex) {
+      if (item.id === editingId) index = itemIndex;
+    });
+    if (index < 0) return;
+    var rows = Array.prototype.slice.call(list.children);
+    var from = rows.indexOf(row);
+    if (from < 0) return;
+    rows.splice(from, 1);
+    rows.splice(index, 0, row);
+    rows.forEach(function (item) { list.appendChild(item); });
+  }
+
   function render() {
+    sortTodos();
     parkForm();
     list.replaceChildren();
     var open = todos.filter(function (todo) { return !todo.done; }).length;
@@ -185,6 +246,7 @@
         tag.textContent = todo.tag;
         line.appendChild(tag);
       }
+      paintPriority(line, todo.priority);
       if (todo.aiTool) {
         var ai = document.createElement("span");
         ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
@@ -239,6 +301,7 @@
     document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
     editingId = todo.id;
     input.value = todo.title;
+    priorityInput.value = priorityValue(todo.priority);
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
     aiInput.value = todo.aiTool || "";
@@ -273,6 +336,7 @@
     } else if (tag) {
       tag.remove();
     }
+    paintPriority(line, todo.priority);
     var ai = line.querySelector(".todo-ai");
     if (todo.aiTool) {
       if (!ai) {
@@ -314,7 +378,6 @@
     }
     var data = await response.json();
     todos = todos.map(function (item) { return item.id === todo.id ? data.todo : item; });
-    todos.sort(function (a, b) { return Number(a.done) - Number(b.done) || b.id - a.id; });
     render();
   }
 
@@ -337,6 +400,7 @@
     showError("");
     var body = {
       title: title,
+      priority: priorityInput.value,
       tag: tagInput.value.trim(),
       requester: requesterInput.value.trim(),
       aiTool: aiInput.value,
@@ -360,6 +424,7 @@
       });
       if (current && data.todo) Object.assign(current, data.todo);
       syncOpenRow(current || data.todo);
+      placeOpenRow();
       showToast("저장되었습니다.");
       return;
     }
@@ -442,6 +507,7 @@
     var heading = (todo.tag ? "[" + todo.tag + "] " : "") + todo.title;
     var dateLine = formatNotionDate(todo.createdAt);
     var meta = [];
+    if (todo.priority) meta.push("중요도 " + priorityValue(todo.priority));
     if (todo.requester) meta.push("요청자 " + todo.requester);
     if (todo.aiTool) meta.push(todo.aiTool);
     var text = heading + "\n\n" + (dateLine ? dateLine + "\n\n" : "");
