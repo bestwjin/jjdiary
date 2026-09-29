@@ -90,9 +90,9 @@
       var meta = document.createElement("div");
       meta.className = "todo-meta";
       var bits = [];
-      if (todo.requester) bits.push("요청자 " + todo.requester);
+      if (todo.requester) bits.push(todo.requester);
       var created = formatCreated(todo.createdAt);
-      if (created) bits.push("등록 " + created);
+      if (created) bits.push(created);
       meta.textContent = bits.join(" · ");
       main.append(line, meta);
 
