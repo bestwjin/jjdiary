@@ -188,6 +188,7 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 .todo-toast.is-on{opacity:1;transform:translate(-50%,0)}
 @media (max-width:800px){#todo-files{grid-template-columns:1fr}}
 .notion-preview p.notion-files{margin:0;line-height:1.35}
+.todo-page{padding-top:14px}
 .todo-head{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:0 0 14px}
 .todo-head .todo-heading{margin:0}
 .todo-head #todo-count{margin:0;font-size:14px;white-space:nowrap}
