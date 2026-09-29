@@ -118,8 +118,7 @@ body{padding-left:56px;background:#eef1fb;color:#2a3160;font-family:Geist,"Geist
 h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .mac-dock{width:56px;justify-content:flex-start;gap:6px;padding:14px 0;background:linear-gradient(180deg,#ffffff 0%,#f7f7f8 38%,#e4e5ea 100%);border-right:1px solid #e7e7eb;box-shadow:inset -1px 0 0 #fff}
 .mac-dock-item{width:40px;height:40px;border-radius:14px;color:#5c5c66}
-.mac-dock-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center}
-.mac-dock-icon svg{width:24px;height:24px;display:block}
+.mac-dock-icon{width:auto;height:auto;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
 .mac-dock-rule{width:16px;height:1px;margin:6px 0;background:#e1e2e7}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.86);color:#3a3a44;box-shadow:0 2px 8px rgba(40,40,50,.06)}
 .mac-dock-item[aria-current=page]{color:#3a3a44;background:#fff;box-shadow:0 4px 12px rgba(40,40,50,.08)}
@@ -165,7 +164,7 @@ h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .wysiwyg-bar button:hover{background:#eef1ff;border-color:#c5cef0}
 .todo-editor,.todo-file-cat{border-color:#e3e7f6;border-radius:12px}
 .todo-file-add{color:#4458c4}
-@media (max-width:640px){.mac-dock{width:44px}.mac-dock-item{width:32px;height:32px;border-radius:12px}body{padding-left:44px}.mac-dock-icon,.mac-dock-icon svg{width:18px;height:18px}}
+@media (max-width:640px){.mac-dock{width:44px}.mac-dock-item{width:32px;height:32px;border-radius:12px}body{padding-left:44px}.mac-dock-icon{font-size:18px}}
 @media (prefers-color-scheme:dark){
 body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-gradient(165deg,#1a2038 0%,#14182c 100%);color:#e8ebff}
 .mac-dock{background:linear-gradient(180deg,#f3f3f5 0%,#d8d9de 100%);border-right-color:#d5d6db;box-shadow:inset -1px 0 0 rgba(255,255,255,.7)}
