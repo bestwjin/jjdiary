@@ -312,5 +312,5 @@ html.theme-dark .mac-dock-rule{background:rgba(255,255,255,.14)}
 html.theme-dark .mac-dock-theme{color:#e8ebff}
 html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visible{background:rgba(255,255,255,.08)}
 .todo-row.is-open .todo-title{font-weight:700}
-.todo-label{font-size:15px;color:#CB9434}
+.todo-label{font-size:14px;color:#CB9434}
 html.theme-dark .todo-label{color:#CB9434}
