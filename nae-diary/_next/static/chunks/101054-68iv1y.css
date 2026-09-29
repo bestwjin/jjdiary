@@ -189,6 +189,9 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 @media (max-width:800px){#todo-files{grid-template-columns:1fr}}
 .notion-preview p.notion-files{margin:0;line-height:1.35}
 .todo-page{padding-top:14px}
+#home-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none;width:100%}
+.home-todo{display:flex;align-items:center;width:100%;min-width:0;text-decoration:none;color:inherit}
+.home-todo .todo-title{cursor:pointer}
 .todo-head{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:0 0 14px}
 .todo-head .todo-heading{margin:0}
 .todo-head #todo-count{margin:0;font-size:14px;white-space:nowrap}
