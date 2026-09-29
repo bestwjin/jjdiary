@@ -119,10 +119,10 @@ h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .mac-dock{width:64px;justify-content:flex-start;gap:8px;padding:16px 0;background:linear-gradient(180deg,#ffffff 0%,#f7f7f8 38%,#e4e5ea 100%);border-right:1px solid #e7e7eb;box-shadow:inset -1px 0 0 #fff}
 .mac-dock-item{width:44px;height:44px;border-radius:14px;color:#5c5c66}
 .mac-dock-icon{width:32px;height:32px;font-size:0;line-height:1;display:flex;align-items:center;justify-content:center}
-.mac-dock-icon svg{width:32px;height:32px;display:block;filter:drop-shadow(0 4px 8px rgba(40,40,55,.14))}
+.mac-dock-icon svg{width:32px;height:32px;display:block;filter:none}
 .mac-dock-rule{width:16px;height:1px;margin:6px 0;background:#e1e2e7}
-.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.86);color:#3a3a44;box-shadow:0 2px 8px rgba(40,40,50,.06)}
-.mac-dock-item[aria-current=page]{color:#3a3a44;background:#fff;box-shadow:0 4px 12px rgba(40,40,50,.08)}
+.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.86);color:#3a3a44;box-shadow:none}
+.mac-dock-item[aria-current=page]{color:#3a3a44;background:#fff;box-shadow:none}
 .mac-tip{left:calc(100% + 10px);background:#2a3160;font-size:12px;font-weight:500;padding:6px 10px;border-radius:10px;box-shadow:0 8px 20px rgba(42,49,96,.18)}
 .bg-indigo-600,.bg-blue-600,.bg-green-600{background-color:#4458c4;border-radius:10px;font-weight:600}
 .hover\:bg-indigo-700:hover,.hover\:bg-blue-700:hover,.hover\:bg-green-700:hover{background-color:#3a4cad}
