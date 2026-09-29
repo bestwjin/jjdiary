@@ -13,7 +13,7 @@
       <h1 class="todo-heading text-gray-800 dark:text-white">할일 목록</h1>
       <div class="todo-toolbar">
         <p id="todo-count" class="text-gray-600 dark:text-gray-300">할일을 불러오는 중</p>
-        <button id="todo-open" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="button">할일 추가</button>
+        <button id="todo-open" class="ks-btn ks-btn-primary" type="button">할일 추가</button>
       </div>
       <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
       <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
@@ -24,8 +24,8 @@
     <div class="notion-head">
       <h2 class="todo-heading">노션에 붙여넣기</h2>
       <div class="todo-actions">
-        <button id="notion-copy" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="button">복사</button>
-        <button id="notion-close" class="px-4 py-3 rounded-lg font-semibold bg-gray-500 text-white" type="button">닫기</button>
+        <button id="notion-copy" class="ks-btn ks-btn-primary" type="button">복사</button>
+        <button id="notion-close" class="ks-btn" type="button">닫기</button>
       </div>
     </div>
     <div id="notion-preview" class="notion-preview"></div>
@@ -41,8 +41,8 @@
           <option value="CURSOR">CURSOR</option>
         </select>
         <input id="todo-input" class="todo-title-input w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
-        <button id="todo-submit" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
-        <button id="todo-cancel" class="px-4 py-3 rounded-lg font-semibold bg-gray-500 text-white" type="button" hidden>취소</button>
+        <button id="todo-submit" class="ks-btn ks-btn-primary" type="submit">추가</button>
+        <button id="todo-cancel" class="ks-btn" type="button" hidden>취소</button>
         <div class="todo-label">작업내용</div>
         <div class="todo-editor">
           <div class="wysiwyg-bar">

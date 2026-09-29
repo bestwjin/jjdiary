@@ -55,7 +55,16 @@
 .todo-label{grid-column:1/-1;margin:8px 0 0;font-size:12px;font-weight:700;color:#4b5563}
 .todo-editor{grid-column:1/-1;border:1px solid #e5e7eb;border-radius:8px;background:#fff;overflow:hidden}
 .wysiwyg-bar{display:flex;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
-.wysiwyg-bar button{border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;color:#111827}
+.ks-btn{box-sizing:border-box;height:32px;padding:0 12px;border-radius:6px;border:1px solid #d4e2dd;background:#fff;color:#34515c;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.ks-btn:hover{background:#edf6f2;border-color:#aac9c0}
+.ks-btn-primary{background:#357f70;border-color:#2f7366;color:#fff}
+.ks-btn-primary:hover{background:#2c6b5f;border-color:#275e54;color:#fff}
+.ks-btn-quiet{height:26px;padding:0 8px;border-color:transparent;background:transparent;color:#5d7280;font-weight:600}
+.ks-btn-quiet:hover{background:#eef6f3;border-color:#d4e2dd;color:#34515c}
+.ks-btn-danger:hover{background:#fdf2f2;border-color:#f0d0d0;color:#b42318}
+.wysiwyg-bar button{height:28px;padding:0 8px;border:1px solid #cbd8df;background:#fff;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:#34515c}
+.wysiwyg-bar button:hover{background:#edf6f2;border-color:#aac9c0}
+#todo-open.ks-btn,#todo-submit.ks-btn,#todo-cancel.ks-btn,#notion-copy.ks-btn,#notion-close.ks-btn{height:32px;padding:0 14px;font-size:12px}
 .todo-work{width:100%;min-height:140px;max-height:360px;overflow:auto;padding:8px 10px;font-size:13px;line-height:1.5;outline:none}
 .todo-work ul,.notion-preview ul{list-style:disc;margin:4px 0;padding-left:1.4em}
 .todo-work ol,.notion-preview ol{list-style:decimal;margin:4px 0;padding-left:1.4em}

@@ -89,7 +89,7 @@
     note.value = changeNote || "";
     var remove = document.createElement("button");
     remove.type = "button";
-    remove.className = "todo-file-add";
+    remove.className = "ks-btn ks-btn-quiet";
     remove.textContent = "삭제";
     remove.addEventListener("click", function () { row.remove(); });
     row.append(name, note, remove);
@@ -108,7 +108,7 @@
       label.textContent = category;
       var add = document.createElement("button");
       add.type = "button";
-      add.className = "todo-file-add";
+      add.className = "ks-btn ks-btn-quiet";
       add.textContent = "추가";
       var rows = document.createElement("div");
       add.addEventListener("click", function () { addFileRow(rows, "", ""); });
@@ -185,12 +185,12 @@
       actions.className = "todo-actions";
       var notion = document.createElement("button");
       notion.type = "button";
-      notion.className = "todo-delete";
+      notion.className = "ks-btn ks-btn-quiet";
       notion.textContent = "노션";
       notion.addEventListener("click", function () { openNotion(todo); });
       var remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "todo-delete";
+      remove.className = "ks-btn ks-btn-quiet ks-btn-danger";
       remove.textContent = "삭제";
       remove.addEventListener("click", function () { removeTodo(todo); });
       actions.append(notion, remove);
