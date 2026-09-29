@@ -163,7 +163,7 @@
     parkForm();
     list.replaceChildren();
     var open = todos.filter(function (todo) { return !todo.done; }).length;
-    count.textContent = open ? "남은 할일 " + open + "개" : "남은 할일이 없습니다";
+    count.innerHTML = open ? "남은 할일 <span class=\"todo-count-num\">" + open + "</span>개" : "남은 할일이 없습니다";
     empty.hidden = todos.length > 0;
     todos.forEach(function (todo) {
       var row = document.createElement("li");
