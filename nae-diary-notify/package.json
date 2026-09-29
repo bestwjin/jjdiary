@@ -1,5 +1,8 @@
 {
   "name": "nae-diary-notify",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
 }

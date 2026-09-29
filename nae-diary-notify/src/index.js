@@ -1,4 +1,5 @@
-import builtinEvents from "./builtin-events.json";
+import builtinEvents from "./builtin-events.json" with { type: "json" };
+import { createEvent, deleteEvent, isDatabaseConfigured, listEvents, migrateEvents, updateEvent } from "./db.js";
 import { addDays, buildMessage, eventsOn, kstToday, normalizeEvents } from "./logic.js";
 
 const EVENTS_KEY = "events";
@@ -8,7 +9,7 @@ function corsHeaders(request) {
   const allowed = origin === "https://nae-diary.pages.dev" || origin.endsWith(".nae-diary.pages.dev");
   return {
     "Access-Control-Allow-Origin": allowed ? origin : "https://nae-diary.pages.dev",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Diary-Sync",
     Vary: "Origin",
   };
@@ -22,9 +23,26 @@ function json(data, status, request) {
 }
 
 async function loadEvents(env) {
+  if (isDatabaseConfigured(env)) {
+    try {
+      return await listEvents(env);
+    } catch (error) {
+      console.error(error);
+    }
+  }
   const saved = await env.DIARY.get(EVENTS_KEY, "json");
   if (Array.isArray(saved) && saved.length) return saved;
   return builtinEvents;
+}
+
+function authorized(request, env) {
+  return request.headers.get("X-Diary-Sync") === env.SYNC_TOKEN;
+}
+
+function dbError(error, request) {
+  if (error?.code === "database_not_configured") return json({ ok: false, reason: "database_not_configured" }, 503, request);
+  console.error(error);
+  return json({ ok: false }, 500, request);
 }
 
 async function reminderFor(env, today) {
@@ -78,6 +96,70 @@ export default {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(request) });
 
+    if (url.pathname === "/events" && request.method === "GET") {
+      try {
+        const events = await listEvents(env);
+        return json({ ok: true, events }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/events" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const event = await createEvent(env, body);
+        if (!event) return json({ ok: false }, 400, request);
+        return json({ ok: true, event }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/events/migrate" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const result = await migrateEvents(env, body.deletedIds, body.custom);
+        return json({ ok: true, ...result }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const eventMatch = url.pathname.match(/^\/events\/(\d+)$/);
+    if (eventMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          await deleteEvent(env, eventMatch[1]);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const event = await updateEvent(env, eventMatch[1], body);
+        if (!event) return json({ ok: false }, 404, request);
+        return json({ ok: true, event }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
     if (url.pathname === "/sync" && request.method === "POST") {
       if (request.headers.get("X-Diary-Sync") !== env.SYNC_TOKEN) return json({ ok: false }, 401, request);
       let body;
@@ -99,7 +181,7 @@ export default {
       return json({ ok: true, ...reminder }, 200, request);
     }
 
-    if (url.pathname === "/health") return json({ ok: true }, 200, request);
+    if (url.pathname === "/health") return json({ ok: true, database: isDatabaseConfigured(env) }, 200, request);
     return json({ ok: false }, 404, request);
   },
 
