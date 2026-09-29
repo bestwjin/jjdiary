@@ -103,6 +103,43 @@
     });
   }
 
+  var moonIcon = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M14.6 3.1a7.6 7.6 0 1 0 6.4 11.7A6.7 6.7 0 0 1 14.6 3.1z"/></svg>';
+  var sunIcon = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 3.1v2.1M12 18.8V21M3.1 12h2.1M18.8 12H21M6 6l1.5 1.5M16.5 16.5 18 18M18 6l-1.5 1.5M7.5 16.5 6 18"/></svg>';
+
+  function themeIsDark() {
+    return document.documentElement.classList.contains("theme-dark");
+  }
+
+  function paintThemeButton(button) {
+    var on = themeIsDark();
+    button.setAttribute("aria-pressed", on ? "true" : "false");
+    button.setAttribute("aria-label", on ? "라이트 테마" : "다크 테마");
+    button.querySelector(".mac-dock-icon").innerHTML = on ? sunIcon : moonIcon;
+    button.querySelector(".mac-tip").textContent = on ? "라이트 테마" : "다크 테마";
+  }
+
+  function setTheme(on) {
+    document.documentElement.classList.toggle("theme-dark", on);
+    try { localStorage.setItem("theme", on ? "dark" : "light"); } catch (error) {}
+    var button = document.getElementById("theme-toggle");
+    if (button) paintThemeButton(button);
+  }
+
+  function createThemeToggle() {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.id = "theme-toggle";
+    button.className = "mac-dock-theme";
+    var icon = document.createElement("span");
+    icon.className = "mac-dock-icon";
+    var tip = document.createElement("span");
+    tip.className = "mac-tip";
+    button.append(icon, tip);
+    paintThemeButton(button);
+    button.addEventListener("click", function () { setTheme(!themeIsDark()); });
+    return button;
+  }
+
   function mount() {
     if (document.getElementById("mac-dock")) return;
     var nav = document.createElement("nav");
@@ -118,6 +155,7 @@
       nav.appendChild(createItem(item, path, true));
     });
     enableDrag(nav);
+    nav.appendChild(createThemeToggle());
     document.body.appendChild(nav);
   }
 
