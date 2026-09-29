@@ -29,3 +29,9 @@
 @media (prefers-color-scheme:dark){.todo-row{background:#1f2937;border-color:#374151}.todo-check{background:#111827}.todo-title{color:#f9fafb}.todo-row.is-done .todo-title{color:#6b7280}}
 body{padding-left:118px}
 @media (max-width:640px){.mac-dock{left:8px;padding:8px 6px;gap:6px;border-radius:24px}.mac-dock-item{width:56px;height:56px}.mac-dock-icon{font-size:32px}body{padding-left:84px}}
+html,body{width:100%;min-height:100dvh}
+body{box-sizing:border-box}
+.container{width:100%;max-width:none}
+.min-h-screen{min-height:100dvh;width:100%;box-sizing:border-box;display:flex;flex-direction:column}
+.min-h-screen>.container{flex:1;display:flex;flex-direction:column;width:100%;max-width:none}
+.grid.grid-cols-7{flex:1;align-content:start}
