@@ -53,7 +53,12 @@
 .todo-row.is-done .todo-title{color:#9ca3af;text-decoration:line-through}
 .todo-delete{border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px}
 .todo-label{grid-column:1/-1;margin:8px 0 0;font-size:12px;font-weight:700;color:#4b5563}
-.todo-work{grid-column:1/-1;width:100%;min-height:120px;resize:vertical;padding:8px 10px;font-size:13px;line-height:1.5;border-radius:8px}
+.todo-editor{grid-column:1/-1;border:1px solid #e5e7eb;border-radius:8px;background:#fff;overflow:hidden}
+.wysiwyg-bar{display:flex;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
+.wysiwyg-bar button{border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;color:#111827}
+.todo-work{width:100%;min-height:140px;max-height:360px;overflow:auto;padding:8px 10px;font-size:13px;line-height:1.5;outline:none}
+.todo-work:empty:before{content:attr(data-placeholder);color:#9ca3af}
+.notion-preview h3{margin:16px 0 8px;font-size:16px}
 #todo-files{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;width:100%}
 .todo-file-cat{min-width:0;border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:6px}
 .todo-file-cat-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:#374151;margin-bottom:4px}

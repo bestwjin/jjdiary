@@ -43,8 +43,17 @@
         <input id="todo-input" class="todo-title-input w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
         <button id="todo-submit" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
         <button id="todo-cancel" class="px-4 py-3 rounded-lg font-semibold bg-gray-500 text-white" type="button" hidden>취소</button>
-        <label class="todo-label" for="todo-work">작업내용</label>
-        <textarea id="todo-work" class="todo-work" placeholder="작업 내용을 입력하세요"></textarea>
+        <div class="todo-label">작업내용</div>
+        <div class="todo-editor">
+          <div class="wysiwyg-bar">
+            <button type="button" data-cmd="bold"><b>B</b></button>
+            <button type="button" data-cmd="italic"><i>I</i></button>
+            <button type="button" data-cmd="underline"><u>U</u></button>
+            <button type="button" data-cmd="insertUnorderedList">목록</button>
+            <button type="button" data-cmd="insertOrderedList">번호</button>
+          </div>
+          <div id="todo-work" class="todo-work" contenteditable="true" data-placeholder="작업 내용을 입력하세요"></div>
+        </div>
         <div class="todo-label">작업파일</div>
         <div id="todo-files"></div>
       </form>

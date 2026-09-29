@@ -62,7 +62,7 @@
     tagInput.value = "";
     requesterInput.value = "";
     aiInput.value = "";
-    workInput.value = "";
+    workInput.innerHTML = "";
     renderFileEditor([]);
     submitButton.textContent = "추가";
     cancelButton.hidden = false;
@@ -211,7 +211,7 @@
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
     aiInput.value = todo.aiTool || "";
-    workInput.value = todo.workContent || "";
+    workInput.innerHTML = editorHtml(todo.workContent);
     renderFileEditor(todo.files || []);
     submitButton.textContent = "저장";
     cancelButton.hidden = false;
@@ -268,7 +268,7 @@
       tag: tagInput.value.trim(),
       requester: requesterInput.value.trim(),
       aiTool: aiInput.value,
-      workContent: workInput.value,
+      workContent: editorHtml(workInput.innerHTML),
       files: readFiles(),
     };
     var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
@@ -322,36 +322,43 @@
     return part("month") + "월 " + part("day") + "일 등록.";
   }
 
-  function workContentHtml(text) {
-    var lines = String(text || "").split(/\r?\n/);
-    var html = "";
-    var listOpen = false;
-    function closeList() {
-      if (listOpen) {
-        html += "</ul>";
-        listOpen = false;
-      }
+  function editorHtml(value) {
+    var text = String(value || "");
+    if (!text.trim()) return "";
+    if (!/<[a-z][\s\S]*>/i.test(text)) {
+      text = text.split(/\r?\n/).map(function (line) { return "<p>" + escapeHtml(line) + "</p>"; }).join("");
     }
-    lines.forEach(function (line) {
-      var trimmed = line.trim();
-      if (!trimmed) {
-        closeList();
-        return;
-      }
-      var bullet = trimmed.match(/^(?:[-*•]|→)\s*(.*)$/);
-      if (bullet) {
-        if (!listOpen) {
-          html += "<ul>";
-          listOpen = true;
+    var allowed = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, UL: 1, OL: 1, LI: 1, DIV: 1, H1: 1, H2: 1, H3: 1 };
+    var doc = new DOMParser().parseFromString(text, "text/html");
+    function clean(node) {
+      Array.from(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 3) return;
+        if (child.nodeType !== 1 || !allowed[child.tagName]) {
+          if (child.nodeType === 1) {
+            while (child.firstChild) node.insertBefore(child.firstChild, child);
+          }
+          child.remove();
+          return;
         }
-        html += "<li>" + escapeHtml(bullet[1] || trimmed) + "</li>";
-        return;
-      }
-      closeList();
-      html += "<p>" + escapeHtml(trimmed) + "</p>";
-    });
-    closeList();
-    return html;
+        Array.from(child.attributes).forEach(function (attr) { child.removeAttribute(attr.name); });
+        clean(child);
+      });
+    }
+    clean(doc.body);
+    var plain = doc.body.innerText.replace(/\u00a0/g, " ").trim();
+    return plain ? doc.body.innerHTML.slice(0, 20000) : "";
+  }
+
+  function workContentHtml(value) {
+    var html = editorHtml(value);
+    if (html) return html;
+    return "";
+  }
+
+  function workContentText(value) {
+    var html = editorHtml(value);
+    if (!html) return "";
+    return new DOMParser().parseFromString(html, "text/html").body.innerText.trim();
   }
 
   function buildNotion(todo) {
@@ -362,20 +369,20 @@
     if (todo.aiTool) meta.push(todo.aiTool);
     var text = heading + "\n\n" + (dateLine ? dateLine + "\n\n" : "");
     if (meta.length) text += meta.join(" · ") + "\n\n";
-    text += (todo.workContent || "").trim();
+    text += workContentText(todo.workContent);
     var html = "<h1>" + escapeHtml(heading) + "</h1>";
     if (dateLine) html += "<p>" + escapeHtml(dateLine) + "</p>";
     if (meta.length) html += "<p>" + escapeHtml(meta.join(" · ")) + "</p>";
     html += workContentHtml(todo.workContent);
     var files = todo.files || [];
     if (files.length) {
-      text += (text && !text.endsWith("\n\n") ? "\n\n" : "\n") + "작업파일\n";
-      html += "<h2>작업파일</h2><ul>";
+      text += (text && !text.endsWith("\n\n") ? "\n\n" : "\n") + "### 작업파일\n";
+      html += "<h3>작업파일</h3><ul>";
       fileCategories.forEach(function (category) {
         var matched = files.filter(function (file) { return file.category === category; });
         if (!matched.length) return;
-        text += "\n" + category + "\n파일명\t수정내용\n";
-        html += "<li><strong>" + escapeHtml(category) + "</strong><table><tbody>";
+        text += "\n- " + category + "\n파일명\t수정내용\n";
+        html += "<li>" + escapeHtml(category) + "<table><tbody>";
         matched.forEach(function (file) {
           text += (file.filename || "") + "\t" + (file.changeNote || "") + "\n";
           html += "<tr><td><code>" + escapeHtml(file.filename || "") + "</code></td><td>" + escapeHtml(file.changeNote || "").replace(/\n/g, "<br>") + "</td></tr>";
@@ -437,6 +444,14 @@
       dialog.close();
       resetForm();
     }
+  });
+
+  document.querySelectorAll(".wysiwyg-bar button").forEach(function (button) {
+    button.addEventListener("mousedown", function (event) { event.preventDefault(); });
+    button.addEventListener("click", function () {
+      workInput.focus();
+      document.execCommand(button.getAttribute("data-cmd"), false, null);
+    });
   });
 
   renderFileEditor([]);
