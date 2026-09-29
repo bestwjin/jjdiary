@@ -9,19 +9,19 @@
 .cal-add:hover{background:#4338ca}
 @media (prefers-color-scheme:dark){.cal-day:hover{background-color:#312e81;border-color:#818cf8;box-shadow:0 8px 20px rgba(0,0,0,.35)}.cal-add{background:rgba(99,102,241,.95)}.cal-add:hover{background:#818cf8}}
 
-.mac-dock{position:fixed;z-index:50;left:0;top:0;bottom:0;width:44px;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 0;border-radius:0;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0) 26%),radial-gradient(90px 160px at 30% 0%,rgba(120,230,210,.42),transparent 72%),linear-gradient(180deg,#1d5c50 0%,#12372f 46%,#0c2823 100%);border:0;border-right:1px solid rgba(255,255,255,.08);box-shadow:inset -1px 0 0 rgba(255,255,255,.12),4px 0 16px rgba(18,55,47,.16)}
-.mac-dock-item{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;text-decoration:none;color:#e7f6f1;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease}
-.mac-dock-icon{font-size:15px;line-height:1;display:block}
+.mac-dock{position:fixed;z-index:50;left:0;top:0;bottom:0;width:48px;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:0;background:linear-gradient(100deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.06) 16%,rgba(255,255,255,0) 40%),radial-gradient(ellipse 130% 42% at 50% -12%,rgba(198,210,255,.78),transparent 60%),radial-gradient(ellipse 80% 30% at 80% 110%,rgba(92,110,190,.45),transparent 64%),linear-gradient(180deg,#3a4d92 0%,#243468 40%,#171e40 100%);border:0;border-right:1px solid rgba(255,255,255,.16);box-shadow:inset -1px 0 0 rgba(255,255,255,.28),inset 1px 0 0 rgba(255,255,255,.1)}
+.mac-dock-item{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;text-decoration:none;color:#eef1ff;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease}
+.mac-dock-icon{font-size:20px;line-height:1;display:block}
 .mac-dock-rule{width:18px;height:1px;margin:4px 0;background:rgba(255,255,255,.18);border-radius:99px}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.12);outline:none}
-.mac-dock-item[aria-current=page]{color:#c9fff7;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.07));box-shadow:inset 0 0 0 1px rgba(185,241,235,.2)}
+.mac-dock-item[aria-current=page]{color:#f4f6ff;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.08));box-shadow:inset 0 0 0 1px rgba(210,218,255,.28)}
 .mac-dock-item[draggable=true]{cursor:grab}
 .mac-dock-item.is-dragging{opacity:.45}
 .mac-dock-item.is-disabled{opacity:.4;cursor:default}
 .mac-dock-item.is-disabled:hover{background:transparent}
 .mac-tip{position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%) translateX(-6px);opacity:0;pointer-events:none;white-space:nowrap;background:rgba(28,28,30,.9);color:#fff;font-size:13px;font-weight:650;line-height:1.2;letter-spacing:-.01em;padding:7px 10px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.18);transition:opacity .16s ease,transform .16s ease}
 .mac-dock-item:hover .mac-tip,.mac-dock-item:focus-visible .mac-tip{opacity:1;transform:translateY(-50%) translateX(0)}
-@media (prefers-color-scheme:dark){.mac-dock{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0) 24%),radial-gradient(90px 160px at 30% 0%,rgba(80,190,190,.28),transparent 70%),linear-gradient(180deg,#1a3d36 0%,#102824 100%);border-right-color:rgba(255,255,255,.08);box-shadow:inset -1px 0 0 rgba(255,255,255,.08)}.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.1)}.mac-dock-rule{background:rgba(255,255,255,.22)}}
+@media (prefers-color-scheme:dark){.mac-dock{background:linear-gradient(100deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.04) 18%,rgba(255,255,255,0) 42%),radial-gradient(ellipse 130% 36% at 50% -12%,rgba(170,186,255,.32),transparent 62%),linear-gradient(180deg,#2a3568 0%,#161c38 100%);border-right-color:rgba(255,255,255,.12);box-shadow:inset -1px 0 0 rgba(255,255,255,.16)}.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.1)}.mac-dock-rule{background:rgba(255,255,255,.22)}}
 .todo-heading{font-size:22px;font-weight:700;line-height:1.3;margin:0 0 2px}
 .todo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
 #todo-count{font-size:13px;margin:0}
@@ -43,8 +43,8 @@
 .todo-form input,.todo-form select,.todo-form button{padding:6px 10px;font-size:13px;line-height:1.3;border-radius:8px}
 .todo-ai{display:inline-flex;align-items:center;flex:none;padding:1px 7px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:11px;font-weight:700;line-height:1.4}
 .todo-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:5px 10px;border-radius:8px;background:#fff;border:1px solid #e5e7eb;width:100%}
-.todo-row.is-open{position:relative;z-index:1;border-color:#d5e4df;background:#fff;box-shadow:0 8px 24px rgba(18,55,47,.08);padding:8px 12px 10px}
-.todo-row.is-open .todo-edit{margin-top:8px;padding-top:8px;border-top:1px solid #e7efec}
+.todo-row.is-open{position:relative;z-index:1;border-color:#d8def2;background:#fff;box-shadow:0 8px 24px rgba(36,48,110,.08);padding:8px 12px 10px}
+.todo-row.is-open .todo-edit{margin-top:8px;padding-top:8px;border-top:1px solid #e8ebf6}
 #todo-list{display:flex;flex-direction:column;gap:4px}
 .todo-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
 .todo-line{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
@@ -59,15 +59,15 @@
 .todo-label{grid-column:1/-1;margin:8px 0 0;font-size:12px;font-weight:700;color:#4b5563}
 .todo-editor{grid-column:1/-1;border:1px solid #e5e7eb;border-radius:8px;background:#fff;overflow:hidden}
 .wysiwyg-bar{display:flex;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
-.ks-btn{box-sizing:border-box;height:32px;padding:0 12px;border-radius:6px;border:1px solid #d4e2dd;background:#fff;color:#34515c;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
-.ks-btn:hover{background:#edf6f2;border-color:#aac9c0}
-.ks-btn-primary{background:#357f70;border-color:#2f7366;color:#fff}
-.ks-btn-primary:hover{background:#2c6b5f;border-color:#275e54;color:#fff}
+.ks-btn{box-sizing:border-box;height:32px;padding:0 12px;border-radius:6px;border:1px solid #d5dced;background:#fff;color:#2c3558;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.ks-btn:hover{background:#eef1fa;border-color:#b7c2e6}
+.ks-btn-primary{background:#3c4f9a;border-color:#34468a;color:#fff}
+.ks-btn-primary:hover{background:#323f7e;border-color:#2b366c;color:#fff}
 .ks-btn-quiet{height:26px;padding:0 8px;border-color:transparent;background:transparent;color:#5d7280;font-weight:600}
-.ks-btn-quiet:hover{background:#eef6f3;border-color:#d4e2dd;color:#34515c}
+.ks-btn-quiet:hover{background:#eef1fa;border-color:#d5dced;color:#2c3558}
 .ks-btn-danger:hover{background:#fdf2f2;border-color:#f0d0d0;color:#b42318}
 .wysiwyg-bar button{height:28px;padding:0 8px;border:1px solid #cbd8df;background:#fff;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:#34515c}
-.wysiwyg-bar button:hover{background:#edf6f2;border-color:#aac9c0}
+.wysiwyg-bar button:hover{background:#eef1fa;border-color:#b7c2e6}
 #todo-open.ks-btn,#todo-submit.ks-btn,#todo-cancel.ks-btn,#notion-copy.ks-btn,#notion-close.ks-btn{height:32px;padding:0 14px;font-size:12px}
 .todo-line>#todo-submit.ks-btn,.todo-line>#todo-cancel.ks-btn{height:22px;padding:0 7px;font-size:11px;border-radius:5px}
 .todo-work{width:100%;min-height:140px;max-height:360px;overflow:auto;padding:8px 10px;font-size:13px;line-height:1.5;outline:none}
@@ -94,7 +94,7 @@
 .todo-ai.todo-ai-gpt{background:#fff;color:#111827;border:1px solid #d1d5db}
 .todo-ai.todo-ai-claude{background:#f6c7a8;color:#7a3418;border:1px solid transparent}
 .todo-ai.todo-ai-cursor{background:#111;color:#fff;border:1px solid transparent}
-body{padding-left:44px}
+body{padding-left:48px}
 @media (max-width:640px){.mac-dock{width:40px}.mac-dock-item{width:30px;height:30px}.mac-dock-icon{font-size:14px}body{padding-left:40px}}
 html,body{width:100%;min-height:100dvh}
 body{box-sizing:border-box}
