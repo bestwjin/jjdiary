@@ -1,5 +1,6 @@
 (function () {
   var items = [
+    { href: "/", icon: "🏠", label: "홈" },
     { href: "/schools", icon: "🏫", label: "학교 정보" },
     { href: "/calendar", icon: "📅", label: "입학설명회 일정" },
     { href: "/todos", icon: "📝", label: "할일 목록" },
@@ -17,7 +18,7 @@
     nav.className = "mac-dock";
     nav.setAttribute("aria-label", "메뉴");
     var path = currentPath();
-    items.forEach(function (item) {
+    items.forEach(function (item, index) {
       var el = item.disabled ? document.createElement("span") : document.createElement("a");
       el.className = "mac-dock-item" + (item.disabled ? " is-disabled" : "");
       if (!item.disabled) {
@@ -35,6 +36,11 @@
       el.appendChild(icon);
       el.appendChild(tip);
       nav.appendChild(el);
+      if (index === 0) {
+        var rule = document.createElement("span");
+        rule.className = "mac-dock-rule";
+        nav.appendChild(rule);
+      }
     });
     document.body.appendChild(nav);
   }

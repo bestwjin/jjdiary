@@ -9,19 +9,18 @@
 </head>
 <body class="min-h-full">
   <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-    <div class="w-full px-6 py-6" style="flex:1;display:flex;flex-direction:column;width:100%">
-      <a class="inline-flex items-center text-indigo-600 dark:text-indigo-400 mb-4" href="/">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:inline-block;vertical-align:-3px">
-          <path d="M19 12H5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
-          <path d="m11 18-6-6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
-        홈으로 돌아가기
-      </a>
+    <div class="container mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
       <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">할일 목록</h1>
       <p id="todo-count" class="text-gray-600 dark:text-gray-300 mb-6">할일을 불러오는 중</p>
       <form id="todo-form" class="todo-form">
         <input id="todo-tag" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="태그" autocomplete="off"/>
         <input id="todo-requester" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="40" placeholder="요청자" autocomplete="off"/>
+        <select id="todo-ai" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+          <option value="">AI툴</option>
+          <option value="GPT">GPT</option>
+          <option value="CLAUDE">CLAUDE</option>
+          <option value="CURSOR">CURSOR</option>
+        </select>
         <input id="todo-input" class="todo-title-input w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
         <button id="todo-submit" class="px-4 py-3 rounded-lg font-semibold bg-indigo-600 text-white" type="submit">추가</button>
         <button id="todo-cancel" class="px-4 py-3 rounded-lg font-semibold bg-gray-500 text-white" type="button" hidden>취소</button>

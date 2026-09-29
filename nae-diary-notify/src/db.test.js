@@ -36,6 +36,8 @@ assert.equal(mapRow({
   priority: "medium",
 }).date, "2026-09-28");
 
+assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 ", aiTool: "claude" }).aiTool, "CLAUDE");
+assert.equal(cleanTodo({ title: "준비물", aiTool: "기타" }).aiTool, "");
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).tag, "입학");
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).requester, "김선생");
 assert.equal(cleanTodo({ title: "   " }), null);

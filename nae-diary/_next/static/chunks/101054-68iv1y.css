@@ -12,14 +12,16 @@
 .mac-dock{position:fixed;z-index:50;left:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 10px;border-radius:32px;background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.75);box-shadow:0 16px 40px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.85)}
 .mac-dock-item{position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:20px;text-decoration:none;color:inherit;transition:transform .22s cubic-bezier(.2,.8,.2,1),background-color .22s ease}
 .mac-dock-icon{font-size:42px;line-height:1;display:block}
+.mac-dock-rule{width:36px;height:1px;margin:2px 0;background:rgba(15,23,42,.16);border-radius:99px}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{transform:scale(1.24);background:rgba(255,255,255,.7);outline:none}
 .mac-dock-item[aria-current=page]{background:rgba(99,102,241,.16)}
 .mac-dock-item.is-disabled{opacity:.4;cursor:default}
 .mac-dock-item.is-disabled:hover{transform:none;background:transparent}
 .mac-tip{position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%) translateX(-6px);opacity:0;pointer-events:none;white-space:nowrap;background:rgba(28,28,30,.9);color:#fff;font-size:13px;font-weight:650;line-height:1.2;letter-spacing:-.01em;padding:7px 10px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.18);transition:opacity .16s ease,transform .16s ease}
 .mac-dock-item:hover .mac-tip,.mac-dock-item:focus-visible .mac-tip{opacity:1;transform:translateY(-50%) translateX(0)}
-@media (prefers-color-scheme:dark){.mac-dock{background:rgba(38,38,42,.72);border-color:rgba(255,255,255,.12);box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.1)}.mac-dock-item[aria-current=page]{background:rgba(129,140,248,.28)}}
-.todo-form{display:grid;grid-template-columns:160px 180px minmax(0,1fr) auto auto;gap:8px;width:100%;margin-bottom:24px}
+@media (prefers-color-scheme:dark){.mac-dock{background:rgba(38,38,42,.72);border-color:rgba(255,255,255,.12);box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}.mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.1)}.mac-dock-item[aria-current=page]{background:rgba(129,140,248,.28)}.mac-dock-rule{background:rgba(255,255,255,.22)}}
+.todo-form{display:grid;grid-template-columns:140px 150px 140px minmax(0,1fr) auto auto;gap:8px;width:100%;margin-bottom:24px}
+.todo-ai{display:inline-flex;align-items:center;flex:none;padding:3px 10px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:12px;font-weight:700;line-height:1.3}
 .todo-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #e5e7eb;width:100%}
 .todo-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .todo-line{display:flex;align-items:center;gap:8px;min-width:0}
@@ -33,7 +35,7 @@
 .todo-delete{border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:14px}
 .todo-delete:hover{color:#dc2626}
 @media (max-width:800px){.todo-form{grid-template-columns:1fr 1fr}.todo-form .todo-title-input{grid-column:1/-1}}
-@media (prefers-color-scheme:dark){.todo-row{background:#1f2937;border-color:#374151}.todo-check{background:#111827}.todo-title{color:#f9fafb}.todo-row.is-done .todo-title{color:#6b7280}.todo-tag{background:#312e81;color:#e0e7ff}.todo-meta{color:#9ca3af}}
+@media (prefers-color-scheme:dark){.todo-row{background:#1f2937;border-color:#374151}.todo-check{background:#111827}.todo-title{color:#f9fafb}.todo-row.is-done .todo-title{color:#6b7280}.todo-tag{background:#312e81;color:#e0e7ff}.todo-ai{background:#064e3b;color:#d1fae5}.todo-meta{color:#9ca3af}}
 body{padding-left:118px}
 @media (max-width:640px){.mac-dock{left:8px;padding:8px 6px;gap:6px;border-radius:24px}.mac-dock-item{width:56px;height:56px}.mac-dock-icon{font-size:32px}body{padding-left:84px}}
 html,body{width:100%;min-height:100dvh}

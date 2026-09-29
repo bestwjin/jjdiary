@@ -14,6 +14,7 @@
   var input = document.getElementById("todo-input");
   var tagInput = document.getElementById("todo-tag");
   var requesterInput = document.getElementById("todo-requester");
+  var aiInput = document.getElementById("todo-ai");
   var submitButton = document.getElementById("todo-submit");
   var cancelButton = document.getElementById("todo-cancel");
 
@@ -46,6 +47,7 @@
     input.value = "";
     tagInput.value = "";
     requesterInput.value = "";
+    aiInput.value = "";
     submitButton.textContent = "추가";
     cancelButton.hidden = true;
   }
@@ -74,6 +76,12 @@
         tag.className = "todo-tag";
         tag.textContent = todo.tag;
         line.appendChild(tag);
+      }
+      if (todo.aiTool) {
+        var ai = document.createElement("span");
+        ai.className = "todo-ai";
+        ai.textContent = todo.aiTool;
+        line.appendChild(ai);
       }
       var title = document.createElement("span");
       title.className = "todo-title";
@@ -111,6 +119,7 @@
     input.value = todo.title;
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
+    aiInput.value = todo.aiTool || "";
     submitButton.textContent = "수정 완료";
     cancelButton.hidden = false;
     input.focus();
@@ -159,7 +168,7 @@
     var title = input.value.trim();
     if (!title) return;
     showError("");
-    var body = { title: title, tag: tagInput.value.trim(), requester: requesterInput.value.trim() };
+    var body = { title: title, tag: tagInput.value.trim(), requester: requesterInput.value.trim(), aiTool: aiInput.value };
     var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
       method: editingId ? "PUT" : "POST",
       headers: headers,
