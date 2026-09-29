@@ -414,21 +414,25 @@
     var files = todo.files || [];
     if (files.length) {
       text += (text && !text.endsWith("\n\n") ? "\n\n" : "\n") + "### 작업파일\n";
-      html += "<h3>작업파일</h3>";
+      html += "<h3>작업파일</h3><p class=\"notion-files\">";
+      var lines = [];
       fileCategories.forEach(function (category) {
         var matched = files.filter(function (file) { return file.category === category; });
         if (!matched.length) return;
-        text += "\n- " + category + "\n";
-        html += "<p>- " + escapeHtml(category) + "</p>";
+        lines.push("- " + category);
         matched.forEach(function (file) {
-          var name = String(file.filename || "").replace(/\t/g, " ");
-          var note = String(file.changeNote || "").replace(/\t/g, " ");
-          text += name + (note ? "\n" + note : "") + "\n";
-          html += "<p>" + escapeHtml(name);
-          if (note) html += (name ? "<br>" : "") + escapeHtml(note).replace(/\n/g, "<br>");
-          html += "</p>";
+          var name = String(file.filename || "").replace(/\t/g, " ").trim();
+          var note = String(file.changeNote || "").replace(/\t/g, " ").trim();
+          if (name) lines.push(name);
+          note.split("\n").forEach(function (part) {
+            var line = part.trim();
+            if (line) lines.push(line);
+          });
         });
       });
+      text += lines.join("\n") + "\n";
+      html += lines.map(function (line) { return escapeHtml(line); }).join("<br>");
+      html += "</p>";
     }
     return { html: html, text: text.trim() + "\n" };
   }

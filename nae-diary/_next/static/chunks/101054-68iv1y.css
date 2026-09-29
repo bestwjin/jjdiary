@@ -187,3 +187,4 @@ body,.min-h-screen.bg-gradient-to-br{background:#14182c;background-image:linear-
 .todo-toast{position:fixed;z-index:80;left:calc(50% + 24px);bottom:28px;transform:translate(-50%,8px);padding:10px 16px;border-radius:999px;background:#2a3160;color:#fff;font-size:13px;font-weight:600;letter-spacing:-.01em;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}
 .todo-toast.is-on{opacity:1;transform:translate(-50%,0)}
 @media (max-width:800px){#todo-files{grid-template-columns:1fr}}
+.notion-preview p.notion-files{margin:0;line-height:1.35}
