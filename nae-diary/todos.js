@@ -102,24 +102,70 @@
     input.focus();
   }
 
-  function addFileRow(listEl, filename, changeNote) {
+  function fileField(tag, value, placeholder, maxLength) {
+    var field = document.createElement(tag);
+    if (tag === "input") field.type = "text";
+    field.placeholder = placeholder;
+    field.maxLength = maxLength;
+    field.value = value || "";
+    return field;
+  }
+
+  function readFileItem(row) {
+    if (row.classList.contains("is-editing")) {
+      var fields = row.querySelectorAll("input, textarea");
+      return { filename: fields[0].value.trim(), changeNote: fields[1].value.trim() };
+    }
+    return {
+      filename: row.querySelector(".todo-file-name").textContent.trim(),
+      changeNote: row.querySelector(".todo-file-note").textContent.trim(),
+    };
+  }
+
+  function showFileItem(row, filename, changeNote) {
+    row.classList.remove("is-editing");
+    var name = document.createElement("span");
+    name.className = "todo-file-name";
+    name.textContent = filename;
+    var note = document.createElement("span");
+    note.className = "todo-file-note";
+    note.textContent = changeNote;
+    var edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "ks-btn ks-btn-quiet todo-file-edit";
+    edit.textContent = "수정";
+    edit.addEventListener("click", function () { editFileItem(row); });
+    row.replaceChildren(name, note, edit);
+  }
+
+  function editFileItem(row) {
+    var current = readFileItem(row);
+    row.classList.add("is-editing");
+    var name = fileField("input", current.filename, "파일명", 200);
+    var note = fileField("textarea", current.changeNote, "수정내용", 4000);
+    note.rows = 1;
+    var done = document.createElement("button");
+    done.type = "button";
+    done.className = "ks-btn ks-btn-quiet todo-file-edit";
+    done.textContent = "완료";
+    done.addEventListener("click", function () {
+      var filename = name.value.trim();
+      var changeNote = note.value.trim();
+      if (!filename && !changeNote) {
+        row.remove();
+        return;
+      }
+      showFileItem(row, filename, changeNote);
+    });
+    row.replaceChildren(name, note, done);
+    name.focus();
+  }
+
+  function appendFileItem(listEl, filename, changeNote) {
     var row = document.createElement("div");
-    row.className = "todo-file-row";
-    var name = document.createElement("input");
-    name.type = "text";
-    name.placeholder = "파일명";
-    name.maxLength = 200;
-    name.value = filename || "";
-    var note = document.createElement("textarea");
-    note.placeholder = "수정내용";
-    note.maxLength = 4000;
-    note.value = changeNote || "";
-    var remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "ks-btn ks-btn-quiet";
-    remove.textContent = "삭제";
-    remove.addEventListener("click", function () { row.remove(); });
-    row.append(name, note, remove);
+    row.className = "todo-file-item";
+    row.tabIndex = 0;
+    showFileItem(row, filename, changeNote);
     listEl.appendChild(row);
   }
 
@@ -133,17 +179,35 @@
       head.className = "todo-file-cat-head";
       var label = document.createElement("span");
       label.textContent = category;
+      head.appendChild(label);
+      var list = document.createElement("div");
+      list.className = "todo-file-list";
+      (files || []).forEach(function (file) {
+        if (file.category !== category) return;
+        var filename = String(file.filename || "").trim();
+        var changeNote = String(file.changeNote || "").trim();
+        if (!filename && !changeNote) return;
+        appendFileItem(list, filename, changeNote);
+      });
+      var compose = document.createElement("div");
+      compose.className = "todo-file-compose";
+      var name = fileField("input", "", "파일명", 200);
+      var note = fileField("textarea", "", "수정내용", 4000);
       var add = document.createElement("button");
       add.type = "button";
-      add.className = "ks-btn ks-btn-quiet";
+      add.className = "ks-btn ks-btn-quiet todo-file-add";
       add.textContent = "추가";
-      var rows = document.createElement("div");
-      add.addEventListener("click", function () { addFileRow(rows, "", ""); });
-      head.append(label, add);
-      var matched = (files || []).filter(function (file) { return file.category === category; });
-      if (matched.length) matched.forEach(function (file) { addFileRow(rows, file.filename, file.changeNote); });
-      else addFileRow(rows, "", "");
-      block.append(head, rows);
+      add.addEventListener("click", function () {
+        var filename = name.value.trim();
+        var changeNote = note.value.trim();
+        if (!filename && !changeNote) return;
+        appendFileItem(list, filename, changeNote);
+        name.value = "";
+        note.value = "";
+        name.focus();
+      });
+      compose.append(name, note, add);
+      block.append(head, list, compose);
       filesRoot.appendChild(block);
     });
   }
@@ -151,12 +215,10 @@
   function readFiles() {
     var files = [];
     filesRoot.querySelectorAll(".todo-file-cat").forEach(function (block) {
-      block.querySelectorAll(".todo-file-row").forEach(function (row) {
-        var fields = row.querySelectorAll("input, textarea");
-        var filename = fields[0].value.trim();
-        var changeNote = fields[1].value.trim();
-        if (!filename && !changeNote) return;
-        files.push({ category: block.dataset.category, filename: filename, changeNote: changeNote });
+      block.querySelectorAll(".todo-file-item").forEach(function (row) {
+        var item = readFileItem(row);
+        if (!item.filename && !item.changeNote) return;
+        files.push({ category: block.dataset.category, filename: item.filename, changeNote: item.changeNote });
       });
     });
     return files;
