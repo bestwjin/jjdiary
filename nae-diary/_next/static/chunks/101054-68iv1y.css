@@ -373,3 +373,14 @@ html.theme-dark .todo-file-note{color:#d1d5db}
 html.theme-dark .todo-file-item:hover,html.theme-dark .todo-file-item:focus-within{background:rgba(255,255,255,.06)}
 html.theme-dark .todo-file-compose input,html.theme-dark .todo-file-compose textarea,html.theme-dark .todo-file-item input,html.theme-dark .todo-file-item textarea{background:#111827;color:#f9fafb;border-color:#374151}
 @media (hover:none){.todo-file-edit{opacity:1;pointer-events:auto}}
+.dash-sched-list{display:flex;flex-direction:column}
+.dash-sched{display:flex;align-items:baseline;gap:8px;padding:9px 8px;border-top:1px solid #eef1f8;border-radius:12px;text-decoration:none;color:inherit}
+.dash-sched:hover{background:#f6f7ff}
+.dash-sched-when{flex:none;font-size:12px;font-weight:700;color:#4458c4;white-space:nowrap}
+.dash-sched-title{flex:1;min-width:0;font-size:13px;font-weight:700;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-sched-empty{margin:0;padding:8px;font-size:13px;color:#6d7394}
+html.theme-dark .dash-sched{border-top-color:rgba(255,255,255,.08)}
+html.theme-dark .dash-sched:hover{background:#222846}
+html.theme-dark .dash-sched-when{color:#9eb0ff}
+html.theme-dark .dash-sched-title{color:#e8ebff}
+html.theme-dark .dash-sched-empty{color:#9aa3c7}
