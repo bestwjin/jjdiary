@@ -93,6 +93,39 @@
     return card;
   }
 
+  function digitalClockCard() {
+    var card = document.createElement("section");
+    card.className = "dash-stat dash-clock dash-clock-digital";
+    card.setAttribute("aria-label", "전자시계");
+    var panel = document.createElement("div");
+    panel.className = "dash-digital";
+    var time = document.createElement("div");
+    time.className = "dash-digital-time";
+    var date = document.createElement("div");
+    date.className = "dash-digital-date";
+    panel.append(time, date);
+    card.appendChild(panel);
+
+    function pad(n) {
+      return n < 10 ? "0" + n : String(n);
+    }
+
+    function tick() {
+      var now = new Date();
+      time.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+      date.textContent = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        weekday: "short",
+        month: "numeric",
+        day: "numeric",
+      }).format(now);
+    }
+
+    tick();
+    setInterval(tick, 250);
+    return card;
+  }
+
   function meterRow(label, value, total, pillClass) {
     var row = document.createElement("div");
     row.className = "dash-meter";
@@ -317,12 +350,12 @@
 
   function arrangeWidgets(widgets, canvasWidth) {
     var stats = widgets.filter(function (widget) { return widget.id.indexOf("stat:") === 0; });
-    var clock = null;
+    var clocks = [];
     var todos = null;
     var side = [];
     widgets.forEach(function (widget) {
       if (widget.id === "todos") todos = widget;
-      else if (widget.id === "clock") clock = widget;
+      else if (widget.id === "clock" || widget.id === "clock-digital") clocks.push(widget);
       else if (widget.id === "tags" || widget.id === "schedule") side.push(widget);
     });
     var y = 0;
@@ -336,17 +369,31 @@
       widget.rect = { x: x, y: y, w: totalW, h: rowH };
       x += widget.rect.w + GAP;
     });
-    if (clock) {
-      var clockW = Math.max(totalW, canvasWidth - x);
+    if (clocks.length) {
+      var remain = Math.max(0, canvasWidth - x);
+      var clockW = Math.max(
+        MIN_W,
+        Math.floor((remain - GAP * (clocks.length - 1)) / clocks.length)
+      );
       if (x + MIN_W > canvasWidth) {
         x = 0;
         y += rowH + GAP;
-        clockW = canvasWidth;
+        remain = canvasWidth;
+        clockW = Math.max(
+          MIN_W,
+          Math.floor((remain - GAP * (clocks.length - 1)) / clocks.length)
+        );
       }
-      rowH = Math.max(rowH, measureWidget(clock.el, clockW));
-      clock.rect = { x: x, y: y, w: Math.min(clockW, canvasWidth - x), h: rowH };
+      clocks.forEach(function (widget) {
+        rowH = Math.max(rowH, measureWidget(widget.el, clockW));
+      });
+      clocks.forEach(function (widget, index) {
+        var w = index === clocks.length - 1 ? Math.max(MIN_W, canvasWidth - x) : clockW;
+        widget.rect = { x: x, y: y, w: w, h: rowH };
+        x += widget.rect.w + GAP;
+      });
       stats.forEach(function (widget) {
-        if (widget.rect.y === clock.rect.y) widget.rect.h = rowH;
+        if (widget.rect.y === y) widget.rect.h = rowH;
       });
       y += rowH + GAP;
     } else if (stats.length) {
@@ -444,7 +491,7 @@
     function relayout() {
       var saved = readLayout();
       var width = canvasWidth();
-      if (saved.custom && saved.items.clock) applySaved(widgets, width, saved);
+      if (saved.custom && saved.items.clock && saved.items["clock-digital"]) applySaved(widgets, width, saved);
       else arrangeWidgets(widgets, width);
       paint();
     }
@@ -657,6 +704,7 @@
     var widgets = [
       { id: "stat:total", el: statCard("남은 할일", open.length, true) },
       { id: "clock", el: clockCard() },
+      { id: "clock-digital", el: digitalClockCard() },
     ];
 
     var allLink = document.createElement("a");
