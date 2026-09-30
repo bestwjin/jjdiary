@@ -315,17 +315,20 @@ html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visi
 .todo-label{font-size:14px;color:#0A2348}
 html.theme-dark .todo-label{color:#7EA2D6}
 .todo-file-list{display:flex;flex-direction:column;gap:4px}
-.todo-file-item{display:grid;grid-template-columns:minmax(140px,240px) minmax(0,1fr) auto;column-gap:40px;align-items:center;min-height:28px;padding:2px 4px;border-radius:8px;outline:none}
+.todo-file-item{display:flex;align-items:center;min-height:28px;padding:2px 4px;border-radius:8px;outline:none}
 .todo-file-item:hover,.todo-file-item:focus-within{background:rgba(68,88,196,.06)}
 .todo-file-name,.todo-file-note{min-width:0;font-size:13px;line-height:1.4}
-.todo-file-name{font-weight:700;color:#1f2937}
-.todo-file-note{white-space:pre-wrap;color:#4b5563}
-.todo-file-edit{opacity:0;pointer-events:none}
+.todo-file-name{flex:0 0 220px;width:220px;margin-right:40px;font-weight:700;color:#1f2937}
+.todo-file-note{flex:0 1 auto;max-width:calc(100% - 340px);margin-right:8px;white-space:pre-wrap;color:#4b5563}
+.todo-file-item>input{flex:0 0 220px;width:220px;margin-right:40px}
+.todo-file-item>textarea{flex:0 1 480px;width:480px;max-width:calc(100% - 340px);margin-right:8px}
+.todo-file-edit{flex:none;opacity:0;pointer-events:none}
 .todo-file-item:hover .todo-file-edit,.todo-file-item:focus-within .todo-file-edit,.todo-file-item.is-editing .todo-file-edit{opacity:1;pointer-events:auto}
-.todo-file-compose{display:flex;flex-direction:column;gap:4px;margin-top:6px}
-.todo-file-compose input,.todo-file-compose textarea,.todo-file-item input,.todo-file-item textarea{width:100%;padding:4px 6px;font-size:12px;border-radius:6px;border:1px solid #e5e7eb}
+.todo-file-compose{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:6px}
+.todo-file-compose input,.todo-file-compose textarea{width:100%}
+.todo-file-compose input,.todo-file-compose textarea,.todo-file-item input,.todo-file-item textarea{padding:4px 6px;font-size:12px;border-radius:6px;border:1px solid #e5e7eb}
 .todo-file-compose textarea,.todo-file-item textarea{min-height:44px;resize:vertical}
-.todo-file-compose .todo-file-add{align-self:center}
+.todo-file-compose .todo-file-add{align-self:flex-start}
 html.theme-dark .todo-file-name{color:#f9fafb}
 html.theme-dark .todo-file-note{color:#d1d5db}
 html.theme-dark .todo-file-item:hover,html.theme-dark .todo-file-item:focus-within{background:rgba(255,255,255,.06)}
