@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <script>try{var root=document.documentElement;function wantDark(){var t=localStorage.getItem("theme");return t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)}function applyTheme(){root.classList.toggle("theme-dark",wantDark())}applyTheme();new MutationObserver(function(){if(root.classList.contains("theme-dark")!==wantDark())applyTheme()}).observe(root,{attributes:true,attributeFilter:["class"]})}catch(e){}</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>설정 - 내 다이어리</title>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="container todo-page mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
+      <div class="todo-head">
+        <h1 class="todo-heading text-gray-800 dark:text-white">설정</h1>
+        <p class="text-gray-600 dark:text-gray-300">연동 키와 앱 옵션을 관리합니다</p>
+      </div>
+      <p id="settings-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <p id="settings-ok" class="text-sm mb-4" style="color:#0c8f55" hidden></p>
+      <section class="settings-card" aria-labelledby="settings-holiday-title">
+        <h2 id="settings-holiday-title">공휴일 연동</h2>
+        <p class="settings-help">공공데이터포털 특일정보 API 일반 인증키를 저장합니다. 스케쥴 달력의 공휴일 표시에 사용됩니다.</p>
+        <form id="settings-form" class="settings-form">
+          <label class="todo-label" for="settings-kasi-key">공휴일 연동 인증키</label>
+          <input id="settings-kasi-key" type="password" autocomplete="off" spellcheck="false" placeholder="인증키를 입력하세요"/>
+          <div class="settings-actions">
+            <button id="settings-toggle" class="ks-btn" type="button">표시</button>
+            <button id="settings-save" class="ks-btn ks-btn-primary" type="submit">저장</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="/dock.js"></script>
+  <script src="/settings.js"></script>
+</body>
+</html>

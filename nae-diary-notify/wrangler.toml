@@ -8,6 +8,9 @@ SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
 # Neon connection string. Set with:
 # wrangler secret put DATABASE_URL
 # postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+#
+# 공공데이터포털 특일정보(KASI) 인증키. Set with:
+# wrangler secret put KASI_SERVICE_KEY
 
 [[kv_namespaces]]
 binding = "DIARY"

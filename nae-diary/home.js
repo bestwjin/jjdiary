@@ -625,13 +625,17 @@
   }
 
   function scheduleWhen(item, today) {
-    if (item.date === today) return item.time ? "오늘 " + item.time : "오늘";
+    if (item.date === today) {
+      if (item.allDay) return "오늘 종일";
+      return item.time ? "오늘 " + item.time : "오늘";
+    }
     var parts = String(item.date || "").split("-");
-    if (parts.length !== 3) return item.time || "";
+    if (parts.length !== 3) return item.allDay ? "종일" : (item.time || "");
     var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
     var days = ["일", "월", "화", "수", "목", "금", "토"];
     var label = Number(parts[1]) + "/" + Number(parts[2]) + " " + days[date.getDay()];
-    if (item.time) label += " " + item.time;
+    if (item.allDay) label += " 종일";
+    else if (item.time) label += " " + item.time;
     return label;
   }
 

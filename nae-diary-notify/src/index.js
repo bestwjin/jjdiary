@@ -1,5 +1,6 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { createEvent, createSchedule, createTodo, deleteEvent, deleteSchedule, deleteTodo, isDatabaseConfigured, listEvents, listSchedules, listTodos, migrateEvents, updateEvent, updateSchedule, updateTodo } from "./db.js";
+import { createEvent, createSchedule, createTodo, deleteEvent, deleteSchedule, deleteTodo, getAppSettings, isDatabaseConfigured, listEvents, listSchedules, listTodos, migrateEvents, updateAppSettings, updateEvent, updateSchedule, updateTodo } from "./db.js";
+import { getHolidays } from "./holidays.js";
 import { addDays, buildMessage, eventsOn, kstToday, normalizeEvents } from "./logic.js";
 
 const EVENTS_KEY = "events";
@@ -209,6 +210,44 @@ export default {
       } catch (error) {
         return dbError(error, request);
       }
+    }
+
+    if (url.pathname === "/settings" && request.method === "GET") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        const settings = await getAppSettings(env);
+        return json({ ok: true, settings }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/settings" && request.method === "PUT") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const settings = await updateAppSettings(env, body);
+        if (!settings) return json({ ok: false }, 400, request);
+        return json({ ok: true, settings }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/holidays" && request.method === "GET") {
+      const year = Number(url.searchParams.get("year"));
+      const month = Number(url.searchParams.get("month"));
+      if (!Number.isInteger(year) || !Number.isInteger(month)) {
+        return json({ status: "BAD_REQUEST", holidays: [] }, 400, request);
+      }
+      const result = await getHolidays(env, year, month);
+      const status = result.status === "BAD_REQUEST" ? 400 : 200;
+      return json(result, status, request);
     }
 
     if (url.pathname === "/schedules" && request.method === "GET") {

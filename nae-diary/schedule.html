@@ -11,9 +11,11 @@
 <body class="min-h-full">
   <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
     <div class="container todo-page mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
-      <div class="todo-head">
+      <div class="todo-head sched-page-head">
         <h1 class="todo-heading text-gray-800 dark:text-white">스케쥴관리</h1>
         <p id="sched-count" class="text-gray-600 dark:text-gray-300">일정을 불러오는 중</p>
+      </div>
+      <div class="sched-toolbar">
         <div class="sched-nav">
           <button id="sched-prev" class="ks-btn" type="button">이전달</button>
           <h2 id="sched-label" class="sched-label"></h2>
@@ -21,26 +23,57 @@
           <button id="sched-today" class="ks-btn ks-btn-quiet" type="button">오늘</button>
         </div>
       </div>
+      <p id="sched-holiday-notice" class="sched-holiday-notice" role="status" hidden></p>
       <p id="sched-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
-      <section class="sched-board" aria-label="월간 달력">
-        <div class="sched-week" aria-hidden="true">
-          <span class="is-sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="is-sat">토</span>
-        </div>
-        <div id="sched-grid" class="sched-grid"></div>
-      </section>
+      <div class="sched-layout">
+        <aside class="sched-side" aria-label="이번 달 일정 목록">
+          <div class="sched-side-head">
+            <h2>일정 목록</h2>
+            <span id="sched-side-count"></span>
+          </div>
+          <div id="sched-side-list" class="sched-side-list"></div>
+        </aside>
+        <section class="sched-board" aria-label="월간 달력">
+          <div class="sched-week" aria-hidden="true">
+            <span class="is-sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="is-sat">토</span>
+          </div>
+          <div id="sched-grid" class="sched-grid"></div>
+        </section>
+      </div>
+      <button id="sched-range-add" class="sched-range-add" type="button" hidden>+ 일정등록</button>
     </div>
   </main>
   <dialog id="sched-dialog" class="todo-dialog sched-dialog">
     <form id="sched-form" class="sched-form">
       <h2 id="sched-day-label" class="todo-heading">일정</h2>
       <ul id="sched-day-list" class="sched-day-list"></ul>
-      <input id="sched-date" type="date" required/>
-      <input id="sched-time" type="time"/>
+      <div class="sched-period">
+        <label class="todo-label" for="sched-date">시작일</label>
+        <input id="sched-date" type="date" required/>
+        <label class="todo-label" for="sched-end-date">종료일</label>
+        <input id="sched-end-date" type="date" required/>
+      </div>
+      <p id="sched-period-summary" class="sched-period-summary" hidden></p>
+      <div class="sched-time-row">
+        <input id="sched-time" type="time"/>
+        <label class="sched-all-day" for="sched-all-day">
+          <input id="sched-all-day" type="checkbox"/>
+          <span>종일</span>
+        </label>
+      </div>
+      <div class="sched-priority" role="group" aria-label="중요도">
+        <span class="todo-label">중요도</span>
+        <div class="sched-priority-options">
+          <button type="button" class="sched-priority-btn" data-priority="높음">높음</button>
+          <button type="button" class="sched-priority-btn is-on" data-priority="보통">보통</button>
+          <button type="button" class="sched-priority-btn" data-priority="낮음">낮음</button>
+        </div>
+      </div>
       <input id="sched-title" type="text" maxlength="200" placeholder="일정 제목" required autocomplete="off"/>
       <textarea id="sched-memo" maxlength="1000" placeholder="메모"></textarea>
       <div class="sched-actions">
         <button id="sched-save" class="ks-btn ks-btn-primary" type="submit">추가</button>
-        <button id="sched-delete" class="ks-btn ks-btn-quiet ks-btn-danger" type="button" hidden>삭제</button>
+        <button id="sched-delete" class="ks-btn ks-btn-danger" type="button" hidden>삭제</button>
         <button id="sched-close" class="ks-btn" type="button">닫기</button>
       </div>
     </form>

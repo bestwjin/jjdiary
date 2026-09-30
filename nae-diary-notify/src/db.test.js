@@ -39,6 +39,12 @@ assert.equal(mapRow({
 assert.equal(cleanSchedule({ title: "  회의  ", date: "2026-09-30", time: "09:30", memo: " 준비 " }).title, "회의");
 assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30", time: "9시" }), null);
 assert.equal(cleanSchedule({ title: "", date: "2026-09-30" }), null);
+assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30", allDay: true, time: "09:30" }).time, "");
+assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30", allDay: true }).allDay, true);
+assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30" }).priority, "보통");
+assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30", priority: "높음" }).priority, "높음");
+assert.equal(mapSchedule({ id: "4", title: "회의", schedule_date: new Date("2026-09-30T00:00:00Z"), schedule_time: "09:30", memo: "", priority: "낮음", all_day: false }).priority, "낮음");
+assert.equal(mapSchedule({ id: "4", title: "회의", schedule_date: new Date("2026-09-30T00:00:00Z"), schedule_time: "09:30", memo: "", all_day: true }).allDay, true);
 assert.equal(mapSchedule({ id: "4", title: "회의", schedule_date: new Date("2026-09-30T00:00:00Z"), schedule_time: "09:30", memo: "" }).date, "2026-09-30");
 
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 ", aiTool: "claude" }).aiTool, "CLAUDE");
