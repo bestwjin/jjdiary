@@ -6,6 +6,7 @@
   };
   var todos = [];
   var editingId = null;
+  var saving = false;
   var list = document.getElementById("todo-list");
   var empty = document.getElementById("todo-empty");
   var count = document.getElementById("todo-count");
@@ -393,47 +394,61 @@
     render();
   }
 
+  document.addEventListener("keydown", function (event) {
+    if (event.code !== "KeyS" || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    if (!editingId || !document.querySelector(".todo-row.is-open")) return;
+    event.preventDefault();
+    if (saving) return;
+    if (typeof form.requestSubmit === "function") form.requestSubmit();
+  });
+
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
+    if (saving) return;
     var title = input.value.trim();
     if (!title) return;
-    showError("");
-    var body = {
-      title: title,
-      priority: priorityInput.value,
-      tag: tagInput.value.trim(),
-      requester: requesterInput.value.trim(),
-      aiTool: aiInput.value,
-      workContent: editorHtml(workInput.innerHTML),
-      files: readFiles(),
-    };
-    var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
-      method: editingId ? "PUT" : "POST",
-      headers: headers,
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      showError(editingId ? "할일을 수정하지 못했습니다." : "할일을 추가하지 못했습니다.");
-      return;
-    }
-    var data = await response.json();
-    if (editingId) {
-      var current = null;
-      todos.forEach(function (item) {
-        if (item.id === editingId) current = item;
+    saving = true;
+    try {
+      showError("");
+      var body = {
+        title: title,
+        priority: priorityInput.value,
+        tag: tagInput.value.trim(),
+        requester: requesterInput.value.trim(),
+        aiTool: aiInput.value,
+        workContent: editorHtml(workInput.innerHTML),
+        files: readFiles(),
+      };
+      var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
+        method: editingId ? "PUT" : "POST",
+        headers: headers,
+        body: JSON.stringify(body),
       });
-      if (current && data.todo) Object.assign(current, data.todo);
-      syncOpenRow(current || data.todo);
-      placeOpenRow();
-      showToast("저장되었습니다.");
-      return;
+      if (!response.ok) {
+        showError(editingId ? "할일을 수정하지 못했습니다." : "할일을 추가하지 못했습니다.");
+        return;
+      }
+      var data = await response.json();
+      if (editingId) {
+        var current = null;
+        todos.forEach(function (item) {
+          if (item.id === editingId) current = item;
+        });
+        if (current && data.todo) Object.assign(current, data.todo);
+        syncOpenRow(current || data.todo);
+        placeOpenRow();
+        showToast("저장되었습니다.");
+        return;
+      }
+      todos.unshift(data.todo);
+      parkForm();
+      if (dialog.open) dialog.close();
+      resetForm();
+      render();
+      input.focus();
+    } finally {
+      saving = false;
     }
-    todos.unshift(data.todo);
-    parkForm();
-    if (dialog.open) dialog.close();
-    resetForm();
-    render();
-    input.focus();
   });
 
   cancelButton.addEventListener("click", function () {
