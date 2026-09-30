@@ -31,7 +31,7 @@
   ];
 
   function currentPath() {
-    var path = location.pathname.replace(/\/$/, "");
+    var path = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
     return path || "/";
   }
 
