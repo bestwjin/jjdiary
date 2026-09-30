@@ -315,7 +315,7 @@ html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visi
 .todo-label{font-size:14px;color:#0A2348}
 html.theme-dark .todo-label{color:#7EA2D6}
 .todo-file-list{display:flex;flex-direction:column;gap:4px}
-.todo-file-item{display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1.6fr) auto;gap:28px;align-items:center;min-height:28px;padding:2px 4px;border-radius:8px;outline:none}
+.todo-file-item{display:grid;grid-template-columns:minmax(140px,240px) minmax(0,1fr) auto;column-gap:40px;align-items:center;min-height:28px;padding:2px 4px;border-radius:8px;outline:none}
 .todo-file-item:hover,.todo-file-item:focus-within{background:rgba(68,88,196,.06)}
 .todo-file-name,.todo-file-note{min-width:0;font-size:13px;line-height:1.4}
 .todo-file-name{font-weight:700;color:#1f2937}
