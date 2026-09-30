@@ -224,7 +224,10 @@ html.theme-dark{
 .dash-item:hover{background:#222846}
 .dash-meter-track{background:rgba(255,255,255,.08)}
 }
-.todo-head{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:0 0 14px}
+.todo-head{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:12px;margin:0 0 14px}
+.todo-search{margin-left:auto;width:min(240px,100%);height:32px;padding:0 12px;border:1px solid #d9def2;border-radius:10px;background:#fff;color:#2a3160;font-size:13px}
+.todo-search:focus{outline:none;border-color:#4458c4}
+html.theme-dark .todo-search{background:#1c2238;border-color:rgba(255,255,255,.14);color:#e8ebff}
 .todo-head .todo-heading{margin:0}
 .todo-head #todo-count{margin:0;font-size:14px;white-space:nowrap}
 .todo-count-num{color:#dc2626;font-weight:800}
@@ -311,7 +314,7 @@ html.theme-dark .mac-dock-item[aria-current=page]{background:transparent;color:#
 html.theme-dark .mac-dock-rule{background:rgba(255,255,255,.14)}
 html.theme-dark .mac-dock-theme{color:#e8ebff}
 html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visible{background:rgba(255,255,255,.08)}
-.todo-row.is-open .todo-title{font-weight:700}
+.todo-row .todo-title,.todo-row.is-open .todo-title{font-weight:700}
 .todo-label{font-size:14px;color:#0A2348}
 html.theme-dark .todo-label{color:#7EA2D6}
 .todo-file-list{display:flex;flex-direction:column;gap:4px}
