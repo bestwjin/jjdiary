@@ -1,5 +1,5 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { createEvent, createTodo, deleteEvent, deleteTodo, isDatabaseConfigured, listEvents, listTodos, migrateEvents, updateEvent, updateTodo } from "./db.js";
+import { createEvent, createSchedule, createTodo, deleteEvent, deleteSchedule, deleteTodo, isDatabaseConfigured, listEvents, listSchedules, listTodos, migrateEvents, updateEvent, updateSchedule, updateTodo } from "./db.js";
 import { addDays, buildMessage, eventsOn, kstToday, normalizeEvents } from "./logic.js";
 
 const EVENTS_KEY = "events";
@@ -203,6 +203,54 @@ export default {
         const todo = await updateTodo(env, todoMatch[1], body);
         if (!todo) return json({ ok: false }, 404, request);
         return json({ ok: true, todo }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/schedules" && request.method === "GET") {
+      try {
+        const schedules = await listSchedules(env);
+        return json({ ok: true, schedules }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/schedules" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const schedule = await createSchedule(env, body);
+        if (!schedule) return json({ ok: false }, 400, request);
+        return json({ ok: true, schedule }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const scheduleMatch = url.pathname.match(/^\/schedules\/(\d+)$/);
+    if (scheduleMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          await deleteSchedule(env, scheduleMatch[1]);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const schedule = await updateSchedule(env, scheduleMatch[1], body);
+        if (!schedule) return json({ ok: false }, 404, request);
+        return json({ ok: true, schedule }, 200, request);
       } catch (error) {
         return dbError(error, request);
       }

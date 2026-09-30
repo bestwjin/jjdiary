@@ -107,6 +107,13 @@ async function ensureSchema(sql) {
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS work_content TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS files JSONB NOT NULL DEFAULT '[]'::jsonb`;
       await sql`ALTER TABLE todos ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT '보통'`;
+      await sql`CREATE TABLE IF NOT EXISTS schedules (
+        id BIGINT PRIMARY KEY,
+        title TEXT NOT NULL,
+        schedule_date DATE NOT NULL,
+        schedule_time TEXT NOT NULL DEFAULT '',
+        memo TEXT NOT NULL DEFAULT ''
+      )`;
     })().catch((error) => {
       root.__diarySchema = null;
       throw error;
@@ -300,6 +307,84 @@ export async function updateTodo(env, id, input) {
       WHERE id = ${todoId}
       RETURNING id, title, tag, requester, ai_tool, work_content, files, priority, done, created_at`;
     return rows[0] ? mapTodo(rows[0]) : null;
+  });
+}
+
+function dateText(value) {
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return String(value || "").slice(0, 10);
+}
+
+export function cleanSchedule(input) {
+  if (!input || typeof input !== "object") return null;
+  const date = typeof input.date === "string" ? input.date.slice(0, 10) : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const title = String(input.title || "").trim().slice(0, 200);
+  if (!title) return null;
+  const time = String(input.time || "").trim().slice(0, 5);
+  if (time && !/^\d{2}:\d{2}$/.test(time)) return null;
+  return {
+    title,
+    date,
+    time,
+    memo: String(input.memo || "").trim().slice(0, 1000),
+  };
+}
+
+export function mapSchedule(row) {
+  return {
+    id: Number(row.id),
+    title: row.title,
+    date: dateText(row.schedule_date),
+    time: row.schedule_time || "",
+    memo: row.memo || "",
+  };
+}
+
+export async function listSchedules(env) {
+  return withDb(env, async (sql) => {
+    const rows = await sql`SELECT id, title, schedule_date, schedule_time, memo FROM schedules
+      ORDER BY schedule_date, schedule_time, id`;
+    return rows.map(mapSchedule);
+  });
+}
+
+export async function createSchedule(env, input) {
+  const schedule = cleanSchedule(input);
+  if (!schedule) return null;
+  const id = Date.now();
+  return withDb(env, async (sql) => {
+    const rows = await sql`INSERT INTO schedules (id, title, schedule_date, schedule_time, memo)
+      VALUES (${id}, ${schedule.title}, ${schedule.date}, ${schedule.time}, ${schedule.memo})
+      RETURNING id, title, schedule_date, schedule_time, memo`;
+    return mapSchedule(rows[0]);
+  });
+}
+
+export async function updateSchedule(env, id, input) {
+  const schedule = cleanSchedule(input);
+  const scheduleId = Number(id);
+  if (!schedule || !Number.isInteger(scheduleId)) return null;
+  return withDb(env, async (sql) => {
+    const rows = await sql`UPDATE schedules
+      SET title = ${schedule.title}, schedule_date = ${schedule.date}, schedule_time = ${schedule.time}, memo = ${schedule.memo}
+      WHERE id = ${scheduleId}
+      RETURNING id, title, schedule_date, schedule_time, memo`;
+    return rows[0] ? mapSchedule(rows[0]) : null;
+  });
+}
+
+export async function deleteSchedule(env, id) {
+  const scheduleId = Number(id);
+  if (!Number.isInteger(scheduleId)) return false;
+  return withDb(env, async (sql) => {
+    const rows = await sql`DELETE FROM schedules WHERE id = ${scheduleId} RETURNING id`;
+    return rows.length > 0;
   });
 }
 
