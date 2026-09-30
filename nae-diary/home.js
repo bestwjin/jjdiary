@@ -266,7 +266,7 @@
       body.style.flex = "none";
       body.style.overflow = "visible";
     }
-    var height = Math.max(MIN_H, el.scrollHeight);
+    var height = Math.max(MIN_H, el.offsetHeight);
     if (body) {
       body.style.flex = "";
       body.style.overflow = "";
@@ -288,15 +288,19 @@
     var statW = stats.length ? Math.floor((canvasWidth - GAP * (per - 1)) / per) : MIN_W;
     statW = Math.max(MIN_W, Math.min(statW, canvasWidth));
     if (stats.length === 1) statW = Math.min(280, canvasWidth);
+    var statH = 96;
+    stats.forEach(function (widget) {
+      statH = Math.max(statH, measureWidget(widget.el, statW));
+    });
     stats.forEach(function (widget) {
       if (x > 0 && x + statW > canvasWidth) {
         x = 0;
-        y += 96 + GAP;
+        y += statH + GAP;
       }
-      widget.rect = { x: x, y: y, w: Math.min(statW, canvasWidth - x), h: 96 };
+      widget.rect = { x: x, y: y, w: Math.min(statW, canvasWidth - x), h: statH };
       x += widget.rect.w + GAP;
     });
-    if (stats.length) y += 96 + GAP;
+    if (stats.length) y += statH + GAP;
     var sideW = Math.max(220, Math.round(canvasWidth * 0.34));
     var leftW = canvasWidth - sideW - GAP;
     var stacked = !side.length || leftW < 280;
