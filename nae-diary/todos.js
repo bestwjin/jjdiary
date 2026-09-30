@@ -8,6 +8,7 @@
   var editingId = null;
   var saving = false;
   var list = document.getElementById("todo-list");
+  var searchInput = document.getElementById("todo-search");
   var empty = document.getElementById("todo-empty");
   var count = document.getElementById("todo-count");
   var error = document.getElementById("todo-error");
@@ -280,6 +281,7 @@
     rows.splice(from, 1);
     rows.splice(index, 0, row);
     rows.forEach(function (item) { list.appendChild(item); });
+    applySearch();
   }
 
   function render() {
@@ -288,7 +290,6 @@
     list.replaceChildren();
     var open = todos.filter(function (todo) { return !todo.done; }).length;
     count.innerHTML = open ? "남은 할일 <span class=\"todo-count-num\">" + open + "</span>개" : "남은 할일이 없습니다";
-    empty.hidden = todos.length > 0;
     todos.forEach(function (todo) {
       var row = document.createElement("li");
       row.className = "todo-row" + (todo.done ? " is-done" : "");
@@ -350,6 +351,30 @@
       row.append(check, main, actions, editor);
       list.appendChild(row);
     });
+    applySearch();
+  }
+
+  function applySearch() {
+    var query = searchInput.value.trim().toLowerCase();
+    var shown = 0;
+    list.querySelectorAll(".todo-row").forEach(function (row) {
+      var title = row.querySelector(".todo-title");
+      var text = title ? title.textContent.toLowerCase() : "";
+      var match = !query || text.indexOf(query) !== -1;
+      row.hidden = !match;
+      if (match) shown += 1;
+    });
+    if (!todos.length) {
+      empty.hidden = false;
+      empty.textContent = "아직 할일이 없습니다.";
+      return;
+    }
+    if (query && !shown) {
+      empty.hidden = false;
+      empty.textContent = "검색 결과가 없습니다.";
+      return;
+    }
+    empty.hidden = true;
   }
 
   function startEdit(todo, editor) {
@@ -417,6 +442,7 @@
     var created = formatCreated(todo.createdAt);
     if (created) bits.push(created);
     row.querySelector(".todo-meta").textContent = bits.join(" · ");
+    applySearch();
   }
 
   async function load() {
@@ -664,6 +690,7 @@
     }
   });
 
+  searchInput.addEventListener("input", applySearch);
   openButton.addEventListener("click", openCreate);
   dialog.addEventListener("click", function (event) {
     if (event.target === dialog) {
