@@ -52,6 +52,47 @@
     return card;
   }
 
+  function clockCard() {
+    var card = document.createElement("section");
+    card.className = "dash-stat dash-clock";
+    card.setAttribute("aria-label", "시계");
+    var face = document.createElement("div");
+    face.className = "dash-clock-face";
+    var i;
+    for (i = 0; i < 12; i++) {
+      var mark = document.createElement("span");
+      mark.className = "dash-clock-mark" + (i % 3 === 0 ? " is-major" : "");
+      mark.style.transform = "rotate(" + i * 30 + "deg)";
+      mark.setAttribute("aria-hidden", "true");
+      face.appendChild(mark);
+    }
+    var hour = document.createElement("span");
+    hour.className = "dash-clock-hand dash-clock-hour";
+    var minute = document.createElement("span");
+    minute.className = "dash-clock-hand dash-clock-minute";
+    var second = document.createElement("span");
+    second.className = "dash-clock-hand dash-clock-second";
+    var hub = document.createElement("span");
+    hub.className = "dash-clock-hub";
+    face.append(hour, minute, second, hub);
+    card.appendChild(face);
+
+    function tick() {
+      var now = new Date();
+      var h = now.getHours() % 12;
+      var m = now.getMinutes();
+      var s = now.getSeconds();
+      var ms = now.getMilliseconds();
+      hour.style.transform = "rotate(" + (h + m / 60) * 30 + "deg)";
+      minute.style.transform = "rotate(" + (m + s / 60) * 6 + "deg)";
+      second.style.transform = "rotate(" + (s + ms / 1000) * 6 + "deg)";
+    }
+
+    tick();
+    setInterval(tick, 50);
+    return card;
+  }
+
   function meterRow(label, value, total, pillClass) {
     var row = document.createElement("div");
     row.className = "dash-meter";
@@ -276,31 +317,41 @@
 
   function arrangeWidgets(widgets, canvasWidth) {
     var stats = widgets.filter(function (widget) { return widget.id.indexOf("stat:") === 0; });
+    var clock = null;
     var todos = null;
     var side = [];
     widgets.forEach(function (widget) {
       if (widget.id === "todos") todos = widget;
+      else if (widget.id === "clock") clock = widget;
       else if (widget.id === "tags" || widget.id === "schedule") side.push(widget);
     });
     var y = 0;
     var x = 0;
-    var per = Math.min(4, Math.max(stats.length, 1));
-    var statW = stats.length ? Math.floor((canvasWidth - GAP * (per - 1)) / per) : MIN_W;
-    statW = Math.max(MIN_W, Math.min(statW, canvasWidth));
-    if (stats.length === 1) statW = Math.min(280, canvasWidth);
-    var statH = 96;
+    var totalW = Math.min(280, Math.max(MIN_W, Math.round(canvasWidth * 0.22)));
+    var rowH = 168;
     stats.forEach(function (widget) {
-      statH = Math.max(statH, measureWidget(widget.el, statW));
+      rowH = Math.max(rowH, measureWidget(widget.el, totalW));
     });
     stats.forEach(function (widget) {
-      if (x > 0 && x + statW > canvasWidth) {
-        x = 0;
-        y += statH + GAP;
-      }
-      widget.rect = { x: x, y: y, w: Math.min(statW, canvasWidth - x), h: statH };
+      widget.rect = { x: x, y: y, w: totalW, h: rowH };
       x += widget.rect.w + GAP;
     });
-    if (stats.length) y += statH + GAP;
+    if (clock) {
+      var clockW = Math.max(totalW, canvasWidth - x);
+      if (x + MIN_W > canvasWidth) {
+        x = 0;
+        y += rowH + GAP;
+        clockW = canvasWidth;
+      }
+      rowH = Math.max(rowH, measureWidget(clock.el, clockW));
+      clock.rect = { x: x, y: y, w: Math.min(clockW, canvasWidth - x), h: rowH };
+      stats.forEach(function (widget) {
+        if (widget.rect.y === clock.rect.y) widget.rect.h = rowH;
+      });
+      y += rowH + GAP;
+    } else if (stats.length) {
+      y += rowH + GAP;
+    }
     var sideW = Math.max(220, Math.round(canvasWidth * 0.34));
     var leftW = canvasWidth - sideW - GAP;
     var stacked = !side.length || leftW < 280;
@@ -393,7 +444,7 @@
     function relayout() {
       var saved = readLayout();
       var width = canvasWidth();
-      if (saved.custom) applySaved(widgets, width, saved);
+      if (saved.custom && saved.items.clock) applySaved(widgets, width, saved);
       else arrangeWidgets(widgets, width);
       paint();
     }
@@ -603,10 +654,10 @@
     if (!showBoard) return;
 
     var tags = groupCount(open, "tag", "태그 없음");
-    var widgets = [{ id: "stat:total", el: statCard("남은 할일", open.length, true) }];
-    tags.forEach(function (item) {
-      widgets.push({ id: "stat:" + item.key, el: statCard(item.key, item.count, false) });
-    });
+    var widgets = [
+      { id: "stat:total", el: statCard("남은 할일", open.length, true) },
+      { id: "clock", el: clockCard() },
+    ];
 
     var allLink = document.createElement("a");
     allLink.className = "dash-more";
