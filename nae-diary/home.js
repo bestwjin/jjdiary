@@ -280,7 +280,7 @@
     var side = [];
     widgets.forEach(function (widget) {
       if (widget.id === "todos") todos = widget;
-      else if (widget.id === "tags" || widget.id === "tools" || widget.id === "schedule") side.push(widget);
+      else if (widget.id === "tags" || widget.id === "schedule") side.push(widget);
     });
     var y = 0;
     var x = 0;
@@ -603,7 +603,6 @@
     if (!showBoard) return;
 
     var tags = groupCount(open, "tag", "태그 없음");
-    var tools = groupCount(open, "aiTool", "미지정");
     var widgets = [{ id: "stat:total", el: statCard("남은 할일", open.length, true) }];
     tags.forEach(function (item) {
       widgets.push({ id: "stat:" + item.key, el: statCard(item.key, item.count, false) });
@@ -633,13 +632,7 @@
       tags.forEach(function (item) {
         tagZone.appendChild(meterRow(item.key, item.count, open.length, "todo-tag"));
       });
-      var toolZone = zone("AI 툴");
-      tools.forEach(function (item) {
-        var pill = "todo-ai";
-        if (item.key !== "미지정") pill += " todo-ai-" + item.key.toLowerCase();
-        toolZone.appendChild(meterRow(item.key, item.count, open.length, pill));
-      });
-      widgets.push({ id: "tags", el: tagZone }, { id: "tools", el: toolZone });
+      widgets.push({ id: "tags", el: tagZone });
     }
     widgets.push({ id: "schedule", el: scheduleZone(schedules) });
     mountBoard(widgets);
