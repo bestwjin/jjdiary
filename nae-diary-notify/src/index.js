@@ -6,7 +6,10 @@ const EVENTS_KEY = "events";
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin") || "";
-  const allowed = origin === "https://nae-diary.pages.dev" || origin.endsWith(".nae-diary.pages.dev");
+  const allowed =
+    origin === "https://nae-diary.pages.dev" ||
+    origin.endsWith(".nae-diary.pages.dev") ||
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   return {
     "Access-Control-Allow-Origin": allowed ? origin : "https://nae-diary.pages.dev",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
