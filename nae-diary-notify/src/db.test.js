@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cleanEvent, cleanTodo, mapRow, mapTodo } from "./db.js";
+import { cleanEvent, cleanSchedule, cleanTodo, mapRow, mapSchedule, mapTodo } from "./db.js";
 
 assert.equal(cleanEvent({ title: "설명회", school: "상명초등학교", date: "2026-10-12T00:00:00.000Z", type: "info-session" }).date, "2026-10-12");
 assert.equal(cleanEvent({ title: "", school: "상명초등학교", date: "2026-10-12" }), null);
@@ -35,6 +35,11 @@ assert.equal(mapRow({
   description: "",
   priority: "medium",
 }).date, "2026-09-28");
+
+assert.equal(cleanSchedule({ title: "  회의  ", date: "2026-09-30", time: "09:30", memo: " 준비 " }).title, "회의");
+assert.equal(cleanSchedule({ title: "회의", date: "2026-09-30", time: "9시" }), null);
+assert.equal(cleanSchedule({ title: "", date: "2026-09-30" }), null);
+assert.equal(mapSchedule({ id: "4", title: "회의", schedule_date: new Date("2026-09-30T00:00:00Z"), schedule_time: "09:30", memo: "" }).date, "2026-09-30");
 
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 ", aiTool: "claude" }).aiTool, "CLAUDE");
 assert.equal(cleanTodo({ title: "준비물", aiTool: "기타" }).aiTool, "");

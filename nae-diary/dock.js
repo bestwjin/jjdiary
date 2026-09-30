@@ -23,6 +23,11 @@
       label: "할일 목록",
       icon: appIcon("dock-todo", "#FACC15", "#047857", '<g transform="rotate(-42 16 16)"><rect x="13.1" y="5.4" width="5.8" height="15.2" rx="1.2" fill="#fff"/><rect x="13.1" y="5.4" width="5.8" height="3.4" rx="1.2" fill="#FDE047"/><path d="M13.1 18.4h5.8L16 24.4z" fill="#fff"/></g>')
     },
+    {
+      href: "/schedule",
+      label: "스케쥴관리",
+      icon: appIcon("dock-sched", "#FB7185", "#9F1239", '<rect x="7.2" y="8.4" width="17.6" height="15.2" rx="2.6" fill="#fff"/><rect x="7.2" y="8.4" width="17.6" height="4.4" fill="#FFE4E6"/><rect x="11" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="19.3" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="10.2" y="15.4" width="5.2" height="1.7" rx=".6" fill="#9F1239"/><rect x="10.2" y="18.6" width="9.2" height="1.7" rx=".6" fill="#9F1239"/>')
+    },
   ];
 
   function currentPath() {
