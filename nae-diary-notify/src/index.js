@@ -1,7 +1,7 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { createEvent, createSchedule, createTodo, deleteEvent, deleteSchedule, deleteTodo, getAppSettings, isDatabaseConfigured, listEvents, listSchedules, listTodos, migrateEvents, updateAppSettings, updateEvent, updateSchedule, updateTodo } from "./db.js";
+import { createCardUsage, createEvent, createMail, createSchedule, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
 import { getHolidays } from "./holidays.js";
-import { addDays, buildMessage, eventsOn, kstToday, normalizeEvents } from "./logic.js";
+import { addDays, buildReminderMessage, eventsOn, isNotifyWindow, kstToday, normalizeEvents, schedulesOn } from "./logic.js";
 
 const EVENTS_KEY = "events";
 
@@ -39,6 +39,16 @@ async function loadEvents(env) {
   return builtinEvents;
 }
 
+async function loadSchedules(env) {
+  if (!isDatabaseConfigured(env)) return [];
+  try {
+    return await listSchedules(env);
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
 function authorized(request, env) {
   return request.headers.get("X-Diary-Sync") === env.SYNC_TOKEN;
 }
@@ -51,33 +61,55 @@ function dbError(error, request) {
 
 async function reminderFor(env, today) {
   const tomorrow = addDays(today, 1);
-  const due = eventsOn(await loadEvents(env), tomorrow);
+  const [events, allSchedules] = await Promise.all([
+    loadEvents(env),
+    loadSchedules(env),
+  ]);
+  const dueEvents = eventsOn(events, tomorrow);
+  const dueSchedules = schedulesOn(allSchedules, tomorrow);
+  const telegram = await getTelegramConfig(env);
   return {
     today,
     tomorrow,
-    count: due.length,
-    message: due.length ? buildMessage(tomorrow, due) : "",
-    telegramConfigured: Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID),
+    count: dueEvents.length + dueSchedules.length,
+    eventCount: dueEvents.length,
+    scheduleCount: dueSchedules.length,
+    events: dueEvents,
+    schedules: dueSchedules,
+    message: buildReminderMessage(tomorrow, dueEvents, dueSchedules),
+    telegramConfigured: Boolean(telegram.token && telegram.username),
+    notifyTime: telegram.notifyTime,
   };
 }
 
 async function sendTelegram(env, text) {
-  const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+  const telegram = await getTelegramConfig(env);
+  if (!telegram.token || !telegram.username) return { ok: false, status: 0, error: "missing_credentials" };
+  const response = await fetch(`https://api.telegram.org/bot${telegram.token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: env.TELEGRAM_CHAT_ID,
+      chat_id: telegram.username,
       text,
       disable_web_page_preview: true,
     }),
   });
   const body = await response.json().catch(() => ({}));
-  return { ok: response.ok && body.ok === true, status: response.status };
+  return {
+    ok: response.ok && body.ok === true,
+    status: response.status,
+    error: body.description || body.error_code || "",
+  };
 }
 
-export async function runReminder(env, today = kstToday()) {
+export async function runReminder(env, today = kstToday(), options = {}) {
+  const force = options.force === true;
   const reminder = await reminderFor(env, today);
   const sentKey = `sent:${today}`;
+
+  if (!force && !isNotifyWindow(new Date(), reminder.notifyTime || "10:00")) {
+    return { ...reminder, sent: false, reason: "not_due" };
+  }
   if (!reminder.message) {
     await env.DIARY.put("lastRun", JSON.stringify({ ...reminder, sent: false, at: new Date().toISOString() }));
     return { ...reminder, sent: false, reason: "no_events" };
@@ -91,8 +123,8 @@ export async function runReminder(env, today = kstToday()) {
   }
   const result = await sendTelegram(env, reminder.message);
   if (result.ok) await env.DIARY.put(sentKey, new Date().toISOString());
-  await env.DIARY.put("lastRun", JSON.stringify({ ...reminder, sent: result.ok, at: new Date().toISOString() }));
-  return { ...reminder, sent: result.ok, reason: result.ok ? "sent" : "telegram_failed" };
+  await env.DIARY.put("lastRun", JSON.stringify({ ...reminder, sent: result.ok, telegramError: result.error || "", at: new Date().toISOString() }));
+  return { ...reminder, sent: result.ok, reason: result.ok ? "sent" : "telegram_failed", telegramError: result.error || "" };
 }
 
 export default {
@@ -239,6 +271,93 @@ export default {
       }
     }
 
+    if (url.pathname === "/mail" && request.method === "GET") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        const folder = url.searchParams.get("folder") || "";
+        const account = url.searchParams.get("account") || "";
+        const data = await listMail(env, folder, account);
+        return json({ ok: true, ...data }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/mail" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const message = await createMail(env, body);
+        if (!message) return json({ ok: false, message: "메일을 저장하지 못했습니다." }, 400, request);
+        return json({ ok: true, message }, 200, request);
+      } catch (error) {
+        if (error && error.code === "settings") {
+          return json({ ok: false, message: "settings" }, 400, request);
+        }
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/mail/sync" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        let body = {};
+        try { body = await request.json(); } catch { body = {}; }
+        const account = body.account || url.searchParams.get("account") || "";
+        const result = await syncMail(env, account);
+        return json(result, 200, request);
+      } catch (error) {
+        if (error && error.code === "settings") {
+          return json({ ok: false, message: "설정에서 다음/네이버/Gmail 연동 정보와 앱 비밀번호를 확인하세요." }, 400, request);
+        }
+        if (error && error.code === "imap") {
+          return json({
+            ok: false,
+            message: "메일 서버 연결에 실패했습니다. IMAP 호스트/포트/앱 비밀번호를 확인하세요.",
+            detail: String(error.message || "").slice(0, 300),
+          }, 400, request);
+        }
+        return dbError(error, request);
+      }
+    }
+
+    const mailMatch = url.pathname.match(/^\/mail\/(\d+)$/);
+    if (mailMatch && request.method === "PUT") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const message = await updateMail(env, mailMatch[1], body);
+        if (!message) return json({ ok: false }, 404, request);
+        return json({ ok: true, message }, 200, request);
+      } catch (error) {
+        if (error && error.code === "settings") {
+          return json({ ok: false, message: "settings" }, 400, request);
+        }
+        return dbError(error, request);
+      }
+    }
+
+    if (mailMatch && request.method === "DELETE") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        const ok = await deleteMail(env, mailMatch[1]);
+        if (!ok) return json({ ok: false }, 404, request);
+        return json({ ok: true }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
     if (url.pathname === "/holidays" && request.method === "GET") {
       const year = Number(url.searchParams.get("year"));
       const month = Number(url.searchParams.get("month"));
@@ -317,6 +436,80 @@ export default {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return json({ ok: false }, 400, request);
       const reminder = await reminderFor(env, today);
       return json({ ok: true, ...reminder }, 200, request);
+    }
+
+    if (url.pathname === "/reminder/run" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      const today = url.searchParams.get("today") || kstToday();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return json({ ok: false }, 400, request);
+      const force = url.searchParams.get("force") === "1";
+      if (force) await env.DIARY.delete(`sent:${today}`);
+      const result = await runReminder(env, today, { force });
+      return json({ ok: true, ...result }, 200, request);
+    }
+
+    if (url.pathname === "/cards" && request.method === "GET") {
+      try {
+        const items = await listCardUsages(env);
+        return json({ ok: true, items }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/cards" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const item = await createCardUsage(env, body);
+        if (!item) return json({ ok: false }, 400, request);
+        return json({ ok: true, item }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/cards/import" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const result = await importCardUsages(env, body.items || body.rows || [], { replace: body.replace === true });
+        return json({ ok: true, ...result }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const cardMatch = url.pathname.match(/^\/cards\/(\d+)$/);
+    if (cardMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          await deleteCardUsage(env, cardMatch[1]);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const item = await updateCardUsage(env, cardMatch[1], body);
+        if (!item) return json({ ok: false }, 404, request);
+        return json({ ok: true, item }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
     }
 
     if (url.pathname === "/health") return json({ ok: true, database: isDatabaseConfigured(env) }, 200, request);

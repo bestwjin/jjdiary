@@ -22,8 +22,27 @@
         </div>
       </div>
       <p id="todo-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
-      <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
-      <ul id="todo-list" style="flex:1;align-content:start;width:100%"></ul>
+      <div class="todo-layout">
+        <aside class="todo-filter-side" aria-label="할일 필터">
+          <div class="todo-filter-block">
+            <h2 class="todo-filter-title">조회 연월</h2>
+            <div class="todo-period">
+              <label class="todo-sr" for="todo-filter-year">연도</label>
+              <select id="todo-filter-year" aria-label="연도"></select>
+              <button id="todo-filter-all" class="todo-filter-all" type="button">전체 기간</button>
+            </div>
+            <div id="todo-filter-months" class="todo-month-filters" role="toolbar" aria-label="월 필터"></div>
+          </div>
+          <div class="todo-filter-block">
+            <h2 class="todo-filter-title">태그</h2>
+            <div id="todo-tag-filters" class="todo-tag-filters" role="toolbar" aria-label="태그 필터"></div>
+          </div>
+        </aside>
+        <section class="todo-main-pane" aria-label="할일 목록">
+          <p id="todo-empty" class="text-gray-500 dark:text-gray-400" hidden>아직 할일이 없습니다.</p>
+          <ul id="todo-list"></ul>
+        </section>
+      </div>
     </div>
   </main>
   <dialog id="notion-dialog" class="todo-dialog notion-dialog">
@@ -48,13 +67,15 @@
         <select id="todo-ai" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
           <option value="">AI툴</option>
           <option value="GPT">GPT</option>
-          <option value="CLAUDE">CLAUDE</option>
+          <option value="CLAUDE" selected>CLAUDE</option>
           <option value="CURSOR">CURSOR</option>
         </select>
         <input id="todo-input" class="todo-title-input w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" type="text" maxlength="200" placeholder="할일을 입력하세요" autocomplete="off"/>
         <button id="todo-submit" class="ks-btn ks-btn-primary" type="submit" form="todo-form">추가</button>
         <button id="todo-cancel" class="ks-btn" type="button" hidden>취소</button>
-        <div class="todo-label">작업내용</div>
+        <input id="todo-created-date" class="todo-carry-date" type="date" hidden/>
+        <button id="todo-carry" class="ks-btn todo-carry-btn" type="button" hidden>이월</button>
+        <div id="todo-work-label" class="todo-label">작업내용</div>
         <div class="todo-editor">
           <div class="wysiwyg-bar">
             <button type="button" data-cmd="bold"><b>B</b></button>

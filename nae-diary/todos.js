@@ -7,8 +7,15 @@
   var todos = [];
   var editingId = null;
   var saving = false;
+  var selectedTag = "";
+  var selectedMonth = "";
+  var filterAllPeriod = false;
   var list = document.getElementById("todo-list");
   var searchInput = document.getElementById("todo-search");
+  var tagFilters = document.getElementById("todo-tag-filters");
+  var yearSelect = document.getElementById("todo-filter-year");
+  var monthFilters = document.getElementById("todo-filter-months");
+  var allPeriodButton = document.getElementById("todo-filter-all");
   var empty = document.getElementById("todo-empty");
   var count = document.getElementById("todo-count");
   var error = document.getElementById("todo-error");
@@ -23,6 +30,8 @@
   var submitButton = document.getElementById("todo-submit");
   var cancelButton = document.getElementById("todo-cancel");
   var openButton = document.getElementById("todo-open");
+  var createdDateInput = document.getElementById("todo-created-date");
+  var carryButton = document.getElementById("todo-carry");
   var dialog = document.getElementById("todo-dialog");
   var notionDialog = document.getElementById("notion-dialog");
   var notionPreview = document.getElementById("notion-preview");
@@ -70,7 +79,27 @@
     return part("year") + "." + part("month") + "." + part("day") + " " + part("hour") + ":" + part("minute");
   }
 
-  var formButtonAnchor = form.querySelector(".todo-label");
+  function createdDateValue(value) {
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    var parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    function part(type) {
+      var found = parts.find(function (item) { return item.type === type; });
+      return found ? found.value : "";
+    }
+    return part("year") + "-" + part("month") + "-" + part("day");
+  }
+
+  function todayDateValue() {
+    return createdDateValue(new Date().toISOString());
+  }
+
+  var formButtonAnchor = document.getElementById("todo-work-label");
 
   function restoreFormButtons() {
     form.insertBefore(submitButton, formButtonAnchor);
@@ -89,8 +118,11 @@
     priorityInput.value = "보통";
     tagInput.value = "";
     requesterInput.value = "";
-    aiInput.value = "";
+    aiInput.value = "CLAUDE";
     workInput.innerHTML = "";
+    createdDateInput.value = "";
+    createdDateInput.hidden = true;
+    carryButton.hidden = true;
     renderFileEditor([]);
     submitButton.textContent = "추가";
     cancelButton.hidden = false;
@@ -284,15 +316,150 @@
     applySearch();
   }
 
+  function kstPart(date, type) {
+    var parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    var found = parts.find(function (item) { return item.type === type; });
+    return found ? found.value : "";
+  }
+
+  function currentYearMonth() {
+    var now = new Date();
+    return { year: kstPart(now, "year"), month: kstPart(now, "month") };
+  }
+
+  function todoYearMonth(todo) {
+    var date = new Date(todo.createdAt);
+    if (Number.isNaN(date.getTime())) return { year: "", month: "" };
+    return { year: kstPart(date, "year"), month: kstPart(date, "month") };
+  }
+
+  function selectedPeriod() {
+    if (filterAllPeriod) return { year: "", month: "" };
+    return {
+      year: yearSelect.value || "",
+      month: selectedMonth || "",
+    };
+  }
+
+  function matchesPeriod(todo) {
+    var period = selectedPeriod();
+    if (!period.year && !period.month) return true;
+    var ym = todoYearMonth(todo);
+    if (period.year && ym.year !== period.year) return false;
+    if (period.month && ym.month !== period.month) return false;
+    return true;
+  }
+
+  function fillYearOptions() {
+    var current = currentYearMonth();
+    var years = {};
+    years[current.year] = true;
+    todos.forEach(function (todo) {
+      var ym = todoYearMonth(todo);
+      if (ym.year) years[ym.year] = true;
+    });
+    var yearList = Object.keys(years).sort(function (a, b) { return Number(b) - Number(a); });
+    var prevYear = yearSelect.value;
+    yearSelect.replaceChildren();
+    yearList.forEach(function (year) {
+      var option = document.createElement("option");
+      option.value = year;
+      option.textContent = year + "년";
+      yearSelect.appendChild(option);
+    });
+    yearSelect.value = yearList.indexOf(prevYear) >= 0 ? prevYear : current.year;
+  }
+
+  function renderMonthFilters() {
+    if (!selectedMonth) selectedMonth = currentYearMonth().month;
+    monthFilters.replaceChildren();
+    for (var month = 1; month <= 12; month += 1) {
+      var value = String(month).padStart(2, "0");
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "todo-month-filter" + (!filterAllPeriod && selectedMonth === value ? " is-on" : "");
+      button.textContent = month + "월";
+      button.disabled = filterAllPeriod;
+      button.setAttribute("aria-pressed", !filterAllPeriod && selectedMonth === value ? "true" : "false");
+      button.addEventListener("click", function (next) {
+        return function () {
+          selectedMonth = next;
+          filterAllPeriod = false;
+          paintPeriodState();
+          renderMonthFilters();
+          renderTagFilters();
+          applySearch();
+        };
+      }(value));
+      monthFilters.appendChild(button);
+    }
+  }
+
+  function paintPeriodState() {
+    yearSelect.disabled = filterAllPeriod;
+    allPeriodButton.classList.toggle("is-on", filterAllPeriod);
+    allPeriodButton.setAttribute("aria-pressed", filterAllPeriod ? "true" : "false");
+  }
+
+  function uniqueTags() {
+    var map = {};
+    todos.forEach(function (todo) {
+      if (!matchesPeriod(todo)) return;
+      var tag = String(todo.tag || "").trim();
+      if (tag) map[tag] = true;
+    });
+    return Object.keys(map).sort(function (a, b) {
+      return a.localeCompare(b, "ko");
+    });
+  }
+
+  function renderTagFilters() {
+    var tags = uniqueTags();
+    tagFilters.replaceChildren();
+    if (selectedTag && tags.indexOf(selectedTag) === -1) selectedTag = "";
+
+    function addButton(label, value, fullWidth) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "todo-tag-filter" +
+        (fullWidth ? " is-all" : "") +
+        (selectedTag === value ? " is-on" : "");
+      button.textContent = label;
+      button.setAttribute("aria-pressed", selectedTag === value ? "true" : "false");
+      button.addEventListener("click", function () {
+        selectedTag = selectedTag === value ? "" : value;
+        renderTagFilters();
+        applySearch();
+      });
+      tagFilters.appendChild(button);
+    }
+
+    addButton("전체", "", true);
+    tags.forEach(function (tag) { addButton(tag, tag, false); });
+  }
+
   function render() {
     sortTodos();
     parkForm();
     list.replaceChildren();
+    fillYearOptions();
+    renderMonthFilters();
+    paintPeriodState();
     var open = todos.filter(function (todo) { return !todo.done; }).length;
     count.innerHTML = open ? "남은 할일 <span class=\"todo-count-num\">" + open + "</span>개" : "남은 할일이 없습니다";
+    renderTagFilters();
     todos.forEach(function (todo) {
       var row = document.createElement("li");
       row.className = "todo-row" + (todo.done ? " is-done" : "");
+      row.dataset.tag = String(todo.tag || "").trim();
+      var ym = todoYearMonth(todo);
+      row.dataset.year = ym.year;
+      row.dataset.month = ym.month;
       var check = document.createElement("button");
       check.type = "button";
       check.className = "todo-check";
@@ -356,11 +523,17 @@
 
   function applySearch() {
     var query = searchInput.value.trim().toLowerCase();
+    var period = selectedPeriod();
     var shown = 0;
     list.querySelectorAll(".todo-row").forEach(function (row) {
       var title = row.querySelector(".todo-title");
       var text = title ? title.textContent.toLowerCase() : "";
-      var match = !query || text.indexOf(query) !== -1;
+      var tag = row.dataset.tag || "";
+      var matchTitle = !query || text.indexOf(query) !== -1;
+      var matchTag = !selectedTag || tag === selectedTag;
+      var matchYear = !period.year || row.dataset.year === period.year;
+      var matchMonth = !period.month || row.dataset.month === period.month;
+      var match = matchTitle && matchTag && matchYear && matchMonth;
       row.hidden = !match;
       if (match) shown += 1;
     });
@@ -369,9 +542,12 @@
       empty.textContent = "아직 할일이 없습니다.";
       return;
     }
-    if (query && !shown) {
+    if (!shown) {
       empty.hidden = false;
-      empty.textContent = "검색 결과가 없습니다.";
+      if (query) empty.textContent = "검색 결과가 없습니다.";
+      else if (selectedTag) empty.textContent = "해당 태그의 할일이 없습니다.";
+      else if (!filterAllPeriod) empty.textContent = "선택한 연월의 할일이 없습니다.";
+      else empty.textContent = "표시할 할일이 없습니다.";
       return;
     }
     empty.hidden = true;
@@ -395,6 +571,9 @@
     aiInput.value = todo.aiTool || "";
     workInput.innerHTML = editorHtml(todo.workContent);
     renderFileEditor(todo.files || []);
+    createdDateInput.value = todayDateValue();
+    createdDateInput.hidden = false;
+    carryButton.hidden = false;
     submitButton.textContent = "저장";
     cancelButton.hidden = false;
     editor.hidden = false;
@@ -507,6 +686,7 @@
         workContent: editorHtml(workInput.innerHTML),
         files: readFiles(),
       };
+      if (editingId && createdDateInput.value) body.createdAt = createdDateInput.value;
       var response = await fetch(editingId ? API + "/todos/" + editingId : API + "/todos", {
         method: editingId ? "PUT" : "POST",
         headers: headers,
@@ -522,7 +702,16 @@
         todos.forEach(function (item) {
           if (item.id === editingId) current = item;
         });
+        var beforeDate = current ? createdDateValue(current.createdAt) : "";
         if (current && data.todo) Object.assign(current, data.todo);
+        var afterDate = data.todo ? createdDateValue(data.todo.createdAt) : beforeDate;
+        if (beforeDate !== afterDate) {
+          parkForm();
+          resetForm();
+          render();
+          showToast("이월되었습니다.");
+          return;
+        }
         syncOpenRow(current || data.todo);
         placeOpenRow();
         showToast("저장되었습니다.");
@@ -544,6 +733,12 @@
     if (dialog.open) dialog.close();
     document.querySelectorAll(".todo-edit").forEach(function (slot) { slot.hidden = true; });
     resetForm();
+  });
+
+  carryButton.addEventListener("click", function () {
+    if (!createdDateInput.value) createdDateInput.value = todayDateValue();
+    if (typeof form.requestSubmit === "function") form.requestSubmit();
+    else form.dispatchEvent(new Event("submit", { cancelable: true }));
   });
 
   function escapeHtml(value) {
@@ -691,6 +886,34 @@
   });
 
   searchInput.addEventListener("input", applySearch);
+  yearSelect.addEventListener("change", function () {
+    filterAllPeriod = false;
+    paintPeriodState();
+    renderMonthFilters();
+    renderTagFilters();
+    applySearch();
+  });
+  allPeriodButton.addEventListener("click", function () {
+    filterAllPeriod = !filterAllPeriod;
+    if (!filterAllPeriod) {
+      var current = currentYearMonth();
+      if (!yearSelect.value) yearSelect.value = current.year;
+      if (!selectedMonth) selectedMonth = current.month;
+    }
+    paintPeriodState();
+    renderMonthFilters();
+    renderTagFilters();
+    applySearch();
+  });
+  (function initPeriod() {
+    var current = currentYearMonth();
+    selectedMonth = current.month;
+    fillYearOptions();
+    yearSelect.value = current.year;
+    filterAllPeriod = false;
+    paintPeriodState();
+    renderMonthFilters();
+  })();
   openButton.addEventListener("click", openCreate);
   dialog.addEventListener("click", function (event) {
     if (event.target === dialog) {
@@ -714,6 +937,113 @@
       applyCommand(button.getAttribute("data-cmd"));
     });
   });
+
+  var selectionCopyButton = null;
+  var selectionCopyText = "";
+
+  function ensureSelectionCopyButton() {
+    if (selectionCopyButton) return selectionCopyButton;
+    selectionCopyButton = document.createElement("button");
+    selectionCopyButton.type = "button";
+    selectionCopyButton.id = "todo-selection-copy";
+    selectionCopyButton.className = "todo-selection-copy";
+    selectionCopyButton.textContent = "복사";
+    selectionCopyButton.hidden = true;
+    document.body.appendChild(selectionCopyButton);
+    selectionCopyButton.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+    });
+    selectionCopyButton.addEventListener("click", async function () {
+      var text = selectionCopyText;
+      if (!text) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          var area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.left = "-9999px";
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        selectionCopyButton.textContent = "복사됨";
+        showToast("복사되었습니다.");
+        setTimeout(function () {
+          if (selectionCopyButton) selectionCopyButton.textContent = "복사";
+          hideSelectionCopy();
+        }, 900);
+      } catch (error) {
+        selectionCopyButton.textContent = "실패";
+        setTimeout(function () {
+          if (selectionCopyButton) selectionCopyButton.textContent = "복사";
+        }, 900);
+      }
+    });
+    return selectionCopyButton;
+  }
+
+  function hideSelectionCopy() {
+    selectionCopyText = "";
+    if (!selectionCopyButton) return;
+    selectionCopyButton.hidden = true;
+  }
+
+  function selectionInsideWork(range) {
+    if (!range || !workInput) return false;
+    return workInput.contains(range.commonAncestorContainer) ||
+      workInput === range.commonAncestorContainer;
+  }
+
+  function updateSelectionCopy() {
+    var selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount < 1) {
+      hideSelectionCopy();
+      return;
+    }
+    var range = selection.getRangeAt(0);
+    if (!selectionInsideWork(range)) {
+      hideSelectionCopy();
+      return;
+    }
+    var text = String(selection.toString() || "").replace(/\u00a0/g, " ").trim();
+    if (!text) {
+      hideSelectionCopy();
+      return;
+    }
+    selectionCopyText = String(selection.toString() || "").replace(/\u00a0/g, " ");
+    var rect = range.getBoundingClientRect();
+    if (!rect || (!rect.width && !rect.height)) {
+      hideSelectionCopy();
+      return;
+    }
+    var button = ensureSelectionCopyButton();
+    button.textContent = "복사";
+    button.hidden = false;
+    var left = Math.min(window.innerWidth - 72, Math.max(8, rect.right + 8));
+    var top = Math.min(window.innerHeight - 40, Math.max(8, rect.top - 4));
+    button.style.left = left + "px";
+    button.style.top = top + "px";
+  }
+
+  document.addEventListener("mouseup", function () {
+    setTimeout(updateSelectionCopy, 0);
+  });
+  document.addEventListener("keyup", function () {
+    setTimeout(updateSelectionCopy, 0);
+  });
+  document.addEventListener("selectionchange", function () {
+    if (!selectionCopyButton || selectionCopyButton.hidden) return;
+    var selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selectionInsideWork(selection.rangeCount ? selection.getRangeAt(0) : null)) {
+      hideSelectionCopy();
+    }
+  });
+  document.addEventListener("scroll", hideSelectionCopy, true);
+  window.addEventListener("resize", hideSelectionCopy);
 
   renderFileEditor([]);
 

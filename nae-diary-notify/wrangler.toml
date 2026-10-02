@@ -17,4 +17,5 @@ binding = "DIARY"
 id = "390c3350adfe4146b52fc960a9c872a0"
 
 [triggers]
-crons = ["0 0 * * *"]
+# 5분마다 확인 후, 설정한 알림 시간(KST)에 발송
+crons = ["*/5 * * * *"]

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <script>try{var root=document.documentElement;function wantDark(){var t=localStorage.getItem("theme");return t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)}function applyTheme(){root.classList.toggle("theme-dark",wantDark())}applyTheme();new MutationObserver(function(){if(root.classList.contains("theme-dark")!==wantDark())applyTheme()}).observe(root,{attributes:true,attributeFilter:["class"]})}catch(e){}</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>메일 - 내 다이어리</title>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="mail-page">
+      <aside class="mail-nav" aria-label="메일함">
+        <button id="mail-compose-btn" class="mail-compose-btn" type="button">메일 쓰기</button>
+        <div class="mail-account-switch" id="mail-account-switch" role="toolbar" aria-label="메일 계정">
+          <button type="button" class="mail-account-chip is-active" data-account="">전체</button>
+          <button type="button" class="mail-account-chip" data-account="daum">다음</button>
+          <button type="button" class="mail-account-chip" data-account="naver">네이버</button>
+          <button type="button" class="mail-account-chip" data-account="gmail">Gmail</button>
+        </div>
+        <nav class="mail-folders" id="mail-folders">
+          <button type="button" class="mail-folder is-active" data-folder="inbox">
+            <span class="mail-folder-label">받은편지함</span>
+            <span class="mail-folder-count" data-count="inbox"></span>
+          </button>
+          <button type="button" class="mail-folder" data-folder="sent">
+            <span class="mail-folder-label">보낸편지함</span>
+            <span class="mail-folder-count" data-count="sent"></span>
+          </button>
+          <button type="button" class="mail-folder" data-folder="drafts">
+            <span class="mail-folder-label">임시보관함</span>
+            <span class="mail-folder-count" data-count="drafts"></span>
+          </button>
+          <button type="button" class="mail-folder" data-folder="trash">
+            <span class="mail-folder-label">휴지통</span>
+            <span class="mail-folder-count" data-count="trash"></span>
+          </button>
+        </nav>
+        <div class="mail-account" id="mail-account">
+          <div class="mail-account-title">연동 계정</div>
+          <div class="mail-account-addr" id="mail-account-addr">설정에서 메일 연동을 입력하세요</div>
+          <a class="mail-account-link" href="/settings">설정으로 이동</a>
+        </div>
+      </aside>
+
+      <section class="mail-list-pane" aria-label="메일 목록">
+        <div class="mail-list-head">
+          <h1 class="mail-list-title" id="mail-list-title">받은편지함</h1>
+          <div class="mail-list-actions">
+            <input id="mail-search" class="mail-search" type="search" placeholder="제목·보낸사람 검색" autocomplete="off"/>
+            <button id="mail-refresh" class="ks-btn" type="button">받기</button>
+          </div>
+        </div>
+        <p id="mail-error" class="mail-error" hidden></p>
+        <p id="mail-empty" class="mail-empty" hidden>메일이 없습니다.</p>
+        <ul id="mail-list" class="mail-list"></ul>
+      </section>
+
+      <section class="mail-detail-pane" aria-label="메일 내용" id="mail-detail-pane">
+        <div id="mail-detail-empty" class="mail-detail-empty">
+          <div class="mail-detail-empty-mark" aria-hidden="true">✉</div>
+          <p>메일을 선택하거나 새 메일을 작성하세요</p>
+        </div>
+        <article id="mail-reader" class="mail-reader" hidden>
+          <div class="mail-reader-head">
+            <h2 id="mail-reader-subject" class="mail-reader-subject"></h2>
+            <div class="mail-reader-actions">
+              <button id="mail-reply" class="ks-btn" type="button">답장</button>
+              <button id="mail-trash" class="ks-btn" type="button">삭제</button>
+            </div>
+          </div>
+          <div class="mail-reader-meta">
+            <div><span>보낸사람</span><strong id="mail-reader-from"></strong></div>
+            <div><span>받는사람</span><strong id="mail-reader-to"></strong></div>
+            <div><span>날짜</span><strong id="mail-reader-date"></strong></div>
+          </div>
+          <div id="mail-reader-body" class="mail-reader-body"></div>
+        </article>
+        <form id="mail-compose" class="mail-compose" hidden>
+          <div class="mail-compose-head">
+            <h2 class="mail-reader-subject" id="mail-compose-title">새 메일</h2>
+            <div class="mail-reader-actions">
+              <button id="mail-save-draft" class="ks-btn" type="button">임시저장</button>
+              <button id="mail-send" class="ks-btn ks-btn-primary" type="submit">보내기</button>
+              <button id="mail-compose-close" class="ks-btn" type="button">닫기</button>
+            </div>
+          </div>
+          <label class="mail-field">
+            <span>보내는계정</span>
+            <select id="mail-from-account">
+              <option value="daum">다음</option>
+              <option value="naver">네이버</option>
+              <option value="gmail">Gmail</option>
+            </select>
+          </label>
+          <label class="mail-field">
+            <span>받는사람</span>
+            <input id="mail-to" type="text" autocomplete="off" placeholder="name@example.com"/>
+          </label>
+          <label class="mail-field">
+            <span>제목</span>
+            <input id="mail-subject" type="text" autocomplete="off" maxlength="200" placeholder="제목"/>
+          </label>
+          <label class="mail-field mail-field-body">
+            <span>내용</span>
+            <textarea id="mail-body" rows="14" placeholder="메일 내용을 입력하세요"></textarea>
+          </label>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="/dock.js"></script>
+  <script src="/mail.js"></script>
+</body>
+</html>

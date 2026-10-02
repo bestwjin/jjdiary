@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cleanEvent, cleanSchedule, cleanTodo, mapRow, mapSchedule, mapTodo } from "./db.js";
+import { cleanCreatedAt, cleanEvent, cleanSchedule, cleanTodo, mapRow, mapSchedule, mapTodo } from "./db.js";
 
 assert.equal(cleanEvent({ title: "설명회", school: "상명초등학교", date: "2026-10-12T00:00:00.000Z", type: "info-session" }).date, "2026-10-12");
 assert.equal(cleanEvent({ title: "", school: "상명초등학교", date: "2026-10-12" }), null);
@@ -57,6 +57,9 @@ assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requ
 assert.equal(cleanTodo({ title: "  준비물 챙기기  ", tag: " 입학 ", requester: " 김선생 " }).requester, "김선생");
 assert.equal(cleanTodo({ title: "   " }), null);
 assert.equal(cleanTodo({ title: "준비물", priority: "높음" }).priority, "높음");
+assert.equal(cleanCreatedAt({ createdAt: "2026-10-01" }, "2026-09-30T01:23:45.000Z"), "2026-10-01T01:23:45.000Z");
+assert.equal(cleanCreatedAt({}, "2026-09-30T01:23:45.000Z"), null);
+assert.equal(cleanCreatedAt({ createdAt: "bad" }, "2026-09-30T01:23:45.000Z"), null);
 assert.equal(cleanTodo({ title: "준비물", priority: "urgent" }).priority, "보통");
 assert.equal(cleanTodo({ title: "준비물" }).priority, "보통");
 assert.equal(mapTodo({ id: "12", title: "준비물", priority: "낮음", done: false, created_at: "2026-09-29T00:00:00.000Z" }).priority, "낮음");

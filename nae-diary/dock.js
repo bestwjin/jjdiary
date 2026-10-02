@@ -29,6 +29,16 @@
       icon: appIcon("dock-sched", "#FB7185", "#9F1239", '<rect x="7.2" y="8.4" width="17.6" height="15.2" rx="2.6" fill="#fff"/><rect x="7.2" y="8.4" width="17.6" height="4.4" fill="#FFE4E6"/><rect x="11" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="19.3" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="10.2" y="15.4" width="5.2" height="1.7" rx=".6" fill="#9F1239"/><rect x="10.2" y="18.6" width="9.2" height="1.7" rx=".6" fill="#9F1239"/>')
     },
     {
+      href: "/cards",
+      label: "법카사용",
+      icon: appIcon("dock-card", "#34D399", "#065F46", '<rect x="6.5" y="10" width="19" height="12.5" rx="2.4" fill="#fff"/><rect x="6.5" y="13.2" width="19" height="3.2" fill="#A7F3D0"/><rect x="9" y="18.2" width="7" height="1.8" rx=".6" fill="#065F46"/><rect x="17.5" y="18.2" width="5" height="1.8" rx=".6" fill="#065F46"/>')
+    },
+    {
+      href: "/mail",
+      label: "메일",
+      icon: appIcon("dock-mail", "#38BDF8", "#0369A1", '<rect x="6.4" y="9.2" width="19.2" height="13.4" rx="2.4" fill="#fff"/><path fill="#BAE6FD" d="M6.4 11.2 16 17.4 25.6 11.2V10.8c0-.9-.7-1.6-1.6-1.6H8c-.9 0-1.6.7-1.6 1.6v.4z"/><path fill="none" stroke="#0369A1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7.4 11.4 16 17.2l8.6-5.8"/>')
+    },
+    {
       href: "/settings",
       label: "설정",
       icon: appIcon(

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <script>try{var root=document.documentElement;function wantDark(){var t=localStorage.getItem("theme");return t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)}function applyTheme(){root.classList.toggle("theme-dark",wantDark())}applyTheme();new MutationObserver(function(){if(root.classList.contains("theme-dark")!==wantDark())applyTheme()}).observe(root,{attributes:true,attributeFilter:["class"]})}catch(e){}</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>법카사용 - 내 다이어리</title>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="container todo-page mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
+      <div class="todo-head">
+        <div class="todo-head-lead">
+          <h1 class="todo-heading text-gray-800 dark:text-white">법카사용</h1>
+        </div>
+        <div class="todo-head-actions">
+          <button id="card-import-open" class="ks-btn" type="button">CSV 가져오기</button>
+          <button id="card-add" class="todo-add-btn" type="button">사용내역 추가</button>
+        </div>
+      </div>
+      <p id="card-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <div class="card-toolbar">
+        <div class="sched-nav">
+          <button id="card-prev" class="ks-btn" type="button">이전달</button>
+          <h2 id="card-label" class="sched-label"></h2>
+          <button id="card-next" class="ks-btn" type="button">다음달</button>
+          <button id="card-all" class="ks-btn ks-btn-quiet" type="button">전체</button>
+        </div>
+        <div class="card-filters">
+          <select id="card-filter-category" aria-label="구분 필터">
+            <option value="">전체 구분</option>
+          </select>
+          <select id="card-filter-settled" aria-label="정산 필터">
+            <option value="">정산 전체</option>
+            <option value="N">미정산</option>
+            <option value="Y">정산완료</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-layout">
+        <aside class="card-side" aria-label="한도 현황">
+          <div class="card-side-head">
+            <h2>한도 현황</h2>
+          </div>
+          <dl class="card-limit-list">
+            <div>
+              <dt>총한도</dt>
+              <dd id="card-limit-total">0</dd>
+            </div>
+            <div>
+              <dt>사용금액</dt>
+              <dd id="card-limit-used">0</dd>
+            </div>
+            <div>
+              <dt>가용금액</dt>
+              <dd id="card-limit-avail" class="is-avail">0</dd>
+            </div>
+          </dl>
+          <p id="card-side-note" class="card-side-note"></p>
+        </aside>
+        <section class="card-board" aria-label="법카 사용 목록">
+          <table class="card-table">
+            <thead>
+              <tr>
+                <th>사용일</th>
+                <th>사용처</th>
+                <th class="is-num">금액</th>
+                <th>사용내역</th>
+                <th>구분</th>
+                <th>정산</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody id="card-body"></tbody>
+          </table>
+          <p id="card-empty" class="card-empty" hidden>등록된 법카 사용내역이 없습니다.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <dialog id="card-dialog" class="todo-dialog sched-dialog">
+    <form id="card-form" class="sched-form">
+      <h2 id="card-form-title" class="todo-heading">사용내역 추가</h2>
+      <div class="card-scan">
+        <button id="card-scan-btn" class="ks-btn ks-btn-primary" type="button">영수증 스캔</button>
+        <input id="card-scan-file" type="file" accept="image/*" capture="environment" hidden/>
+        <p id="card-scan-status" class="card-scan-status" hidden></p>
+        <img id="card-scan-preview" class="card-scan-preview" alt="영수증 미리보기" hidden/>
+      </div>
+      <label class="todo-label" for="card-date">사용일</label>
+      <input id="card-date" type="date" required/>
+      <label class="todo-label" for="card-merchant">사용처</label>
+      <input id="card-merchant" type="text" maxlength="120" required autocomplete="off"/>
+      <label class="todo-label" for="card-amount">금액</label>
+      <input id="card-amount" type="number" step="1" required/>
+      <label class="todo-label" for="card-purpose">사용내역</label>
+      <input id="card-purpose" type="text" maxlength="300" autocomplete="off"/>
+      <label class="todo-label" for="card-category">구분</label>
+      <input id="card-category" type="text" maxlength="40" list="card-category-list" placeholder="식대, 교통, 접대 등" autocomplete="off"/>
+      <datalist id="card-category-list">
+        <option value="식대"></option>
+        <option value="교통"></option>
+        <option value="접대"></option>
+        <option value="소모품"></option>
+        <option value="교육"></option>
+        <option value="기타"></option>
+      </datalist>
+      <label class="settings-check" for="card-settled"><input id="card-settled" type="checkbox"/> 정산완료</label>
+      <label class="todo-label" for="card-note">비고</label>
+      <textarea id="card-note" maxlength="500" rows="3"></textarea>
+      <div class="sched-actions">
+        <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+        <button id="card-delete" class="ks-btn ks-btn-danger" type="button" hidden>삭제</button>
+        <button id="card-close" class="ks-btn" type="button">닫기</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="card-import-dialog" class="todo-dialog sched-dialog">
+    <form id="card-import-form" class="sched-form">
+      <h2 class="todo-heading">CSV 가져오기</h2>
+      <p class="settings-help">엑셀/시트에서 CSV로 내려받거나, 표 내용을 복사해 붙여넣으세요. 첫 줄은 헤더(사용일, 사용처, 금액, 사용내역, 구분, 정산, 비고)여야 합니다.</p>
+      <textarea id="card-import-text" rows="12" placeholder="사용일,사용처,금액,사용내역,구분,정산,비고&#10;2026-10-01,스타벅스,12000,팀미팅,식대,, "></textarea>
+      <label class="settings-check" for="card-import-replace"><input id="card-import-replace" type="checkbox"/> 기존 데이터 모두 지우고 가져오기</label>
+      <div class="sched-actions">
+        <button class="ks-btn ks-btn-primary" type="submit">가져오기</button>
+        <button id="card-import-close" class="ks-btn" type="button">닫기</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="/dock.js"></script>
+  <script src="/cards.js"></script>
+</body>
+</html>
