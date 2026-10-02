@@ -160,18 +160,37 @@
     var name = document.createElement("span");
     name.className = "todo-file-name";
     name.textContent = filename;
+    name.title = "더블클릭하여 수정";
     var note = document.createElement("span");
     note.className = "todo-file-note";
     note.textContent = changeNote;
+    note.title = "더블클릭하여 수정";
     var edit = document.createElement("button");
     edit.type = "button";
     edit.className = "ks-btn ks-btn-quiet todo-file-edit";
     edit.textContent = "수정";
     edit.addEventListener("click", function () { editFileItem(row); });
+    function startEdit(event) {
+      event.preventDefault();
+      editFileItem(row);
+    }
+    name.addEventListener("dblclick", startEdit);
+    note.addEventListener("dblclick", startEdit);
     row.replaceChildren(name, note, edit);
   }
 
+  function finishFileEdit(row, name, note) {
+    var filename = name.value.trim();
+    var changeNote = note.value.trim();
+    if (!filename && !changeNote) {
+      row.remove();
+      return;
+    }
+    showFileItem(row, filename, changeNote);
+  }
+
   function editFileItem(row) {
+    if (row.classList.contains("is-editing")) return;
     var current = readFileItem(row);
     row.classList.add("is-editing");
     var name = fileField("input", current.filename, "파일명", 200);
@@ -182,16 +201,19 @@
     done.className = "ks-btn ks-btn-quiet todo-file-edit";
     done.textContent = "완료";
     done.addEventListener("click", function () {
-      var filename = name.value.trim();
-      var changeNote = note.value.trim();
-      if (!filename && !changeNote) {
-        row.remove();
-        return;
-      }
-      showFileItem(row, filename, changeNote);
+      finishFileEdit(row, name, note);
     });
+    function onCtrlEnter(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        finishFileEdit(row, name, note);
+      }
+    }
+    name.addEventListener("keydown", onCtrlEnter);
+    note.addEventListener("keydown", onCtrlEnter);
     row.replaceChildren(name, note, done);
     name.focus();
+    name.select();
   }
 
   function appendFileItem(listEl, filename, changeNote) {
