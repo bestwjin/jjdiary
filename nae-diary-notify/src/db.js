@@ -134,6 +134,7 @@ async function ensureSchema(sql) {
       )`;
       await sql`ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS external_id TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS account TEXT NOT NULL DEFAULT 'daum'`;
+      await sql`ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS body_html TEXT NOT NULL DEFAULT ''`;
       await sql`CREATE INDEX IF NOT EXISTS mail_messages_folder_idx ON mail_messages (folder, created_at DESC)`;
       await sql`CREATE INDEX IF NOT EXISTS mail_messages_account_idx ON mail_messages (account, folder, created_at DESC)`;
       await sql`DROP INDEX IF EXISTS mail_messages_external_uidx`;
@@ -691,6 +692,7 @@ export function mapMail(row) {
     toAddr: row.to_addr || "",
     subject: row.subject || "",
     body: row.body || "",
+    bodyHtml: row.body_html || "",
     externalId: row.external_id || "",
     isRead: row.is_read === true || row.is_read === "t" || row.is_read === "true",
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at || ""),
@@ -703,16 +705,16 @@ export async function listMail(env, folder, accountId) {
     const account = accountId && MAIL_PROVIDERS[accountId] ? accountId : "";
     let rows;
     if (account && folder && MAIL_FOLDERS.has(folder)) {
-      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at
+      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at
         FROM mail_messages WHERE account = ${account} AND folder = ${folder} ORDER BY created_at DESC, id DESC`;
     } else if (account) {
-      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at
+      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at
         FROM mail_messages WHERE account = ${account} ORDER BY created_at DESC, id DESC`;
     } else if (folder && MAIL_FOLDERS.has(folder)) {
-      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at
+      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at
         FROM mail_messages WHERE folder = ${folder} ORDER BY created_at DESC, id DESC`;
     } else {
-      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at
+      rows = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at
         FROM mail_messages ORDER BY created_at DESC, id DESC`;
     }
 
@@ -792,7 +794,7 @@ export async function createMail(env, input) {
     const rows = await sql`INSERT INTO mail_messages
       (id, account, folder, from_addr, to_addr, subject, body, is_read, created_at, updated_at)
       VALUES (${id}, ${mail.account}, ${mail.folder}, ${mail.fromAddr}, ${mail.toAddr}, ${mail.subject}, ${mail.body}, ${mail.folder !== "inbox"}, NOW(), NOW())
-      RETURNING id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at`;
+      RETURNING id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at`;
     return mapMail(rows[0]);
   });
 }
@@ -801,7 +803,7 @@ export async function updateMail(env, id, input) {
   const mailId = Number(id);
   if (!Number.isInteger(mailId) || !input || typeof input !== "object") return null;
   return withDb(env, async (sql) => {
-    const existing = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at
+    const existing = await sql`SELECT id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at
       FROM mail_messages WHERE id = ${mailId} LIMIT 1`;
     if (!existing[0]) return null;
     const current = mapMail(existing[0]);
@@ -850,7 +852,7 @@ export async function updateMail(env, id, input) {
       is_read = ${isRead},
       updated_at = NOW()
       WHERE id = ${mailId}
-      RETURNING id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at`;
+      RETURNING id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at`;
     return mapMail(rows[0]);
   });
 }
@@ -901,6 +903,7 @@ export async function syncMail(env, accountId) {
             to_addr = ${item.toAddr},
             subject = ${item.subject},
             body = ${item.body},
+            body_html = ${item.bodyHtml || ""},
             is_read = ${item.isRead},
             updated_at = NOW()
             WHERE id = ${exists[0].id}`;
@@ -908,8 +911,8 @@ export async function syncMail(env, accountId) {
         }
         const id = Date.now() * 1000 + Math.floor(Math.random() * 1000) + imported;
         await sql`INSERT INTO mail_messages
-          (id, account, folder, from_addr, to_addr, subject, body, external_id, is_read, created_at, updated_at)
-          VALUES (${id}, ${mail.id}, 'inbox', ${item.fromAddr}, ${item.toAddr}, ${item.subject}, ${item.body}, ${externalId}, ${item.isRead}, NOW(), NOW())`;
+          (id, account, folder, from_addr, to_addr, subject, body, body_html, external_id, is_read, created_at, updated_at)
+          VALUES (${id}, ${mail.id}, 'inbox', ${item.fromAddr}, ${item.toAddr}, ${item.subject}, ${item.body}, ${item.bodyHtml || ""}, ${externalId}, ${item.isRead}, NOW(), NOW())`;
         imported += 1;
       }
     });

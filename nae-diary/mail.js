@@ -70,6 +70,63 @@
     });
   }
 
+  function sanitizeMailHtml(html) {
+    return String(html || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/\bon\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  }
+
+  function wrapMailHtmlForViewer(html) {
+    var cleaned = sanitizeMailHtml(html);
+    if (/<html[\s>]/i.test(cleaned)) return cleaned;
+    return (
+      "<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+      "<base target=\"_blank\">" +
+      "<style>body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.7;color:#1e293b;margin:12px;word-break:break-word}" +
+      "img{max-width:100%;height:auto}a{color:#2563eb}</style></head><body>" +
+      cleaned +
+      "</body></html>"
+    );
+  }
+
+  function resizeMailHtmlFrame(iframe) {
+    try {
+      var doc = iframe.contentDocument;
+      if (!doc) return;
+      var h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
+      iframe.style.height = Math.min(Math.max(h + 12, 120), 4000) + "px";
+    } catch (err) {}
+  }
+
+  function setMailReaderBody(bodyEl, item) {
+    bodyEl.innerHTML = "";
+    bodyEl.classList.remove("mail-reader-body--html");
+    var html = item.bodyHtml && String(item.bodyHtml).trim();
+    var plain = item.body && String(item.body).trim();
+    if (!html && plain && /<(?:html|body|div|p|table|br|span|td|tr)\b/i.test(plain)) {
+      html = plain;
+      plain = "";
+    }
+    if (!html && !plain) {
+      bodyEl.textContent = "(내용 없음)";
+      return;
+    }
+    if (html) {
+      bodyEl.classList.add("mail-reader-body--html");
+      var iframe = document.createElement("iframe");
+      iframe.className = "mail-reader-html-frame";
+      iframe.setAttribute("sandbox", "allow-same-origin allow-popups");
+      iframe.setAttribute("title", "메일 본문");
+      iframe.srcdoc = wrapMailHtmlForViewer(html);
+      bodyEl.appendChild(iframe);
+      iframe.addEventListener("load", function () {
+        resizeMailHtmlFrame(iframe);
+      });
+      return;
+    }
+    bodyEl.textContent = plain;
+  }
+
   function updateCounts() {
     Object.keys(folders).forEach(function (folder) {
       var el = document.querySelector('[data-count="' + folder + '"]');
@@ -184,8 +241,7 @@
     document.getElementById("mail-reader-to").textContent = item.toAddr || "";
     document.getElementById("mail-reader-date").textContent =
       formatDate(item.createdAt) + (item.account ? " · " + (accountLabels[item.account] || item.account) : "");
-    var bodyEl = document.getElementById("mail-reader-body");
-    bodyEl.textContent = item.body && String(item.body).trim() ? item.body : "(내용 없음)";
+    setMailReaderBody(document.getElementById("mail-reader-body"), item);
     paintList();
     if (!item.isRead && item.folder === "inbox") {
       try {

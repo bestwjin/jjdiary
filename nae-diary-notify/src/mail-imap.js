@@ -67,7 +67,7 @@ function stripHtml(html) {
     .trim();
 }
 
-function decodeBody(raw, headers) {
+function decodePartBody(raw, headers) {
   const transfer = headerValue(headers, "Content-Transfer-Encoding").toLowerCase();
   const type = headerValue(headers, "Content-Type");
   const charsetMatch = type.match(/charset="?([^";\s]+)"?/i);
@@ -79,24 +79,36 @@ function decodeBody(raw, headers) {
     const bytes = Uint8Array.from(decoded, (ch) => ch.charCodeAt(0));
     text = bytesToString(bytes, charset);
   }
-  if (/text\/html/i.test(type)) return stripHtml(text);
   return text.trim();
 }
 
-function extractTextBody(headers, bodyRaw) {
+function finalizeBodies(parts) {
+  const plain = String(parts.plain || "").trim();
+  const html = String(parts.html || "").trim();
+  return {
+    plain: plain || (html ? stripHtml(html) : ""),
+    html,
+  };
+}
+
+function extractBodies(headers, bodyRaw) {
   const type = headerValue(headers, "Content-Type");
   const boundaryMatch = type.match(/boundary="?([^";]+)"?/i);
   if (/multipart\//i.test(type) && boundaryMatch) {
     const parsed = extractMultipartParts(bodyRaw, boundaryMatch[1]);
-    if (parsed) return parsed;
+    if (parsed.plain || parsed.html) return finalizeBodies(parsed);
   }
   const loose = extractLooseMultipart(bodyRaw);
-  if (loose) return loose;
-  return decodeBody(bodyRaw, headers);
+  if (loose && (loose.plain || loose.html)) return finalizeBodies(loose);
+  const decoded = decodePartBody(bodyRaw, headers);
+  if (/text\/html/i.test(type)) {
+    return { plain: stripHtml(decoded), html: decoded };
+  }
+  return { plain: decoded, html: "" };
 }
 
 function extractMultipartParts(bodyRaw, boundary) {
-  if (!boundary) return "";
+  if (!boundary) return { plain: "", html: "" };
   const parts = String(bodyRaw || "").split(`--${boundary}`);
   let plain = "";
   let html = "";
@@ -108,22 +120,23 @@ function extractMultipartParts(bodyRaw, boundary) {
     const partType = headerValue(partHeaders, "Content-Type").toLowerCase();
     if (partType.includes("multipart/")) {
       const nested = headerValue(partHeaders, "Content-Type").match(/boundary="?([^";]+)"?/i);
-      const nestedText = nested ? extractMultipartParts(partBody, nested[1]) : "";
-      if (nestedText && !plain) plain = nestedText;
+      const nestedParts = nested ? extractMultipartParts(partBody, nested[1]) : { plain: "", html: "" };
+      if (nestedParts.plain && !plain) plain = nestedParts.plain;
+      if (nestedParts.html && !html) html = nestedParts.html;
       continue;
     }
-    if (partType.includes("text/plain") && !plain) plain = decodeBody(partBody, partHeaders);
-    if (partType.includes("text/html") && !html) html = decodeBody(partBody, partHeaders);
+    if (partType.includes("text/plain") && !plain) plain = decodePartBody(partBody, partHeaders);
+    if (partType.includes("text/html") && !html) html = decodePartBody(partBody, partHeaders);
   }
-  return (plain || html || "").trim();
+  return { plain, html };
 }
 
 function extractLooseMultipart(raw) {
   const text = String(raw || "").replace(/^\uFEFF/, "").trim();
   const firstLine = text.split(/\r?\n/, 1)[0] || "";
-  if (!firstLine.startsWith("--") || firstLine.length < 5) return "";
+  if (!firstLine.startsWith("--") || firstLine.length < 5) return null;
   const boundary = firstLine.slice(2).replace(/--\s*$/, "");
-  if (!boundary) return "";
+  if (!boundary) return null;
   return extractMultipartParts(text, boundary);
 }
 
@@ -271,15 +284,24 @@ class ImapClient {
     if (!headers && !body) {
       return this.fetchMessageFallback(uid);
     }
-    let text = extractTextBody(headers, body);
-    if (!text) text = decodeBody(body, headers);
+    let { plain, html } = extractBodies(headers, body);
+    if (!plain && !html) {
+      const fallback = decodePartBody(body, headers);
+      if (/text\/html/i.test(headerValue(headers, "Content-Type"))) {
+        html = fallback;
+        plain = stripHtml(fallback);
+      } else {
+        plain = fallback;
+      }
+    }
     return {
       uid: String(uid),
       flags,
       fromAddr: parseAddress(headerValue(headers, "From")),
       toAddr: parseAddress(headerValue(headers, "To")),
       subject: decodeMimeWord(headerValue(headers, "Subject")) || "(제목 없음)",
-      body: String(text || "").slice(0, 50000),
+      body: String(plain || "").slice(0, 50000),
+      bodyHtml: String(html || "").slice(0, 50000),
       dateHeader: headerValue(headers, "Date"),
       isRead: /\b\\Seen\b/i.test(flags),
     };
@@ -309,13 +331,15 @@ class ImapClient {
     const split = String(raw || "").split(/\r?\n\r?\n/);
     const headers = split.shift() || "";
     const bodyRaw = split.join("\n\n");
+    const { plain, html } = extractBodies(headers, bodyRaw);
     return {
       uid: String(uid),
       flags,
       fromAddr: parseAddress(headerValue(headers, "From")),
       toAddr: parseAddress(headerValue(headers, "To")),
       subject: decodeMimeWord(headerValue(headers, "Subject")) || "(제목 없음)",
-      body: extractTextBody(headers, bodyRaw).slice(0, 50000),
+      body: String(plain || "").slice(0, 50000),
+      bodyHtml: String(html || "").slice(0, 50000),
       dateHeader: headerValue(headers, "Date"),
       isRead: /\b\\Seen\b/i.test(flags),
     };

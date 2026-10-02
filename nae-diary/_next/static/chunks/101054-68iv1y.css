@@ -668,6 +668,8 @@ html.theme-dark .settings-check{color:#c8cce0}
 .mail-reader-meta span{color:#94a3b8}
 .mail-reader-meta strong{font-weight:600;color:#334155;word-break:break-all}
 .mail-reader-body{flex:1;overflow:auto;font-size:14px;line-height:1.7;color:#1e293b;white-space:pre-wrap;word-break:break-word}
+.mail-reader-body.mail-reader-body--html{white-space:normal;padding:0}
+.mail-reader-html-frame{display:block;width:100%;min-height:120px;border:0;background:transparent}
 .mail-field{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px;margin-bottom:10px}
 .mail-field span{font-size:13px;color:#64748b}
 .mail-field input,.mail-field textarea{width:100%;border:1px solid #d9def2;border-radius:10px;background:#fff;color:#0f172a;font-size:14px;padding:10px 12px}
