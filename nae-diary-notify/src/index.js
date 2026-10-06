@@ -516,7 +516,15 @@ export default {
     return json({ ok: false }, 404, request);
   },
 
-  async scheduled(_event, env, ctx) {
+  async scheduled(event, env, ctx) {
+    if (event.cron === "*/10 * * * *") {
+      ctx.waitUntil(
+        syncMail(env, "").catch((error) => {
+          console.error("mail auto-sync failed", error && error.message ? error.message : error);
+        }),
+      );
+      return;
+    }
     ctx.waitUntil(runReminder(env));
   },
 };

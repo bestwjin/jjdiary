@@ -374,25 +374,37 @@
     }
   });
 
+  async function syncInbox(opts) {
+    opts = opts || {};
+    var response = await fetch(API + "/mail/sync", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ account: currentAccount || undefined }),
+    });
+    var data = await response.json().catch(function () { return {}; });
+    if (!response.ok) {
+      var message = (data.message || "메일 받기에 실패했습니다.") + (data.detail ? " (" + data.detail + ")" : "");
+      if (!opts.silent) showError(message);
+      return { ok: false, message: message };
+    }
+    await loadMessages();
+    if (!opts.silent) showOk(data.message || "받은편지함을 새로고침했습니다.");
+    return { ok: true, message: data.message || "" };
+  }
+
   document.getElementById("mail-refresh").addEventListener("click", async function () {
     showError("");
     try {
-      var response = await fetch(API + "/mail/sync", {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({ account: currentAccount || undefined }),
-      });
-      var data = await response.json().catch(function () { return {}; });
-      if (!response.ok) {
-        showError((data.message || "메일 받기에 실패했습니다.") + (data.detail ? " (" + data.detail + ")" : ""));
-        return;
-      }
-      await loadMessages();
-      showOk(data.message || "받은편지함을 새로고침했습니다.");
+      await syncInbox();
     } catch (err) {
       showError("메일 받기에 실패했습니다.");
     }
   });
+
+  setInterval(function () {
+    if (document.hidden) return;
+    syncInbox({ silent: true }).catch(function () {});
+  }, 10 * 60 * 1000);
 
   async function saveMail(payload) {
     var response = await fetch(API + "/mail" + (draftId ? "/" + draftId : ""), {

@@ -895,16 +895,18 @@ export async function syncMail(env, accountId) {
     await withDb(env, async (sql) => {
       for (const item of fetched) {
         const externalId = `imap:${mail.id}:${item.uid}`;
-        const exists = await sql`SELECT id FROM mail_messages
+        const exists = await sql`SELECT id, is_read FROM mail_messages
           WHERE account = ${mail.id} AND folder = 'inbox' AND external_id = ${externalId} LIMIT 1`;
         if (exists[0]) {
+          const localRead = exists[0].is_read === true || exists[0].is_read === "t" || exists[0].is_read === "true";
+          const isRead = localRead || Boolean(item.isRead);
           await sql`UPDATE mail_messages SET
             from_addr = ${item.fromAddr},
             to_addr = ${item.toAddr},
             subject = ${item.subject},
             body = ${item.body},
             body_html = ${item.bodyHtml || ""},
-            is_read = ${item.isRead},
+            is_read = ${isRead},
             updated_at = NOW()
             WHERE id = ${exists[0].id}`;
           continue;
