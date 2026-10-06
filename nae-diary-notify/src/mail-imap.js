@@ -53,6 +53,8 @@ function headerValue(headers, name) {
 
 function stripHtml(html) {
   return String(html || "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<!\[if[\s\S]*?<!\[endif\]-->/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
@@ -64,7 +66,13 @@ function stripHtml(html) {
     .replace(/&gt;/gi, ">")
     .replace(/&quot;/gi, "\"")
     .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function looksLikeHtml(value) {
+  return /<(?:!--|!\[if|html|head|body|div|p|table|tr|td|th|br|span|img|a|style|center|font|h[1-6])\b/i.test(String(value || ""));
 }
 
 function decodePartBody(raw, headers) {
@@ -83,12 +91,17 @@ function decodePartBody(raw, headers) {
 }
 
 function finalizeBodies(parts) {
-  const plain = String(parts.plain || "").trim();
-  const html = String(parts.html || "").trim();
-  return {
-    plain: plain || (html ? stripHtml(html) : ""),
-    html,
-  };
+  let plain = String(parts.plain || "").trim();
+  let html = String(parts.html || "").trim();
+  if (!html && looksLikeHtml(plain)) {
+    html = plain;
+    plain = stripHtml(plain);
+  } else if (html && (!plain || looksLikeHtml(plain))) {
+    plain = stripHtml(html);
+  } else if (!plain && html) {
+    plain = stripHtml(html);
+  }
+  return { plain, html };
 }
 
 function extractBodies(headers, bodyRaw) {
@@ -101,10 +114,10 @@ function extractBodies(headers, bodyRaw) {
   const loose = extractLooseMultipart(bodyRaw);
   if (loose && (loose.plain || loose.html)) return finalizeBodies(loose);
   const decoded = decodePartBody(bodyRaw, headers);
-  if (/text\/html/i.test(type)) {
-    return { plain: stripHtml(decoded), html: decoded };
+  if (/text\/html/i.test(type) || looksLikeHtml(decoded)) {
+    return finalizeBodies({ plain: "", html: decoded });
   }
-  return { plain: decoded, html: "" };
+  return finalizeBodies({ plain: decoded, html: "" });
 }
 
 function extractMultipartParts(bodyRaw, boundary) {

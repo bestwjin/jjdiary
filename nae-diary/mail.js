@@ -98,12 +98,18 @@
     } catch (err) {}
   }
 
+  function looksLikeMailHtml(value) {
+    var text = String(value || "");
+    if (!text) return false;
+    return /<(?:!--|!\[if|html|head|body|div|p|table|tr|td|th|br|span|img|a|style|center|font|h[1-6])\b/i.test(text);
+  }
+
   function setMailReaderBody(bodyEl, item) {
     bodyEl.innerHTML = "";
     bodyEl.classList.remove("mail-reader-body--html");
     var html = item.bodyHtml && String(item.bodyHtml).trim();
     var plain = item.body && String(item.body).trim();
-    if (!html && plain && /<(?:html|body|div|p|table|br|span|td|tr)\b/i.test(plain)) {
+    if (!html && looksLikeMailHtml(plain)) {
       html = plain;
       plain = "";
     }
