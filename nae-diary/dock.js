@@ -1,4 +1,13 @@
 (function () {
+  var MAIL_API = "https://nae-diary-notify.jjinytm.workers.dev";
+  var MAIL_HEADERS = {
+    "Content-Type": "application/json",
+    "X-Diary-Sync": "575dc6f9f6eafc1d4246ca0c4991655e",
+  };
+  var MAIL_BADGE_KEY = "mailDockHasNew";
+  var MAIL_VISIT_KEY = "mailDockClearedAt";
+  var MAIL_CHECK_MS = 10 * 60 * 1000;
+
   var appIcon = function (id, from, to, glyph) {
     return '<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><defs><linearGradient id="' + id + '" x1="6" y1="2" x2="26" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="' + from + '"/><stop offset="1" stop-color="' + to + '"/></linearGradient></defs><rect x="1" y="1" width="30" height="30" rx="9" fill="url(#' + id + ')"/>' + glyph + "</svg>";
   };
@@ -93,7 +102,113 @@
     tip.className = "mac-tip";
     tip.textContent = item.label;
     el.append(icon, tip);
+    if (item.href === "/mail") {
+      var badge = document.createElement("span");
+      badge.className = "mac-dock-badge";
+      badge.hidden = true;
+      badge.setAttribute("aria-hidden", "true");
+      el.appendChild(badge);
+    }
     return el;
+  }
+
+  function mailDockItem() {
+    return document.querySelector('#mac-dock .mac-dock-item[href="/mail"]');
+  }
+
+  function paintMailBadge(on) {
+    var el = mailDockItem();
+    if (!el) return;
+    var badge = el.querySelector(".mac-dock-badge");
+    if (!badge) return;
+    badge.hidden = !on;
+    if (on) {
+      el.setAttribute("data-mail-badge", "1");
+      el.setAttribute("aria-label", "메일 (새 메일)");
+    } else {
+      el.removeAttribute("data-mail-badge");
+      el.setAttribute("aria-label", "메일");
+    }
+  }
+
+  function readBadgeFlag() {
+    try {
+      return localStorage.getItem(MAIL_BADGE_KEY) === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function markMailBadge() {
+    try { localStorage.setItem(MAIL_BADGE_KEY, "1"); } catch (error) {}
+    if (currentPath() !== "/mail") paintMailBadge(true);
+  }
+
+  function clearMailBadge() {
+    var now = new Date().toISOString();
+    try {
+      localStorage.setItem(MAIL_BADGE_KEY, "0");
+      localStorage.setItem(MAIL_VISIT_KEY, now);
+    } catch (error) {}
+    paintMailBadge(false);
+  }
+
+  function ensureVisitBaseline(messages) {
+    try {
+      if (localStorage.getItem(MAIL_VISIT_KEY)) return;
+      var latest = "";
+      (messages || []).forEach(function (item) {
+        if (item.createdAt && item.createdAt > latest) latest = item.createdAt;
+      });
+      localStorage.setItem(MAIL_VISIT_KEY, latest || new Date().toISOString());
+    } catch (error) {}
+  }
+
+  function hasNewSinceVisit(messages) {
+    var clearedAt = "";
+    try { clearedAt = localStorage.getItem(MAIL_VISIT_KEY) || ""; } catch (error) {}
+    if (!clearedAt) return false;
+    return (messages || []).some(function (item) {
+      return item.createdAt && item.createdAt > clearedAt;
+    });
+  }
+
+  async function syncAndCheckMailBadge() {
+    if (currentPath() === "/mail") {
+      clearMailBadge();
+      return;
+    }
+    try {
+      var syncRes = await fetch(MAIL_API + "/mail/sync", {
+        method: "POST",
+        headers: MAIL_HEADERS,
+        body: "{}",
+      });
+      var syncData = await syncRes.json().catch(function () { return {}; });
+      if (syncRes.ok && Number(syncData.imported) > 0) {
+        markMailBadge();
+        return;
+      }
+    } catch (error) {}
+
+    try {
+      var listRes = await fetch(MAIL_API + "/mail?folder=inbox", { headers: MAIL_HEADERS });
+      if (!listRes.ok) return;
+      var listData = await listRes.json();
+      var messages = listData.messages || [];
+      ensureVisitBaseline(messages);
+      if (hasNewSinceVisit(messages)) markMailBadge();
+      else if (readBadgeFlag()) paintMailBadge(true);
+      else paintMailBadge(false);
+    } catch (error) {}
+  }
+
+  function refreshMailBadgeFromStorage() {
+    if (currentPath() === "/mail") {
+      clearMailBadge();
+      return;
+    }
+    paintMailBadge(readBadgeFlag());
   }
 
   function saveOrder(nav) {
@@ -182,6 +297,8 @@
     enableDrag(nav);
     nav.appendChild(createThemeToggle());
     document.body.appendChild(nav);
+    if (path === "/mail") clearMailBadge();
+    else refreshMailBadgeFromStorage();
   }
 
   mount();
@@ -192,4 +309,21 @@
     var button = document.getElementById("theme-toggle");
     if (button) paintThemeButton(button);
   }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+  window.addEventListener("mail-badge-new", markMailBadge);
+  window.addEventListener("mail-badge-clear", clearMailBadge);
+  window.addEventListener("storage", function (event) {
+    if (event.key === MAIL_BADGE_KEY) refreshMailBadgeFromStorage();
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) refreshMailBadgeFromStorage();
+  });
+
+  setTimeout(function () {
+    syncAndCheckMailBadge().catch(function () {});
+  }, 2500);
+  setInterval(function () {
+    if (document.hidden) return;
+    syncAndCheckMailBadge().catch(function () {});
+  }, MAIL_CHECK_MS);
 })();

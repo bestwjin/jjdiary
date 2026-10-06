@@ -11,6 +11,7 @@ html.theme-dark{.cal-day:hover{background-color:#312e81;border-color:#818cf8;box
 
 .mac-dock{position:fixed;z-index:50;left:0;top:0;bottom:0;width:48px;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:0;background:linear-gradient(100deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.06) 16%,rgba(255,255,255,0) 40%),radial-gradient(ellipse 130% 42% at 50% -12%,rgba(198,210,255,.78),transparent 60%),radial-gradient(ellipse 80% 30% at 80% 110%,rgba(92,110,190,.45),transparent 64%),linear-gradient(180deg,#3a4d92 0%,#243468 40%,#171e40 100%);border:0;border-right:1px solid rgba(255,255,255,.16);box-shadow:inset -1px 0 0 rgba(255,255,255,.28),inset 1px 0 0 rgba(255,255,255,.1)}
 .mac-dock-item{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;text-decoration:none;color:#eef1ff;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease}
+.mac-dock-badge{position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:999px;background:#ef4444;border:2px solid #fff;box-shadow:0 0 0 1px rgba(239,68,68,.25);pointer-events:none;z-index:2}
 .mac-dock-icon{font-size:20px;line-height:1;display:block}
 .mac-dock-rule{width:18px;height:1px;margin:4px 0;background:rgba(255,255,255,.18);border-radius:99px}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:rgba(255,255,255,.12);outline:none}
@@ -377,6 +378,7 @@ html.theme-dark .mac-dock-item[aria-current=page]{background:transparent;color:#
 html.theme-dark .mac-dock-rule{background:rgba(255,255,255,.14)}
 html.theme-dark .mac-dock-theme{color:#e8ebff}
 html.theme-dark .mac-dock-theme:hover,html.theme-dark .mac-dock-theme:focus-visible{background:rgba(255,255,255,.08)}
+html.theme-dark .mac-dock-badge{border-color:#12162a}
 .todo-row .todo-title,.todo-row.is-open .todo-title{font-weight:700}
 .sched-page-head{margin-bottom:8px}
 .sched-toolbar{display:flex;justify-content:center;margin:0 0 12px}

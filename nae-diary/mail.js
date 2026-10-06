@@ -283,6 +283,11 @@
     updateCounts();
     updateAccount();
     paintList();
+    try {
+      localStorage.setItem("mailDockHasNew", "0");
+      localStorage.setItem("mailDockClearedAt", new Date().toISOString());
+    } catch (err) {}
+    window.dispatchEvent(new Event("mail-badge-clear"));
     if (selectedId) {
       var still = messages.some(function (item) { return String(item.id) === String(selectedId); });
       if (!still) showDetailEmpty();
@@ -388,8 +393,13 @@
       return { ok: false, message: message };
     }
     await loadMessages();
+    try {
+      localStorage.setItem("mailDockHasNew", "0");
+      localStorage.setItem("mailDockClearedAt", new Date().toISOString());
+    } catch (err) {}
+    window.dispatchEvent(new Event("mail-badge-clear"));
     if (!opts.silent) showOk(data.message || "받은편지함을 새로고침했습니다.");
-    return { ok: true, message: data.message || "" };
+    return { ok: true, message: data.message || "", imported: Number(data.imported) || 0 };
   }
 
   document.getElementById("mail-refresh").addEventListener("click", async function () {
