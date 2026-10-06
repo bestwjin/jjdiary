@@ -6,6 +6,7 @@
   };
   var MAIL_BADGE_KEY = "mailDockHasNew";
   var MAIL_VISIT_KEY = "mailDockClearedAt";
+  var MAIL_NOTIFIED_KEY = "mailDockNotifiedAt";
   var MAIL_CHECK_MS = 10 * 60 * 1000;
 
   var appIcon = function (id, from, to, glyph) {
@@ -149,6 +150,7 @@
     try {
       localStorage.setItem(MAIL_BADGE_KEY, "0");
       localStorage.setItem(MAIL_VISIT_KEY, now);
+      localStorage.setItem(MAIL_NOTIFIED_KEY, now);
     } catch (error) {}
     paintMailBadge(false);
   }
@@ -160,7 +162,11 @@
       (messages || []).forEach(function (item) {
         if (item.createdAt && item.createdAt > latest) latest = item.createdAt;
       });
-      localStorage.setItem(MAIL_VISIT_KEY, latest || new Date().toISOString());
+      var baseline = latest || new Date().toISOString();
+      localStorage.setItem(MAIL_VISIT_KEY, baseline);
+      if (!localStorage.getItem(MAIL_NOTIFIED_KEY)) {
+        localStorage.setItem(MAIL_NOTIFIED_KEY, baseline);
+      }
     } catch (error) {}
   }
 
@@ -173,11 +179,101 @@
     });
   }
 
+  function messagesSince(messages, since) {
+    return (messages || []).filter(function (item) {
+      return item.createdAt && (!since || item.createdAt > since);
+    });
+  }
+
+  function registerMailServiceWorker() {
+    if (!("serviceWorker" in navigator)) return Promise.resolve(null);
+    return navigator.serviceWorker.register("/sw.js").catch(function () {
+      return null;
+    });
+  }
+
+  async function ensureMailNotifyPermission() {
+    if (!("Notification" in window)) return false;
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
+    try {
+      var result = await Notification.requestPermission();
+      return result === "granted";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async function notifyNewMail(messages, opts) {
+    opts = opts || {};
+    if (currentPath() === "/mail") return;
+    if (!("Notification" in window)) return;
+    if (!(await ensureMailNotifyPermission())) return;
+
+    var notifiedAt = "";
+    var clearedAt = "";
+    try {
+      notifiedAt = localStorage.getItem(MAIL_NOTIFIED_KEY) || "";
+      clearedAt = localStorage.getItem(MAIL_VISIT_KEY) || "";
+    } catch (error) {}
+    var since = notifiedAt && clearedAt
+      ? (notifiedAt > clearedAt ? notifiedAt : clearedAt)
+      : (notifiedAt || clearedAt);
+
+    var fresh = messagesSince(messages, since);
+    var count = Number(opts.count) || fresh.length;
+    if (!count) return;
+
+    var title = count === 1 && fresh[0]
+      ? (fresh[0].subject || "새 메일")
+      : "새 메일 " + count + "통";
+    var body = count === 1 && fresh[0]
+      ? (fresh[0].fromAddr || "받은편지함에 새 메일이 있습니다.")
+      : (fresh.slice(0, 3).map(function (item) {
+          return item.subject || "(제목 없음)";
+        }).join(" · ") || "받은편지함에 새 메일이 있습니다.");
+
+    var latest = since || "";
+    fresh.forEach(function (item) {
+      if (item.createdAt && item.createdAt > latest) latest = item.createdAt;
+    });
+    if (!latest) latest = new Date().toISOString();
+    try { localStorage.setItem(MAIL_NOTIFIED_KEY, latest); } catch (error) {}
+
+    var options = {
+      body: body,
+      icon: "/favicon.ico",
+      badge: "/favicon.ico",
+      tag: "nae-diary-mail",
+      renotify: true,
+      data: { url: "/mail" },
+    };
+
+    try {
+      if ("serviceWorker" in navigator) {
+        var reg = await navigator.serviceWorker.ready;
+        await reg.showNotification(title, options);
+        return;
+      }
+    } catch (error) {}
+    try {
+      new Notification(title, options);
+    } catch (error) {}
+  }
+
+  async function loadInboxMessages() {
+    var listRes = await fetch(MAIL_API + "/mail?folder=inbox", { headers: MAIL_HEADERS });
+    if (!listRes.ok) return [];
+    var listData = await listRes.json();
+    return listData.messages || [];
+  }
+
   async function syncAndCheckMailBadge() {
     if (currentPath() === "/mail") {
       clearMailBadge();
       return;
     }
+    var imported = 0;
     try {
       var syncRes = await fetch(MAIL_API + "/mail/sync", {
         method: "POST",
@@ -185,22 +281,26 @@
         body: "{}",
       });
       var syncData = await syncRes.json().catch(function () { return {}; });
-      if (syncRes.ok && Number(syncData.imported) > 0) {
-        markMailBadge();
-        return;
-      }
+      if (syncRes.ok) imported = Number(syncData.imported) || 0;
     } catch (error) {}
 
     try {
-      var listRes = await fetch(MAIL_API + "/mail?folder=inbox", { headers: MAIL_HEADERS });
-      if (!listRes.ok) return;
-      var listData = await listRes.json();
-      var messages = listData.messages || [];
+      var messages = await loadInboxMessages();
       ensureVisitBaseline(messages);
-      if (hasNewSinceVisit(messages)) markMailBadge();
-      else if (readBadgeFlag()) paintMailBadge(true);
-      else paintMailBadge(false);
-    } catch (error) {}
+      if (imported > 0 || hasNewSinceVisit(messages)) {
+        markMailBadge();
+        await notifyNewMail(messages, { count: imported || undefined });
+      } else if (readBadgeFlag()) {
+        paintMailBadge(true);
+      } else {
+        paintMailBadge(false);
+      }
+    } catch (error) {
+      if (imported > 0) {
+        markMailBadge();
+        await notifyNewMail([], { count: imported });
+      }
+    }
   }
 
   function refreshMailBadgeFromStorage() {
@@ -320,10 +420,12 @@
   });
 
   setTimeout(function () {
-    syncAndCheckMailBadge().catch(function () {});
+    registerMailServiceWorker()
+      .then(function () { return ensureMailNotifyPermission(); })
+      .then(function () { return syncAndCheckMailBadge(); })
+      .catch(function () {});
   }, 2500);
   setInterval(function () {
-    if (document.hidden) return;
     syncAndCheckMailBadge().catch(function () {});
   }, MAIL_CHECK_MS);
 })();
