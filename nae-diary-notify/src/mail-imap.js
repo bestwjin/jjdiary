@@ -164,6 +164,91 @@ function parseAddress(value) {
   return text;
 }
 
+function looksLikeRawHeaders(text) {
+  const sample = String(text || "").slice(0, 4000);
+  if (!sample) return false;
+  const hits = [
+    /^Return-Path:/im,
+    /^Delivered-To:/im,
+    /^Received:/im,
+    /^From:/im,
+    /^Subject:/im,
+    /^MIME-Version:/im,
+    /^DKIM-Signature:/im,
+    /^ARC-Seal:/im,
+    /^Content-Type:/im,
+  ].filter((re) => re.test(sample)).length;
+  return hits >= 2;
+}
+
+function splitHeadersBody(raw) {
+  const text = String(raw || "").replace(/^\uFEFF/, "");
+  const match = text.match(/\r?\n\r?\n/);
+  if (!match) {
+    return looksLikeRawHeaders(text)
+      ? { headers: text, body: "" }
+      : { headers: "", body: text };
+  }
+  return {
+    headers: text.slice(0, match.index),
+    body: text.slice(match.index + match[0].length),
+  };
+}
+
+function normalizeFetchedParts(headers, body) {
+  let h = String(headers || "");
+  let b = String(body || "");
+
+  const hasIdentity = (block) => Boolean(headerValue(block, "From") || headerValue(block, "Subject"));
+
+  if (hasIdentity(h)) return { headers: h, body: b };
+
+  if (h && b) {
+    const merged = splitHeadersBody(`${h.replace(/\s*$/, "")}\r\n${b}`);
+    if (hasIdentity(merged.headers)) return merged;
+  }
+
+  if (looksLikeRawHeaders(b)) {
+    const fromBody = splitHeadersBody(b);
+    if (hasIdentity(fromBody.headers)) return fromBody;
+  }
+
+  if (looksLikeRawHeaders(h) && !b) {
+    return splitHeadersBody(h);
+  }
+
+  return { headers: h, body: b };
+}
+
+function buildParsedMessage(uid, flags, headers, bodyRaw) {
+  const parts = normalizeFetchedParts(headers, bodyRaw);
+  let { plain, html } = extractBodies(parts.headers, parts.body);
+  if (!plain && !html) {
+    const fallback = decodePartBody(parts.body, parts.headers);
+    if (/text\/html/i.test(headerValue(parts.headers, "Content-Type")) || looksLikeHtml(fallback)) {
+      html = fallback;
+      plain = stripHtml(fallback);
+    } else if (!looksLikeRawHeaders(fallback)) {
+      plain = fallback;
+    }
+  }
+  // Never keep raw SMTP headers as the visible body.
+  if (plain && looksLikeRawHeaders(plain) && !html) {
+    plain = "";
+  }
+  return {
+    uid: String(uid),
+    flags,
+    fromAddr: parseAddress(headerValue(parts.headers, "From")),
+    toAddr: parseAddress(headerValue(parts.headers, "To")),
+    subject: decodeMimeWord(headerValue(parts.headers, "Subject")) || "(제목 없음)",
+    body: String(plain || "").slice(0, 50000),
+    bodyHtml: String(html || "").slice(0, 50000),
+    dateHeader: headerValue(parts.headers, "Date"),
+    isRead: /\b\\Seen\b/i.test(flags),
+  };
+}
+
 function withTimeout(promise, ms, message) {
   let timer;
   return Promise.race([
@@ -265,13 +350,22 @@ class ImapClient {
   }
 
   async fetchMessage(uid) {
+    const primary = await this.fetchRawMessage(uid, "BODY.PEEK[]");
+    if (primary.fromAddr || primary.subject !== "(제목 없음)" || primary.body || primary.bodyHtml) {
+      return primary;
+    }
+    return this.fetchRawMessage(uid, "RFC822");
+  }
+
+  async fetchRawMessage(uid, item) {
     this.tag += 1;
     const tag = `A${String(this.tag).padStart(4, "0")}`;
-    await this.write(`${tag} UID FETCH ${uid} (UID FLAGS RFC822.HEADER RFC822.TEXT)`);
+    await this.write(`${tag} UID FETCH ${uid} (UID FLAGS ${item})`);
+    let raw = "";
     let headers = "";
     let body = "";
     let flags = "";
-    let part = 0;
+    let pending = "";
     while (true) {
       const line = await this.readLine();
       if (line.startsWith(`${tag} `)) {
@@ -282,80 +376,31 @@ class ImapClient {
         }
         break;
       }
-      if (line.startsWith("* ")) {
+      if (/FLAGS \(/i.test(line)) {
         const flagMatch = line.match(/FLAGS \(([^)]*)\)/i);
         if (flagMatch) flags = flagMatch[1];
       }
+      if (/RFC822\.HEADER/i.test(line) || /BODY\[HEADER\]/i.test(line)) pending = "header";
+      else if (/RFC822\.TEXT/i.test(line) || /BODY\[TEXT\]/i.test(line)) pending = "text";
+      else if (/BODY\.PEEK\[\]|BODY\[\]|RFC822(?!\.)/i.test(line)) pending = "raw";
+
       const literal = line.match(/\{(\d+)\}\s*$/);
       if (literal) {
         const content = await this.readLiteral(Number(literal[1]));
-        if (part === 0) headers = content;
+        if (pending === "header") headers = content;
+        else if (pending === "text") body = content;
+        else if (pending === "raw") raw = content;
+        else if (!raw && !headers) raw = content;
         else body = content;
-        part += 1;
+        pending = "";
       }
     }
-    if (!headers && !body) {
-      return this.fetchMessageFallback(uid);
-    }
-    let { plain, html } = extractBodies(headers, body);
-    if (!plain && !html) {
-      const fallback = decodePartBody(body, headers);
-      if (/text\/html/i.test(headerValue(headers, "Content-Type"))) {
-        html = fallback;
-        plain = stripHtml(fallback);
-      } else {
-        plain = fallback;
-      }
-    }
-    return {
-      uid: String(uid),
-      flags,
-      fromAddr: parseAddress(headerValue(headers, "From")),
-      toAddr: parseAddress(headerValue(headers, "To")),
-      subject: decodeMimeWord(headerValue(headers, "Subject")) || "(제목 없음)",
-      body: String(plain || "").slice(0, 50000),
-      bodyHtml: String(html || "").slice(0, 50000),
-      dateHeader: headerValue(headers, "Date"),
-      isRead: /\b\\Seen\b/i.test(flags),
-    };
-  }
 
-  async fetchMessageFallback(uid) {
-    this.tag += 1;
-    const tag = `A${String(this.tag).padStart(4, "0")}`;
-    await this.write(`${tag} UID FETCH ${uid} (UID FLAGS BODY.PEEK[])`);
-    let raw = "";
-    let flags = "";
-    while (true) {
-      const line = await this.readLine();
-      if (line.startsWith(`${tag} `)) {
-        if (!line.startsWith(`${tag} OK`)) {
-          const err = new Error(line);
-          err.code = "imap";
-          throw err;
-        }
-        break;
-      }
-      const flagMatch = line.match(/FLAGS \(([^)]*)\)/i);
-      if (flagMatch) flags = flagMatch[1];
-      const literal = line.match(/\{(\d+)\}\s*$/);
-      if (literal) raw = await this.readLiteral(Number(literal[1]));
+    if (raw) {
+      const split = splitHeadersBody(raw);
+      return buildParsedMessage(uid, flags, split.headers, split.body);
     }
-    const split = String(raw || "").split(/\r?\n\r?\n/);
-    const headers = split.shift() || "";
-    const bodyRaw = split.join("\n\n");
-    const { plain, html } = extractBodies(headers, bodyRaw);
-    return {
-      uid: String(uid),
-      flags,
-      fromAddr: parseAddress(headerValue(headers, "From")),
-      toAddr: parseAddress(headerValue(headers, "To")),
-      subject: decodeMimeWord(headerValue(headers, "Subject")) || "(제목 없음)",
-      body: String(plain || "").slice(0, 50000),
-      bodyHtml: String(html || "").slice(0, 50000),
-      dateHeader: headerValue(headers, "Date"),
-      isRead: /\b\\Seen\b/i.test(flags),
-    };
+    return buildParsedMessage(uid, flags, headers, body);
   }
 
   async close() {
