@@ -161,12 +161,6 @@
     priority.className = "todo-priority " + (level === "높음" ? "todo-priority-high" : level === "낮음" ? "todo-priority-low" : "todo-priority-mid");
     priority.textContent = level;
     line.appendChild(priority);
-    if (todo.aiTool) {
-      var ai = document.createElement("span");
-      ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
-      ai.textContent = todo.aiTool;
-      line.appendChild(ai);
-    }
     var status = document.createElement("span");
     var statusValue = todo.progressStatus === "모니터링중" || todo.progressStatus === "완료" || todo.progressStatus === "진행중"
       ? todo.progressStatus

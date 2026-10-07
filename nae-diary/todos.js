@@ -25,7 +25,6 @@
   var priorityInput = document.getElementById("todo-priority");
   var tagInput = document.getElementById("todo-tag");
   var requesterInput = document.getElementById("todo-requester");
-  var aiInput = document.getElementById("todo-ai");
   var workInput = document.getElementById("todo-work");
   var filesRoot = document.getElementById("todo-files");
   var submitButton = document.getElementById("todo-submit");
@@ -144,7 +143,6 @@
     priorityInput.value = "보통";
     tagInput.value = "";
     requesterInput.value = "";
-    aiInput.value = "CLAUDE";
     workInput.innerHTML = "";
     createdDateInput.value = "";
     createdDateInput.hidden = true;
@@ -337,7 +335,7 @@
     if (!pill) {
       pill = document.createElement("span");
       var tag = line.querySelector(".todo-tag");
-      var anchor = line.querySelector(".todo-ai") || line.querySelector("button") || line.querySelector(".todo-title");
+      var anchor = line.querySelector(".todo-status") || line.querySelector("button") || line.querySelector(".todo-title");
       if (tag && tag.nextSibling) line.insertBefore(pill, tag.nextSibling);
       else if (tag) line.appendChild(pill);
       else line.insertBefore(pill, anchor);
@@ -526,12 +524,6 @@
         line.appendChild(tag);
       }
       paintPriority(line, todo.priority);
-      if (todo.aiTool) {
-        var ai = document.createElement("span");
-        ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
-        ai.textContent = todo.aiTool;
-        line.appendChild(ai);
-      }
       var status = document.createElement("span");
       status.className = statusClass(todo.progressStatus || (todo.done ? "완료" : "진행중"));
       status.textContent = statusValue(todo.progressStatus || (todo.done ? "완료" : "진행중"));
@@ -621,7 +613,6 @@
     priorityInput.value = priorityValue(todo.priority);
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
-    aiInput.value = todo.aiTool || "";
     workInput.innerHTML = editorHtml(todo.workContent);
     renderFileEditor(todo.files || []);
     createdDateInput.value = todayDateValue();
@@ -657,18 +648,6 @@
       tag.remove();
     }
     paintPriority(line, todo.priority);
-    var ai = line.querySelector(".todo-ai");
-    if (todo.aiTool) {
-      if (!ai) {
-        ai = document.createElement("span");
-        ai.className = "todo-ai";
-        line.insertBefore(ai, line.querySelector("button") || titleButton);
-      }
-      ai.className = "todo-ai todo-ai-" + String(todo.aiTool).toLowerCase();
-      ai.textContent = todo.aiTool;
-    } else if (ai) {
-      ai.remove();
-    }
     paintStatus(line, todo.progressStatus || (todo.done ? "완료" : "진행중"));
     var bits = [];
     if (todo.requester) bits.push(todo.requester);
@@ -738,7 +717,6 @@
         priority: priorityInput.value,
         tag: tagInput.value.trim(),
         requester: requesterInput.value.trim(),
-        aiTool: aiInput.value,
         workContent: editorHtml(workInput.innerHTML),
         files: readFiles(),
       };
@@ -862,8 +840,8 @@
     var dateLine = formatNotionDate(todo.createdAt);
     var meta = [];
     if (todo.priority) meta.push("중요도 " + priorityValue(todo.priority));
+    if (todo.progressStatus) meta.push("진행상태 " + statusValue(todo.progressStatus || (todo.done ? "완료" : "진행중")));
     if (todo.requester) meta.push("요청자 " + todo.requester);
-    if (todo.aiTool) meta.push(todo.aiTool);
     var text = heading + "\n\n" + (dateLine ? dateLine + "\n\n" : "");
     if (meta.length) text += meta.join(" · ") + "\n\n";
     text += workContentText(todo.workContent);
