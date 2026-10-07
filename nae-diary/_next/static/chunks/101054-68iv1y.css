@@ -296,6 +296,13 @@ html.theme-dark .todo-carry-date{background:#1c2238;border-color:rgba(255,255,25
 .todo-priority-high{background:#fee2e2;color:#b91c1c}
 .todo-priority-mid{background:#fef3c7;color:#92400e}
 .todo-priority-low{background:#eef1f8;color:#5b6478}
+.todo-status{display:inline-flex;align-items:center;flex:none;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.4}
+.todo-status-progress{background:#dbeafe;color:#1d4ed8}
+.todo-status-monitor{background:#fce7f3;color:#9d174d}
+.todo-status-done{background:#dcfce7;color:#166534}
+html.theme-dark .todo-status-progress{background:#1e3a5f;color:#93c5fd}
+html.theme-dark .todo-status-monitor{background:#4a1942;color:#f9a8d4}
+html.theme-dark .todo-status-done{background:#14532d;color:#86efac}
 .mac-dock-item:hover,.mac-dock-item:focus-visible{background:transparent;box-shadow:none}
 .mac-dock-item[aria-current=page]{background:transparent;box-shadow:none;color:#3a3a44}
 .mac-dock-item[aria-current=page]::after{content:"";position:absolute;left:50%;right:auto;top:auto;bottom:0;width:18px;height:4px;transform:translateX(-50%);border:0;border-radius:99px;background:#0078d4}

@@ -167,6 +167,17 @@
       ai.textContent = todo.aiTool;
       line.appendChild(ai);
     }
+    var status = document.createElement("span");
+    var statusValue = todo.progressStatus === "모니터링중" || todo.progressStatus === "완료" || todo.progressStatus === "진행중"
+      ? todo.progressStatus
+      : (todo.done ? "완료" : "진행중");
+    status.className = "todo-status " + (
+      statusValue === "완료" ? "todo-status-done"
+        : statusValue === "모니터링중" ? "todo-status-monitor"
+          : "todo-status-progress"
+    );
+    status.textContent = statusValue;
+    line.appendChild(status);
     var title = document.createElement("span");
     title.className = "todo-title";
     title.textContent = todo.title;

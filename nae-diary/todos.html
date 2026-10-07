@@ -57,7 +57,12 @@
   </dialog>
   <dialog id="todo-dialog" class="todo-dialog">
     <form id="todo-form" class="todo-form">
-        <select id="todo-priority" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+        <select id="todo-status" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" aria-label="진행상태">
+          <option value="진행중" selected>진행중</option>
+          <option value="모니터링중">모니터링중</option>
+          <option value="완료">완료</option>
+        </select>
+        <select id="todo-priority" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" aria-label="중요도">
           <option value="높음">높음</option>
           <option value="보통" selected>보통</option>
           <option value="낮음">낮음</option>

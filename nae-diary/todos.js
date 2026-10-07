@@ -21,6 +21,7 @@
   var error = document.getElementById("todo-error");
   var form = document.getElementById("todo-form");
   var input = document.getElementById("todo-input");
+  var statusInput = document.getElementById("todo-status");
   var priorityInput = document.getElementById("todo-priority");
   var tagInput = document.getElementById("todo-tag");
   var requesterInput = document.getElementById("todo-requester");
@@ -112,9 +113,34 @@
     document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
   }
 
+  function statusValue(value) {
+    if (value === "모니터링중" || value === "완료" || value === "진행중") return value;
+    return "진행중";
+  }
+
+  function statusClass(value) {
+    if (value === "완료") return "todo-status todo-status-done";
+    if (value === "모니터링중") return "todo-status todo-status-monitor";
+    return "todo-status todo-status-progress";
+  }
+
+  function paintStatus(line, status) {
+    var value = statusValue(status);
+    var pill = line.querySelector(".todo-status");
+    if (!pill) {
+      pill = document.createElement("span");
+      var title = line.querySelector(".todo-title");
+      if (title) line.insertBefore(pill, title);
+      else line.appendChild(pill);
+    }
+    pill.className = statusClass(value);
+    pill.textContent = value;
+  }
+
   function resetForm() {
     editingId = null;
     input.value = "";
+    statusInput.value = "진행중";
     priorityInput.value = "보통";
     tagInput.value = "";
     requesterInput.value = "";
@@ -506,6 +532,10 @@
         ai.textContent = todo.aiTool;
         line.appendChild(ai);
       }
+      var status = document.createElement("span");
+      status.className = statusClass(todo.progressStatus || (todo.done ? "완료" : "진행중"));
+      status.textContent = statusValue(todo.progressStatus || (todo.done ? "완료" : "진행중"));
+      line.appendChild(status);
       var title = document.createElement("button");
       title.type = "button";
       title.className = "todo-title";
@@ -587,6 +617,7 @@
     document.querySelectorAll(".todo-row.is-open").forEach(function (item) { item.classList.remove("is-open"); });
     editingId = todo.id;
     input.value = todo.title;
+    statusInput.value = statusValue(todo.progressStatus || (todo.done ? "완료" : "진행중"));
     priorityInput.value = priorityValue(todo.priority);
     tagInput.value = todo.tag || "";
     requesterInput.value = todo.requester || "";
@@ -638,11 +669,13 @@
     } else if (ai) {
       ai.remove();
     }
+    paintStatus(line, todo.progressStatus || (todo.done ? "완료" : "진행중"));
     var bits = [];
     if (todo.requester) bits.push(todo.requester);
     var created = formatCreated(todo.createdAt);
     if (created) bits.push(created);
     row.querySelector(".todo-meta").textContent = bits.join(" · ");
+    row.classList.toggle("is-done", Boolean(todo.done));
     applySearch();
   }
 
@@ -701,6 +734,7 @@
       showError("");
       var body = {
         title: title,
+        progressStatus: statusValue(statusInput.value),
         priority: priorityInput.value,
         tag: tagInput.value.trim(),
         requester: requesterInput.value.trim(),
