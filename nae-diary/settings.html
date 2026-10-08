@@ -62,7 +62,7 @@
             <h2 id="settings-mail-title">메일 연동</h2>
           </div>
           <div class="settings-card-body">
-          <p class="settings-help">다음·네이버·Gmail을 각각 연동할 수 있습니다. 비밀번호는 계정 비밀번호가 아니라 <strong>앱 비밀번호</strong>를 입력하세요.</p>
+          <p class="settings-help">다음·다음 웍스·네이버·Gmail을 각각 연동할 수 있습니다. 비밀번호는 계정 비밀번호가 아니라 <strong>앱 비밀번호</strong>를 입력하세요.</p>
           <form id="settings-mail-form" class="settings-form settings-form-mail">
             <div class="mail-provider" data-provider="daum">
               <div class="mail-provider-head">
@@ -72,6 +72,38 @@
               <p class="settings-help">IMAP imap.daum.net:993 / SMTP smtp.daum.net:465</p>
               <label class="todo-label">메일 주소</label>
               <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@daum.net"/>
+              <label class="todo-label">표시 이름</label>
+              <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
+              <div class="settings-grid-2">
+                <div>
+                  <label class="todo-label">IMAP 사용자</label>
+                  <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                </div>
+                <div>
+                  <label class="todo-label">IMAP 앱 비밀번호</label>
+                  <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
+                </div>
+              </div>
+              <div class="settings-grid-2">
+                <div>
+                  <label class="todo-label">SMTP 사용자</label>
+                  <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                </div>
+                <div>
+                  <label class="todo-label">SMTP 앱 비밀번호</label>
+                  <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="mail-provider" data-provider="works">
+              <div class="mail-provider-head">
+                <h3>다음 웍스</h3>
+                <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+              </div>
+              <p class="settings-help">기업메일용 · IMAP/SMTP는 다음과 동일 (imap.daum.net) · 메일 주소에 웍스 주소(예: name@company.com) 입력</p>
+              <label class="todo-label">메일 주소</label>
+              <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="name@company.com"/>
               <label class="todo-label">표시 이름</label>
               <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
               <div class="settings-grid-2">

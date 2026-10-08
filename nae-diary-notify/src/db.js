@@ -525,6 +525,16 @@ export const MAIL_PROVIDERS = {
     imapSecure: true,
     smtpSecure: true,
   },
+  works: {
+    id: "works",
+    label: "다음 웍스",
+    imapHost: "imap.daum.net",
+    imapPort: "993",
+    smtpHost: "smtp.daum.net",
+    smtpPort: "465",
+    imapSecure: true,
+    smtpSecure: true,
+  },
   naver: {
     id: "naver",
     label: "네이버",
@@ -676,6 +686,7 @@ export async function getMailAccounts(env) {
   }
   const accounts = {
     daum: emptyMailAccount("daum"),
+    works: emptyMailAccount("works"),
     naver: emptyMailAccount("naver"),
     gmail: emptyMailAccount("gmail"),
   };
@@ -694,9 +705,10 @@ export async function getMailSettings(env, accountId) {
   const accounts = await getMailAccounts(env);
   if (accountId && accounts[accountId]) return accounts[accountId];
   return accounts.daum.address ? accounts.daum
-    : accounts.naver.address ? accounts.naver
-      : accounts.gmail.address ? accounts.gmail
-        : accounts.daum;
+    : accounts.works.address ? accounts.works
+      : accounts.naver.address ? accounts.naver
+        : accounts.gmail.address ? accounts.gmail
+          : accounts.daum;
 }
 
 export function mapMail(row) {

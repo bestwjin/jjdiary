@@ -16,7 +16,7 @@
   var mailToggle = document.getElementById("settings-mail-toggle");
   var error = document.getElementById("settings-error");
   var ok = document.getElementById("settings-ok");
-  var providers = ["daum", "naver", "gmail"];
+  var providers = ["daum", "works", "naver", "gmail"];
 
   function showError(message) {
     error.hidden = !message;

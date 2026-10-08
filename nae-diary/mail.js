@@ -10,7 +10,7 @@
     drafts: "임시보관함",
     trash: "휴지통",
   };
-  var accountLabels = { daum: "다음", naver: "네이버", gmail: "Gmail" };
+  var accountLabels = { daum: "다음", works: "웍스", naver: "네이버", gmail: "Gmail" };
   var messages = [];
   var counts = { inbox: 0, sent: 0, drafts: 0, trash: 0 };
   var accounts = [];
