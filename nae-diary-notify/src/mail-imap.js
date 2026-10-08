@@ -411,7 +411,52 @@ class ImapClient {
   }
 }
 
-export async function fetchInboxMessages(settings, limit = 8) {
+function encodeMailbox(name) {
+  const text = String(name || "INBOX");
+  if (/^INBOX$/i.test(text)) return "INBOX";
+  if (/^[\w.-]+$/.test(text)) return text;
+  return encodeImapString(text);
+}
+
+function parseListMailboxes(lines) {
+  const names = [];
+  for (const line of lines || []) {
+    if (!/^\* LIST /i.test(line)) continue;
+    const quoted = [...String(line).matchAll(/"([^"]*)"/g)].map((m) => m[1]);
+    let name = "";
+    if (quoted.length >= 2) name = quoted[quoted.length - 1];
+    else {
+      const tail = String(line).trim().split(/\s+/).pop() || "";
+      name = tail.replace(/^"|"$/g, "");
+    }
+    if (!name || name === "/" || name === ".") continue;
+    if (!names.includes(name)) names.push(name);
+  }
+  return names;
+}
+
+function pickMailboxes(names, settings) {
+  const list = Array.isArray(names) ? names : [];
+  const picked = [];
+  const push = (name) => {
+    if (name && !picked.includes(name)) picked.push(name);
+  };
+  push(list.find((name) => /^INBOX$/i.test(name)) || "INBOX");
+
+  const address = String(settings.address || "").toLowerCase();
+  const domain = address.includes("@") ? address.split("@")[1] : "";
+  const keywords = ["스마트", "웍스", "works", "smart", "office", "기업", "회사", "jacobsoft"];
+  if (domain) keywords.push(domain.split(".")[0]);
+
+  for (const name of list) {
+    const lower = String(name).toLowerCase();
+    if (/^inbox$/i.test(name)) continue;
+    if (keywords.some((key) => key && lower.includes(String(key).toLowerCase()))) push(name);
+  }
+  return picked.slice(0, 4);
+}
+
+export async function fetchInboxMessages(settings, limit = 8, options = {}) {
   const host = String(settings.imapHost || "").trim();
   const port = Number(settings.imapPort || 993);
   const password = String(settings.imapPassword || "");
@@ -426,10 +471,17 @@ export async function fetchInboxMessages(settings, limit = 8) {
     const text = String(value || "").trim();
     if (text && !candidates.includes(text)) candidates.push(text);
   };
+  // 다음 스마트워크는 회사메일 주소가 아니라 Daum ID로 로그인하는 경우가 많음
   pushUser(settings.imapUser);
-  pushUser(settings.address);
-  if (String(settings.address || "").includes("@")) {
-    pushUser(String(settings.address).split("@")[0]);
+  for (const alias of options.loginAliases || []) pushUser(alias);
+  if (settings.id === "works") {
+    pushUser(String(settings.address || "").split("@")[0]);
+    pushUser(settings.address);
+  } else {
+    pushUser(settings.address);
+    if (String(settings.address || "").includes("@")) {
+      pushUser(String(settings.address).split("@")[0]);
+    }
   }
   if (!candidates.length) {
     const err = new Error("settings");
@@ -453,6 +505,41 @@ export async function fetchInboxMessages(settings, limit = 8) {
     }
     return client;
   }
+
+  async function fetchFromMailbox(client, mailbox, perFolder) {
+    await withTimeout(client.command(`SELECT ${encodeMailbox(mailbox)}`), 10000, `SELECT ${mailbox} 시간 초과`);
+    const search = await withTimeout(client.command("UID SEARCH ALL"), 10000, "SEARCH 시간 초과");
+    const uidLine = search.lines.find((line) => line.startsWith("* SEARCH")) || "";
+    const uids = uidLine.replace("* SEARCH", "").trim().split(/\s+/).filter(Boolean);
+    const recent = uids.slice(-Math.max(1, Math.min(perFolder, 8)));
+    const messages = [];
+    for (let i = recent.length - 1; i >= 0; i -= 1) {
+      try {
+        const item = await withTimeout(client.fetchMessage(recent[i]), 12000, `FETCH 시간 초과 (uid ${recent[i]})`);
+        messages.push({
+          ...item,
+          mailbox,
+          uid: `${mailbox}:${item.uid}`,
+        });
+      } catch (error) {
+        messages.push({
+          uid: `${mailbox}:${recent[i]}`,
+          mailbox,
+          flags: "",
+          fromAddr: "",
+          toAddr: "",
+          subject: `(가져오기 실패: ${mailbox} ${recent[i]})`,
+          body: String(error && error.message || "본문을 가져오지 못했습니다."),
+          bodyHtml: "",
+          dateHeader: "",
+          isRead: true,
+        });
+      }
+    }
+    return messages;
+  }
+
+  const perAccountLimit = settings.id === "works" ? Math.max(limit, 12) : limit;
 
   return withTimeout((async () => {
     let client = null;
@@ -482,29 +569,25 @@ export async function fetchInboxMessages(settings, limit = 8) {
     }
 
     try {
-      await withTimeout(client.command("SELECT INBOX"), 10000, "SELECT INBOX 시간 초과");
-      const search = await withTimeout(client.command("UID SEARCH ALL"), 10000, "SEARCH 시간 초과");
-      const uidLine = search.lines.find((line) => line.startsWith("* SEARCH")) || "";
-      const uids = uidLine.replace("* SEARCH", "").trim().split(/\s+/).filter(Boolean);
-      const recent = uids.slice(-Math.max(1, Math.min(limit, 5)));
+      let mailboxes = ["INBOX"];
+      try {
+        const listed = await withTimeout(client.command('LIST "" "*"'), 10000, "LIST 시간 초과");
+        mailboxes = pickMailboxes(parseListMailboxes(listed.lines), settings);
+      } catch {
+        mailboxes = ["INBOX"];
+      }
+
+      const perFolder = Math.max(3, Math.ceil(perAccountLimit / mailboxes.length));
       const messages = [];
-      for (let i = recent.length - 1; i >= 0; i -= 1) {
+      for (const mailbox of mailboxes) {
         try {
-          messages.push(await withTimeout(client.fetchMessage(recent[i]), 12000, `FETCH 시간 초과 (uid ${recent[i]})`));
+          const rows = await fetchFromMailbox(client, mailbox, perFolder);
+          messages.push(...rows);
         } catch (error) {
-          messages.push({
-            uid: String(recent[i]),
-            flags: "",
-            fromAddr: "",
-            toAddr: "",
-            subject: `(가져오기 실패: uid ${recent[i]})`,
-            body: String(error && error.message || "본문을 가져오지 못했습니다."),
-            dateHeader: "",
-            isRead: true,
-          });
+          if (mailbox === "INBOX") throw error;
         }
       }
-      return messages;
+      return messages.slice(0, perAccountLimit);
     } finally {
       await client.close();
     }

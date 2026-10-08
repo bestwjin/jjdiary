@@ -527,7 +527,7 @@ export const MAIL_PROVIDERS = {
   },
   works: {
     id: "works",
-    label: "다음 웍스",
+    label: "스마트워크",
     imapHost: "imap.daum.net",
     imapPort: "993",
     smtpHost: "smtp.daum.net",
@@ -639,8 +639,12 @@ function normalizeMailAccount(providerId, input) {
   const base = emptyMailAccount(providerId);
   const raw = input && typeof input === "object" ? input : {};
   const address = String(raw.address ?? "").trim().slice(0, 200);
-  const imapUser = String(raw.imapUser ?? address).trim().slice(0, 200);
-  const smtpUser = String(raw.smtpUser ?? address).trim().slice(0, 200);
+  // 스마트워크는 IMAP 사용자가 회사메일이 아니라 Daum ID여야 함
+  const rawImapUser = String(raw.imapUser ?? "").trim().slice(0, 200);
+  const imapUser = providerId === "works"
+    ? rawImapUser
+    : (rawImapUser || address);
+  const smtpUser = String(raw.smtpUser ?? (providerId === "works" ? rawImapUser : address)).trim().slice(0, 200);
   const imapPassword = String(raw.imapPassword ?? "").slice(0, 500);
   const smtpPassword = String(raw.smtpPassword ?? imapPassword).slice(0, 500);
   return {
@@ -648,9 +652,9 @@ function normalizeMailAccount(providerId, input) {
     enabled: raw.enabled === true || raw.enabled === "1" || raw.enabled === "true" || Boolean(address && imapPassword),
     address,
     displayName: String(raw.displayName ?? "").trim().slice(0, 100),
-    imapUser: imapUser || address,
+    imapUser: imapUser || (providerId === "works" ? "" : address),
     imapPassword,
-    smtpUser: smtpUser || address,
+    smtpUser: smtpUser || imapUser || address,
     smtpPassword,
   };
 }
@@ -911,10 +915,30 @@ export async function syncMail(env, accountId) {
   let fetchedTotal = 0;
   const errors = [];
 
-  for (const mail of targets) {
+  for (const target of targets) {
+    let mail = target;
     let fetched = [];
     try {
-      fetched = await fetchInboxMessages(mail, 8);
+      const loginAliases = [];
+      if (mail.id === "works") {
+        const daum = accounts.daum;
+        if (daum) {
+          if (daum.imapUser) loginAliases.push(daum.imapUser);
+          if (daum.address) {
+            loginAliases.push(daum.address);
+            loginAliases.push(String(daum.address).split("@")[0]);
+          }
+        }
+        // 앱 비밀번호를 웍스에 안 넣었으면 다음 계정 비밀번호로 시도
+        if (!mail.imapPassword && daum && daum.imapPassword) {
+          mail = {
+            ...mail,
+            imapPassword: daum.imapPassword,
+            smtpPassword: mail.smtpPassword || daum.smtpPassword || daum.imapPassword,
+          };
+        }
+      }
+      fetched = await fetchInboxMessages(mail, mail.id === "works" ? 12 : 8, { loginAliases });
     } catch (error) {
       errors.push(`${mail.label}: ${error && error.message ? error.message : "동기화 실패"}`);
       continue;
