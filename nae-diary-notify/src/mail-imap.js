@@ -164,6 +164,14 @@ function parseAddress(value) {
   return text;
 }
 
+function parseAddressList(value) {
+  return String(value || "")
+    .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+    .map((part) => parseAddress(part))
+    .filter(Boolean)
+    .join(", ");
+}
+
 function looksLikeRawHeaders(text) {
   const sample = String(text || "").slice(0, 4000);
   if (!sample) return false;
@@ -240,7 +248,12 @@ function buildParsedMessage(uid, flags, headers, bodyRaw) {
     uid: String(uid),
     flags,
     fromAddr: parseAddress(headerValue(parts.headers, "From")),
-    toAddr: parseAddress(headerValue(parts.headers, "To")),
+    toAddr: [
+      parseAddressList(headerValue(parts.headers, "To")),
+      parseAddressList(headerValue(parts.headers, "Cc"))
+        ? `참조 ${parseAddressList(headerValue(parts.headers, "Cc"))}`
+        : "",
+    ].filter(Boolean).join(" · "),
     subject: decodeMimeWord(headerValue(parts.headers, "Subject")) || "(제목 없음)",
     body: String(plain || "").slice(0, 50000),
     bodyHtml: String(html || "").slice(0, 50000),
@@ -418,6 +431,20 @@ function encodeMailbox(name) {
   return encodeImapString(text);
 }
 
+function decodeImapUtf7(value) {
+  return String(value || "").replace(/&([^-]*)-/g, (_, data) => {
+    if (!data) return "&";
+    try {
+      const b64 = data.replace(/,/g, "/");
+      const pad = b64 + "===".slice((b64.length + 3) % 4);
+      const bytes = Uint8Array.from(atob(pad), (ch) => ch.charCodeAt(0));
+      return new TextDecoder("utf-16be").decode(bytes);
+    } catch {
+      return data;
+    }
+  });
+}
+
 function parseListMailboxes(lines) {
   const names = [];
   for (const line of lines || []) {
@@ -436,22 +463,26 @@ function parseListMailboxes(lines) {
 }
 
 function pickMailboxes(names, settings) {
-  const list = Array.isArray(names) ? names : [];
+  const list = (Array.isArray(names) ? names : []).map((name) => ({
+    raw: name,
+    label: decodeImapUtf7(name),
+  }));
   const picked = [];
   const push = (name) => {
     if (name && !picked.includes(name)) picked.push(name);
   };
-  push(list.find((name) => /^INBOX$/i.test(name)) || "INBOX");
+  const inbox = list.find((item) => /^inbox$/i.test(item.label) || /^inbox$/i.test(item.raw));
+  push(inbox ? inbox.raw : "INBOX");
 
   const address = String(settings.address || "").toLowerCase();
   const domain = address.includes("@") ? address.split("@")[1] : "";
-  const keywords = ["스마트", "웍스", "works", "smart", "office", "기업", "회사", "jacobsoft"];
+  const keywords = ["스마트", "웍스", "works", "smart", "office", "기업", "회사", "jacobsoft", "받은"];
   if (domain) keywords.push(domain.split(".")[0]);
 
-  for (const name of list) {
-    const lower = String(name).toLowerCase();
-    if (/^inbox$/i.test(name)) continue;
-    if (keywords.some((key) => key && lower.includes(String(key).toLowerCase()))) push(name);
+  for (const item of list) {
+    const lower = `${item.label} ${item.raw}`.toLowerCase();
+    if (/^inbox$/i.test(item.label)) continue;
+    if (keywords.some((key) => key && lower.includes(String(key).toLowerCase()))) push(item.raw);
   }
   return picked.slice(0, 4);
 }
@@ -471,13 +502,14 @@ export async function fetchInboxMessages(settings, limit = 8, options = {}) {
     const text = String(value || "").trim();
     if (text && !candidates.includes(text)) candidates.push(text);
   };
-  // 다음 스마트워크는 회사메일 주소가 아니라 Daum ID로 로그인하는 경우가 많음
-  pushUser(settings.imapUser);
-  for (const alias of options.loginAliases || []) pushUser(alias);
   if (settings.id === "works") {
-    pushUser(String(settings.address || "").split("@")[0]);
+    // 회사 주소 사서함을 먼저 연다. Daum ID는 개인 받은편지함으로 붙는 경우가 있다.
     pushUser(settings.address);
+    pushUser(settings.imapUser);
+    pushUser(String(settings.address || "").split("@")[0]);
+    for (const alias of options.loginAliases || []) pushUser(alias);
   } else {
+    pushUser(settings.imapUser);
     pushUser(settings.address);
     if (String(settings.address || "").includes("@")) {
       pushUser(String(settings.address).split("@")[0]);
@@ -506,12 +538,33 @@ export async function fetchInboxMessages(settings, limit = 8, options = {}) {
     return client;
   }
 
-  async function fetchFromMailbox(client, mailbox, perFolder) {
+  function searchUids(lines) {
+    const uidLine = (lines || []).find((line) => line.startsWith("* SEARCH")) || "";
+    return uidLine.replace("* SEARCH", "").trim().split(/\s+/).filter(Boolean);
+  }
+
+  async function searchMailbox(client, mailbox, address) {
     await withTimeout(client.command(`SELECT ${encodeMailbox(mailbox)}`), 10000, `SELECT ${mailbox} 시간 초과`);
-    const search = await withTimeout(client.command("UID SEARCH ALL"), 10000, "SEARCH 시간 초과");
-    const uidLine = search.lines.find((line) => line.startsWith("* SEARCH")) || "";
-    const uids = uidLine.replace("* SEARCH", "").trim().split(/\s+/).filter(Boolean);
-    const recent = uids.slice(-Math.max(1, Math.min(perFolder, 8)));
+    if (!address) {
+      const all = await withTimeout(client.command("UID SEARCH ALL"), 10000, "SEARCH 시간 초과");
+      return searchUids(all.lines);
+    }
+    const quoted = encodeImapString(address);
+    try {
+      const found = await withTimeout(
+        client.command(`UID SEARCH OR OR TO ${quoted} CC ${quoted} HEADER Delivered-To ${quoted}`),
+        10000,
+        "SEARCH 시간 초과",
+      );
+      return searchUids(found.lines);
+    } catch {
+      const all = await withTimeout(client.command("UID SEARCH ALL"), 10000, "SEARCH 시간 초과");
+      return searchUids(all.lines);
+    }
+  }
+
+  async function fetchUids(client, mailbox, uids, take) {
+    const recent = uids.slice(-Math.max(1, take));
     const messages = [];
     for (let i = recent.length - 1; i >= 0; i -= 1) {
       try {
@@ -539,57 +592,75 @@ export async function fetchInboxMessages(settings, limit = 8, options = {}) {
     return messages;
   }
 
-  const perAccountLimit = settings.id === "works" ? Math.max(limit, 12) : limit;
+  function matchesAddress(item, address) {
+    if (!address) return true;
+    const blob = `${item.toAddr || ""} ${item.fromAddr || ""}`.toLowerCase();
+    return blob.includes(String(address).toLowerCase());
+  }
+
+  const perAccountLimit = settings.id === "works" ? Math.max(limit, 15) : limit;
+  const watchAddress = settings.id === "works" ? String(settings.address || "").trim() : "";
 
   return withTimeout((async () => {
     let client = null;
     let lastLoginError = null;
+    let fallback = [];
     for (const candidate of candidates) {
       try {
         if (client) await client.close();
         client = await openClient();
         await withTimeout(
           client.command(`LOGIN ${encodeImapString(candidate)} ${encodeImapString(password)}`),
-          10000,
+          8000,
           `LOGIN 시간 초과 (${candidate})`
         );
         lastLoginError = null;
-        break;
       } catch (error) {
         lastLoginError = error;
         client = null;
+        continue;
       }
+
+      let mailboxes = ["INBOX"];
+      try {
+        const listed = await withTimeout(client.command('LIST "" "*"'), 8000, "LIST 시간 초과");
+        mailboxes = pickMailboxes(parseListMailboxes(listed.lines), settings);
+      } catch {
+        mailboxes = ["INBOX"];
+      }
+
+      const matched = [];
+      const recent = [];
+      for (const mailbox of mailboxes) {
+        try {
+          const uids = await searchMailbox(client, mailbox, watchAddress);
+          const rows = await fetchUids(client, mailbox, uids, watchAddress ? 12 : perAccountLimit);
+          if (watchAddress) {
+            const hits = rows.filter((item) => matchesAddress(item, watchAddress));
+            matched.push(...(hits.length ? hits : rows.slice(0, 4)));
+          }
+          recent.push(...rows);
+        } catch (error) {
+          if (mailbox === "INBOX" && !watchAddress) throw error;
+        }
+      }
+      const chosen = watchAddress ? matched.filter((item) => matchesAddress(item, watchAddress)) : recent;
+      if (chosen.length) {
+        await client.close();
+        return chosen.slice(0, perAccountLimit);
+      }
+      if (!fallback.length) fallback = recent;
+      await client.close();
+      client = null;
+      if (!watchAddress) break;
     }
-    if (!client || lastLoginError) {
+    if (!fallback.length && lastLoginError) {
       const err = new Error(lastLoginError && lastLoginError.message
         ? `LOGIN 실패: ${lastLoginError.message}`
         : "LOGIN 실패");
       err.code = "imap";
       throw err;
     }
-
-    try {
-      let mailboxes = ["INBOX"];
-      try {
-        const listed = await withTimeout(client.command('LIST "" "*"'), 10000, "LIST 시간 초과");
-        mailboxes = pickMailboxes(parseListMailboxes(listed.lines), settings);
-      } catch {
-        mailboxes = ["INBOX"];
-      }
-
-      const perFolder = Math.max(3, Math.ceil(perAccountLimit / mailboxes.length));
-      const messages = [];
-      for (const mailbox of mailboxes) {
-        try {
-          const rows = await fetchFromMailbox(client, mailbox, perFolder);
-          messages.push(...rows);
-        } catch (error) {
-          if (mailbox === "INBOX") throw error;
-        }
-      }
-      return messages.slice(0, perAccountLimit);
-    } finally {
-      await client.close();
-    }
-  })(), 28000, "메일 서버 응답이 없습니다. IMAP 설정·앱 비밀번호를 확인하세요.");
+    return fallback.slice(0, perAccountLimit);
+  })(), watchAddress ? 45000 : 28000, "메일 서버 응답이 없습니다. IMAP 설정·앱 비밀번호를 확인하세요.");
 }

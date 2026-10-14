@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 import builtinEvents from "./builtin-events.json" with { type: "json" };
 
 const TYPES = new Set(["registration-open", "info-session", "application", "lottery", "registration"]);
@@ -50,8 +50,26 @@ function databaseError() {
   return error;
 }
 
+async function ensureTelegramOutboxTable(sql) {
+  await sql`CREATE TABLE IF NOT EXISTS telegram_outbox (
+    id BIGINT PRIMARY KEY,
+    body TEXT NOT NULL,
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    sent_at TIMESTAMPTZ
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS telegram_outbox_pending_idx
+    ON telegram_outbox (status, scheduled_at ASC)`;
+}
+
 async function ensureSchema(sql) {
   const root = globalThis;
+  if (root.__diarySchemaReady) {
+    await ensureTelegramOutboxTable(sql);
+    return;
+  }
   if (!root.__diarySchema) {
     root.__diarySchema = (async () => {
       await sql`CREATE TABLE IF NOT EXISTS events (
@@ -66,29 +84,20 @@ async function ensureSchema(sql) {
       )`;
       const rows = await sql`SELECT COUNT(*)::int AS n FROM events`;
       if (Number(rows[0].n) === 0) {
-        const payload = JSON.stringify(builtinEvents.map((event) => ({
-          id: event.id,
-          title: event.title,
-          school: event.school || "",
-          event_date: event.date,
-          event_time: event.time || "",
-          event_type: event.type || "info-session",
-          description: event.description || "",
-          priority: event.priority || "medium",
-        })));
-        await sql`INSERT INTO events (id, title, school, event_date, event_time, event_type, description, priority)
-          SELECT id, title, school, event_date, event_time, event_type, description, priority
-          FROM json_to_recordset(${payload}::json) AS x(
-            id bigint,
-            title text,
-            school text,
-            event_date date,
-            event_time text,
-            event_type text,
-            description text,
-            priority text
-          )
-          ON CONFLICT (id) DO NOTHING`;
+        for (const event of builtinEvents) {
+          await sql`INSERT INTO events (id, title, school, event_date, event_time, event_type, description, priority)
+            VALUES (
+              ${event.id},
+              ${event.title},
+              ${event.school || ""},
+              ${event.date},
+              ${event.time || ""},
+              ${event.type || "info-session"},
+              ${event.description || ""},
+              ${event.priority || "medium"}
+            )
+            ON CONFLICT (id) DO NOTHING`;
+        }
       }
       await sql`CREATE TABLE IF NOT EXISTS todos (
         id BIGINT PRIMARY KEY,
@@ -153,6 +162,8 @@ async function ensureSchema(sql) {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
       await sql`CREATE INDEX IF NOT EXISTS card_usages_date_idx ON card_usages (used_date DESC, id DESC)`;
+      await ensureTelegramOutboxTable(sql);
+      root.__diarySchemaReady = true;
     })().catch((error) => {
       root.__diarySchema = null;
       throw error;
@@ -161,11 +172,29 @@ async function ensureSchema(sql) {
   return root.__diarySchema;
 }
 
+function databaseUrl(env) {
+  return env.HYPERDRIVE?.connectionString || env.DATABASE_URL || "";
+}
+
+function createSql(connectionString) {
+  return postgres(connectionString, {
+    max: 1,
+    idle_timeout: 20,
+    connect_timeout: 15,
+    fetch_types: false,
+  });
+}
+
 async function withDb(env, fn) {
-  if (!env.DATABASE_URL) throw databaseError();
-  const sql = neon(env.DATABASE_URL);
-  await ensureSchema(sql);
-  return fn(sql);
+  const connectionString = databaseUrl(env);
+  if (!connectionString) throw databaseError();
+  const sql = createSql(connectionString);
+  try {
+    await ensureSchema(sql);
+    return await fn(sql);
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
 }
 
 export async function listEvents(env) {
@@ -250,7 +279,7 @@ export async function migrateEvents(env, deletedIds, custom) {
 }
 
 export function isDatabaseConfigured(env) {
-  return Boolean(env.DATABASE_URL);
+  return Boolean(env.HYPERDRIVE?.connectionString || env.DATABASE_URL);
 }
 
 const AI_TOOLS = new Set(["GPT", "CLAUDE", "CURSOR"]);
@@ -331,9 +360,8 @@ export async function createTodo(env, input) {
   if (!todo) return null;
   const id = Date.now();
   return withDb(env, async (sql) => {
-    const files = JSON.stringify(todo.files);
     const rows = await sql`INSERT INTO todos (id, title, tag, requester, ai_tool, work_content, files, priority, progress_status, done)
-      VALUES (${id}, ${todo.title}, ${todo.tag}, ${todo.requester}, ${todo.aiTool}, ${todo.workContent}, ${files}::jsonb, ${todo.priority}, ${todo.progressStatus}, ${todo.done})
+      VALUES (${id}, ${todo.title}, ${todo.tag}, ${todo.requester}, ${todo.aiTool}, ${todo.workContent}, ${sql.json(todo.files)}, ${todo.priority}, ${todo.progressStatus}, ${todo.done})
       RETURNING id, title, tag, requester, ai_tool, work_content, files, priority, progress_status, done, created_at`;
     return mapTodo(rows[0]);
   });
@@ -356,11 +384,10 @@ export async function updateTodo(env, id, input) {
     const createdAt = cleanCreatedAt(input, existing[0].created_at instanceof Date
       ? existing[0].created_at.toISOString()
       : String(existing[0].created_at || ""));
-    const files = JSON.stringify(todo.files);
     if (createdAt) {
       const rows = await sql`UPDATE todos
         SET title = ${todo.title}, tag = ${todo.tag}, requester = ${todo.requester}, ai_tool = ${todo.aiTool},
-            work_content = ${todo.workContent}, files = ${files}::jsonb, priority = ${todo.priority},
+            work_content = ${todo.workContent}, files = ${sql.json(todo.files)}, priority = ${todo.priority},
             progress_status = ${todo.progressStatus}, done = ${todo.done},
             created_at = ${createdAt}
         WHERE id = ${todoId}
@@ -369,7 +396,7 @@ export async function updateTodo(env, id, input) {
     }
     const rows = await sql`UPDATE todos
       SET title = ${todo.title}, tag = ${todo.tag}, requester = ${todo.requester}, ai_tool = ${todo.aiTool},
-          work_content = ${todo.workContent}, files = ${files}::jsonb, priority = ${todo.priority},
+          work_content = ${todo.workContent}, files = ${sql.json(todo.files)}, priority = ${todo.priority},
           progress_status = ${todo.progressStatus}, done = ${todo.done}
       WHERE id = ${todoId}
       RETURNING id, title, tag, requester, ai_tool, work_content, files, priority, progress_status, done, created_at`;
@@ -1130,6 +1157,119 @@ export async function deleteCardUsage(env, id) {
   return withDb(env, async (sql) => {
     const rows = await sql`DELETE FROM card_usages WHERE id = ${cardId} RETURNING id`;
     return rows.length > 0;
+  });
+}
+
+function mapTelegramOutbox(row) {
+  return {
+    id: Number(row.id),
+    body: row.body || "",
+    scheduledAt: row.scheduled_at instanceof Date ? row.scheduled_at.toISOString() : String(row.scheduled_at || ""),
+    status: row.status || "pending",
+    error: row.error || "",
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at || ""),
+    sentAt: row.sent_at instanceof Date ? row.sent_at.toISOString() : (row.sent_at ? String(row.sent_at) : ""),
+  };
+}
+
+export async function listTelegramOutbox(env, limit = 50) {
+  const take = Math.max(1, Math.min(100, Number(limit) || 50));
+  return withDb(env, async (sql) => {
+    const rows = await sql`
+      SELECT id, body, scheduled_at, status, error, created_at, sent_at
+      FROM telegram_outbox
+      ORDER BY created_at DESC
+      LIMIT ${take}
+    `;
+    return rows.map(mapTelegramOutbox);
+  });
+}
+
+export async function createTelegramOutbox(env, input) {
+  const body = String(input?.body || input?.message || "").trim().slice(0, 4000);
+  if (!body) return null;
+  const scheduledAt = input?.scheduledAt || input?.scheduled_at;
+  const when = scheduledAt ? new Date(scheduledAt) : new Date();
+  if (Number.isNaN(when.getTime())) return null;
+  const status = input?.status === "sent" ? "sent" : "pending";
+  return withDb(env, async (sql) => {
+    const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+    const rows = await sql`
+      INSERT INTO telegram_outbox (id, body, scheduled_at, status, sent_at)
+      VALUES (
+        ${id},
+        ${body},
+        ${when.toISOString()},
+        ${status},
+        ${status === "sent" ? new Date().toISOString() : null}
+      )
+      RETURNING id, body, scheduled_at, status, error, created_at, sent_at
+    `;
+    return mapTelegramOutbox(rows[0]);
+  });
+}
+
+export async function cancelTelegramOutbox(env, id) {
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId)) return null;
+  return withDb(env, async (sql) => {
+    const rows = await sql`
+      UPDATE telegram_outbox
+      SET status = 'cancelled'
+      WHERE id = ${numericId} AND status IN ('pending', 'failed')
+      RETURNING id, body, scheduled_at, status, error, created_at, sent_at
+    `;
+    return rows[0] ? mapTelegramOutbox(rows[0]) : null;
+  });
+}
+
+export async function hasPendingTelegramOutbox(env) {
+  return withDb(env, async (sql) => {
+    const rows = await sql`
+      SELECT 1 AS ok
+      FROM telegram_outbox
+      WHERE status = 'pending'
+      LIMIT 1
+    `;
+    return rows.length > 0;
+  });
+}
+
+export async function claimDueTelegramOutbox(env) {
+  return withDb(env, async (sql) => {
+    const rows = await sql`
+      UPDATE telegram_outbox
+      SET status = 'sending'
+      WHERE id IN (
+        SELECT id
+        FROM telegram_outbox
+        WHERE status = 'pending' AND scheduled_at <= NOW()
+        ORDER BY scheduled_at ASC
+        LIMIT 20
+      )
+      RETURNING id, body, scheduled_at, status, error, created_at, sent_at
+    `;
+    return rows.map(mapTelegramOutbox);
+  });
+}
+
+export async function markTelegramOutboxSent(env, id) {
+  return withDb(env, async (sql) => {
+    await sql`
+      UPDATE telegram_outbox
+      SET status = 'sent', sent_at = NOW(), error = ''
+      WHERE id = ${Number(id)}
+    `;
+  });
+}
+
+export async function markTelegramOutboxFailed(env, id, error) {
+  return withDb(env, async (sql) => {
+    await sql`
+      UPDATE telegram_outbox
+      SET status = 'failed', error = ${String(error || "").slice(0, 500)}
+      WHERE id = ${Number(id)}
+    `;
   });
 }
 

@@ -14,9 +14,26 @@
   var telegramNotifyTime = document.getElementById("settings-telegram-notify-time");
   var telegramToggle = document.getElementById("settings-telegram-toggle");
   var mailToggle = document.getElementById("settings-mail-toggle");
+  var telegramSendForm = document.getElementById("settings-telegram-send-form");
+  var telegramMessage = document.getElementById("settings-telegram-message");
+  var telegramScheduled = document.getElementById("settings-telegram-scheduled");
+  var telegramScheduleAt = document.getElementById("settings-telegram-schedule-at");
+  var telegramScheduleWrap = document.getElementById("settings-telegram-schedule-wrap");
+  var telegramOutbox = document.getElementById("settings-telegram-outbox");
+  var telegramOutboxEmpty = document.getElementById("settings-telegram-outbox-empty");
+  var telegramOutboxRefresh = document.getElementById("settings-telegram-outbox-refresh");
   var error = document.getElementById("settings-error");
   var ok = document.getElementById("settings-ok");
+  var nav = document.getElementById("settings-nav");
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".settings-panel[data-panel]"));
   var providers = ["daum", "works", "naver", "gmail"];
+  var STATUS_LABEL = {
+    pending: "예약",
+    sending: "발송중",
+    sent: "완료",
+    failed: "실패",
+    cancelled: "취소",
+  };
 
   function showError(message) {
     error.hidden = !message;
@@ -112,9 +129,140 @@
     });
   }
 
+  function pad(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function toLocalInputValue(date) {
+    return (
+      date.getFullYear() +
+      "-" + pad(date.getMonth() + 1) +
+      "-" + pad(date.getDate()) +
+      "T" + pad(date.getHours()) +
+      ":" + pad(date.getMinutes()) +
+      ":" + pad(date.getSeconds())
+    );
+  }
+
+  function fromLocalInputValue(value) {
+    if (!value) return "";
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString();
+  }
+
+  function formatWhen(value) {
+    if (!value) return "-";
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return (
+      date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
+      " " + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds())
+    );
+  }
+
+  function syncScheduleFields() {
+    var on = telegramScheduled.checked;
+    telegramScheduleWrap.hidden = !on;
+    telegramScheduleAt.required = on;
+    if (on && !telegramScheduleAt.value) {
+      var next = new Date(Date.now() + 60 * 1000);
+      telegramScheduleAt.value = toLocalInputValue(next);
+    }
+  }
+
+  async function loadOutbox() {
+    var response = await fetch(API + "/telegram/outbox", { headers: headers });
+    if (!response.ok) throw new Error("outbox");
+    var data = await response.json();
+    var items = Array.isArray(data.items) ? data.items : [];
+    telegramOutbox.innerHTML = "";
+    telegramOutboxEmpty.hidden = items.length > 0;
+    items.forEach(function (item) {
+      var li = document.createElement("li");
+      li.className = "telegram-outbox-item";
+      var meta = document.createElement("div");
+      meta.className = "telegram-outbox-meta";
+      var badge = document.createElement("span");
+      badge.className = "telegram-outbox-status is-" + (item.status || "pending");
+      badge.textContent = STATUS_LABEL[item.status] || item.status || "예약";
+      var when = document.createElement("span");
+      when.textContent = item.status === "sent" && item.sentAt
+        ? "발송 " + formatWhen(item.sentAt)
+        : "예약 " + formatWhen(item.scheduledAt);
+      var created = document.createElement("span");
+      created.textContent = "등록 " + formatWhen(item.createdAt);
+      meta.appendChild(badge);
+      meta.appendChild(when);
+      meta.appendChild(created);
+      var body = document.createElement("p");
+      body.className = "telegram-outbox-body";
+      body.textContent = item.body || "";
+      li.appendChild(meta);
+      li.appendChild(body);
+      if (item.error) {
+        var err = document.createElement("p");
+        err.className = "telegram-outbox-error";
+        err.textContent = item.error;
+        li.appendChild(err);
+      }
+      if (item.status === "pending" || item.status === "failed") {
+        var cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "ks-btn";
+        cancel.textContent = "취소";
+        cancel.addEventListener("click", async function () {
+          cancel.disabled = true;
+          try {
+            var res = await fetch(API + "/telegram/outbox/" + item.id, {
+              method: "DELETE",
+              headers: headers,
+            });
+            if (!res.ok) throw new Error("cancel");
+            showOk("예약을 취소했습니다.");
+            await loadOutbox();
+          } catch (e) {
+            showError("예약을 취소하지 못했습니다.");
+            cancel.disabled = false;
+          }
+        });
+        li.appendChild(cancel);
+      }
+      telegramOutbox.appendChild(li);
+    });
+  }
+
+  function showPanel(id) {
+    panels.forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-panel") !== id;
+    });
+    Array.prototype.forEach.call(nav.querySelectorAll(".settings-nav-item"), function (button) {
+      var on = button.getAttribute("data-panel") === id;
+      button.classList.toggle("is-on", on);
+      button.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    try {
+      localStorage.setItem("settingsPanel", id);
+    } catch (e) {}
+    if (id === "telegram-send") {
+      syncScheduleFields();
+    }
+    if (id === "telegram-history") {
+      loadOutbox().catch(function () {
+        showError("발송 내역을 불러오지 못했습니다.");
+      });
+    }
+  }
+
   bindToggle(kasiToggle, kasiInput);
   bindToggle(telegramToggle, telegramToken);
   bindToggle(mailToggle, Array.prototype.slice.call(mailForm.querySelectorAll('input[data-field$="Password"]')));
+
+  nav.addEventListener("click", function (event) {
+    var button = event.target.closest(".settings-nav-item");
+    if (!button || !nav.contains(button)) return;
+    showPanel(button.getAttribute("data-panel"));
+  });
 
   holidayForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -164,374 +312,69 @@
     }
   });
 
-  telegramNotifyTime.value = "10:00";
+  telegramScheduled.addEventListener("change", syncScheduleFields);
+  telegramOutboxRefresh.addEventListener("click", function () {
+    loadOutbox().then(function () {
+      showOk("발송 내역을 새로고침했습니다.");
+    }).catch(function () {
+      showError("발송 내역을 불러오지 못했습니다.");
+    });
+  });
 
-  var GAP = 14;
-  var SNAP = 12;
-  var NEAR = 80;
-  var MIN_W = 280;
-  var MIN_H = 180;
-  var board = document.getElementById("settings-board");
-
-  function readLayout() {
+  telegramSendForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var button = telegramSendForm.querySelector('button[type="submit"]');
+    button.disabled = true;
     try {
-      var data = JSON.parse(localStorage.getItem("settingsLayout") || "");
-      if (!data || typeof data !== "object" || !data.items) return { custom: false, items: {} };
-      return data;
-    } catch (e) {
-      return { custom: false, items: {} };
-    }
-  }
-
-  function writeLayout(widgets, canvasWidth) {
-    var items = {};
-    widgets.forEach(function (widget) {
-      items[widget.id] = {
-        x: canvasWidth ? widget.rect.x / canvasWidth : 0,
-        y: widget.rect.y,
-        w: canvasWidth ? widget.rect.w / canvasWidth : 1,
-        h: widget.rect.h,
+      var payload = {
+        message: telegramMessage.value.trim(),
+        scheduled: telegramScheduled.checked,
       };
-    });
-    localStorage.setItem("settingsLayout", JSON.stringify({ custom: true, items: items }));
-  }
-
-  function cloneRect(rect) {
-    return { x: rect.x, y: rect.y, w: rect.w, h: rect.h };
-  }
-
-  function magnet(value, targets) {
-    var best = null;
-    var dist = SNAP + 0.01;
-    targets.forEach(function (target) {
-      if (!isFinite(target)) return;
-      var delta = Math.abs(target - value);
-      if (delta <= SNAP && delta < dist) {
-        dist = delta;
-        best = target;
-      }
-    });
-    return best === null ? value : Math.round(best);
-  }
-
-  function separation(a, b) {
-    var dx = 0;
-    if (a.x + a.w < b.x) dx = b.x - (a.x + a.w);
-    else if (b.x + b.w < a.x) dx = a.x - (b.x + b.w);
-    var dy = 0;
-    if (a.y + a.h < b.y) dy = b.y - (a.y + a.h);
-    else if (b.y + b.h < a.y) dy = a.y - (b.y + b.h);
-    return Math.max(dx, dy);
-  }
-
-  function nearbyRects(rect, rects) {
-    return rects.filter(function (other) { return separation(rect, other) <= NEAR; });
-  }
-
-  function overlaps(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-  }
-
-  function snapMove(rect, near, canvasWidth) {
-    var xs = [0, canvasWidth - rect.w];
-    var ys = [0];
-    near.forEach(function (other) {
-      xs.push(other.x, other.x + other.w + GAP, other.x + other.w - rect.w, other.x - GAP - rect.w);
-      ys.push(other.y, other.y + other.h + GAP, other.y + other.h - rect.h, other.y - GAP - rect.h);
-    });
-    var x = magnet(rect.x, xs);
-    var y = Math.max(0, magnet(rect.y, ys));
-    x = Math.max(0, Math.min(Math.max(0, canvasWidth - rect.w), x));
-    return { x: x, y: y, w: rect.w, h: rect.h };
-  }
-
-  function snapSize(rect, near, canvasWidth, edge) {
-    var next = cloneRect(rect);
-    if (edge.indexOf("e") >= 0) {
-      var rights = [canvasWidth];
-      near.forEach(function (other) {
-        rights.push(rect.x + other.w, other.x + other.w, other.x - GAP);
-      });
-      var right = magnet(rect.x + rect.w, rights);
-      next.w = Math.max(MIN_W, Math.min(canvasWidth - rect.x, right - rect.x));
-    }
-    if (edge.indexOf("s") >= 0) {
-      var bottoms = [];
-      near.forEach(function (other) {
-        bottoms.push(rect.y + other.h, other.y + other.h, other.y - GAP);
-      });
-      if (bottoms.length) {
-        var bottom = magnet(rect.y + rect.h, bottoms);
-        next.h = Math.max(MIN_H, bottom - rect.y);
-      }
-    }
-    return next;
-  }
-
-  function resolveOverlap(rect, rects, canvasWidth) {
-    var next = cloneRect(rect);
-    var guard = 0;
-    while (guard++ < 20) {
-      var hit = null;
-      for (var i = 0; i < rects.length; i++) {
-        if (overlaps(next, rects[i])) {
-          hit = rects[i];
-          break;
+      if (payload.scheduled) {
+        payload.scheduledAt = fromLocalInputValue(telegramScheduleAt.value);
+        if (!payload.scheduledAt) {
+          showError("예약 시각을 확인해 주세요.");
+          return;
         }
       }
-      if (!hit) break;
-      var down = hit.y + hit.h + GAP - next.y;
-      var right = hit.x + hit.w + GAP - next.x;
-      if (right > 0 && right <= down && next.x + next.w + right <= canvasWidth + 1) next.x += right;
-      else next.y += Math.max(down, GAP);
-    }
-    next.x = Math.max(0, Math.min(Math.max(0, canvasWidth - next.w), next.x));
-    next.y = Math.max(0, next.y);
-    return {
-      x: Math.round(next.x),
-      y: Math.round(next.y),
-      w: Math.round(next.w),
-      h: Math.round(next.h),
-    };
-  }
-
-  function measureCard(el, width) {
-    el.style.position = "absolute";
-    el.style.left = "0px";
-    el.style.top = "0px";
-    el.style.width = width + "px";
-    el.style.height = "auto";
-    var body = el.querySelector(".settings-card-body, .dash-body");
-    if (body) {
-      body.style.flex = "none";
-      body.style.overflow = "visible";
-    }
-    var height = Math.max(MIN_H, el.scrollHeight || el.offsetHeight);
-    if (body) {
-      body.style.flex = "";
-      body.style.overflow = "";
-    }
-    return height;
-  }
-
-  function defaultArrange(widgets, canvasWidth) {
-    var y = 0;
-    var half = Math.max(MIN_W, Math.floor((canvasWidth - GAP) / 2));
-    var holiday = widgets.find(function (w) { return w.id === "holiday"; });
-    var telegram = widgets.find(function (w) { return w.id === "telegram"; });
-    var mail = widgets.find(function (w) { return w.id === "mail"; });
-    if (holiday && telegram && canvasWidth >= MIN_W * 2 + GAP) {
-      var h1 = measureCard(holiday.el, half);
-      var h2 = measureCard(telegram.el, half);
-      var rowH = Math.max(h1, h2);
-      holiday.rect = { x: 0, y: y, w: half, h: rowH };
-      telegram.rect = { x: half + GAP, y: y, w: canvasWidth - half - GAP, h: rowH };
-      y += rowH + GAP;
-    } else {
-      [holiday, telegram].forEach(function (widget) {
-        if (!widget) return;
-        var h = measureCard(widget.el, canvasWidth);
-        widget.rect = { x: 0, y: y, w: canvasWidth, h: h };
-        y += h + GAP;
+      showError("");
+      showOk("");
+      var response = await fetch(API + "/telegram/send", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(payload),
       });
-    }
-    if (mail) {
-      var mailH = measureCard(mail.el, canvasWidth);
-      mail.rect = { x: 0, y: y, w: canvasWidth, h: Math.max(mailH, 420) };
-    }
-  }
-
-  function placeMissing(widgets, canvasWidth) {
-    var placed = widgets.filter(function (widget) { return widget.rect; }).map(function (widget) { return widget.rect; });
-    widgets.forEach(function (widget) {
-      if (widget.rect) return;
-      var w = Math.min(canvasWidth, Math.max(MIN_W, Math.round(canvasWidth * 0.48)));
-      var h = measureCard(widget.el, w);
-      var rect = resolveOverlap({ x: 0, y: 0, w: w, h: h }, placed, canvasWidth);
-      widget.rect = rect;
-      placed.push(rect);
-    });
-  }
-
-  function applySaved(widgets, canvasWidth, saved) {
-    widgets.forEach(function (widget) { widget.rect = null; });
-    widgets.forEach(function (widget) {
-      var item = saved.items[widget.id];
-      if (!item || !isFinite(Number(item.w)) || !isFinite(Number(item.h))) return;
-      var w = Math.max(MIN_W, Math.round(Number(item.w) * canvasWidth));
-      var x = Math.round(Number(item.x) * canvasWidth);
-      if (w > canvasWidth) w = canvasWidth;
-      if (x + w > canvasWidth) x = Math.max(0, canvasWidth - w);
-      widget.rect = {
-        x: Math.max(0, x),
-        y: Math.max(0, Math.round(Number(item.y) || 0)),
-        w: w,
-        h: Math.max(MIN_H, Math.round(Number(item.h) || MIN_H)),
-      };
-    });
-    placeMissing(widgets, canvasWidth);
-  }
-
-  function mountSettingsBoard() {
-    if (!board || board.dataset.mounted === "1") return;
-    board.dataset.mounted = "1";
-    var canvas = document.createElement("div");
-    canvas.className = "dash-canvas settings-canvas";
-    var cards = Array.prototype.slice.call(board.querySelectorAll(".settings-card[data-zone]"));
-    var widgets = cards.map(function (el) {
-      return { id: el.getAttribute("data-zone"), el: el, rect: null };
-    });
-    widgets.forEach(function (widget) {
-      var body = widget.el.querySelector(".settings-card-body");
-      if (body) body.classList.add("dash-body");
-      ["e", "s", "se"].forEach(function (edge) {
-        var handle = document.createElement("button");
-        handle.type = "button";
-        handle.className = "dash-resize";
-        handle.dataset.edge = edge;
-        handle.setAttribute("aria-label", edge === "e" ? "가로 크기 조정" : edge === "s" ? "세로 크기 조정" : "가로세로 크기 조정");
-        widget.el.appendChild(handle);
-      });
-      widget.el.classList.add("dash-widget");
-      canvas.appendChild(widget.el);
-    });
-    board.appendChild(canvas);
-
-    function canvasWidth() {
-      return canvas.clientWidth || board.clientWidth || 320;
-    }
-
-    function paint() {
-      var bottom = 0;
-      widgets.forEach(function (widget) {
-        var rect = widget.rect;
-        widget.el.style.left = rect.x + "px";
-        widget.el.style.top = rect.y + "px";
-        widget.el.style.width = rect.w + "px";
-        widget.el.style.height = rect.h + "px";
-        bottom = Math.max(bottom, rect.y + rect.h);
-      });
-      canvas.style.height = bottom + "px";
-    }
-
-    function relayout() {
-      var saved = readLayout();
-      var width = canvasWidth();
-      if (saved.custom) applySaved(widgets, width, saved);
-      else defaultArrange(widgets, width);
-      paint();
-    }
-
-    relayout();
-    var drag = null;
-
-    function widgetByEl(el) {
-      for (var i = 0; i < widgets.length; i++) {
-        if (widgets[i].el === el) return widgets[i];
-      }
-      return null;
-    }
-
-    function otherRects(widget) {
-      return widgets.filter(function (item) { return item !== widget; }).map(function (item) { return item.rect; });
-    }
-
-    canvas.addEventListener("pointerdown", function (event) {
-      if (event.button !== 0) return;
-      var handle = event.target.closest(".dash-resize");
-      var widgetEl = event.target.closest(".dash-widget");
-      if (!widgetEl) return;
-      var widget = widgetByEl(widgetEl);
-      if (!widget) return;
-      if (handle) {
-        event.preventDefault();
-        event.stopPropagation();
-        drag = {
-          mode: "resize",
-          edge: handle.dataset.edge,
-          widget: widget,
-          px: event.clientX,
-          py: event.clientY,
-          rect: cloneRect(widget.rect),
-          near: nearbyRects(widget.rect, otherRects(widget)),
-          moved: false,
-        };
-        widget.el.classList.add("is-resizing");
-        try { handle.setPointerCapture(event.pointerId); } catch (e) {}
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok || !data.ok) {
+        var reason = data.reason || "";
+        if (reason === "missing_credentials") showError("텔레그램 연동 정보를 먼저 저장해 주세요.");
+        else if (reason === "empty_message") showError("메시지를 입력해 주세요.");
+        else showError("메시지 발송에 실패했습니다.");
         return;
       }
-      if (event.target.closest("a, button, input, textarea, select, label")) return;
-      if (!event.target.closest(".settings-card-head")) return;
-      event.preventDefault();
-      drag = {
-        mode: "move",
-        widget: widget,
-        px: event.clientX,
-        py: event.clientY,
-        rect: cloneRect(widget.rect),
-        near: nearbyRects(widget.rect, otherRects(widget)),
-        moved: false,
-      };
-      widget.el.classList.add("is-dragging");
-      try { widget.el.setPointerCapture(event.pointerId); } catch (e) {}
-    });
-
-    window.addEventListener("pointermove", function (event) {
-      if (!drag) return;
-      var dx = event.clientX - drag.px;
-      var dy = event.clientY - drag.py;
-      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-      var width = canvasWidth();
-      var raw = cloneRect(drag.rect);
-      var near = drag.near.slice();
-      nearbyRects(raw, otherRects(drag.widget)).forEach(function (rect) {
-        if (near.indexOf(rect) < 0) near.push(rect);
-      });
-      if (drag.mode === "move") {
-        raw.x += dx;
-        raw.y = Math.max(0, raw.y + dy);
-        var snapped = snapMove(raw, near, width);
-        drag.widget.rect = snapped;
-        drag.widget.el.classList.toggle("is-magnet", Math.abs(snapped.x - raw.x) > 0.5 || Math.abs(snapped.y - raw.y) > 0.5);
-      } else {
-        if (drag.edge.indexOf("e") >= 0) raw.w = Math.max(MIN_W, drag.rect.w + dx);
-        if (drag.edge.indexOf("s") >= 0) raw.h = Math.max(MIN_H, drag.rect.h + dy);
-        if (raw.x + raw.w > width) raw.w = Math.max(MIN_W, width - raw.x);
-        var snappedSize = snapSize(raw, near, width, drag.edge);
-        drag.widget.rect = snappedSize;
-        drag.widget.el.classList.toggle("is-magnet", snappedSize.w !== raw.w || snappedSize.h !== raw.h);
-      }
-      paint();
-    });
-
-    function finishDrag() {
-      if (!drag) return;
-      var widget = drag.widget;
-      var moved = drag.moved;
-      var mode = drag.mode;
-      widget.el.classList.remove("is-dragging", "is-resizing", "is-magnet");
-      drag = null;
-      if (!moved) return;
-      if (mode === "move") widget.rect = resolveOverlap(widget.rect, otherRects(widget), canvasWidth());
-      else widget.rect = {
-        x: Math.round(widget.rect.x),
-        y: Math.round(widget.rect.y),
-        w: Math.round(widget.rect.w),
-        h: Math.round(widget.rect.h),
-      };
-      paint();
-      writeLayout(widgets, canvasWidth());
+      telegramMessage.value = "";
+      showOk(data.sent ? "텔레그램 메시지를 발송했습니다." : "텔레그램 예약 발송을 등록했습니다.");
+      syncScheduleFields();
+    } catch (err) {
+      showError("메시지 발송에 실패했습니다.");
+    } finally {
+      button.disabled = false;
     }
+  });
 
-    window.addEventListener("pointerup", finishDrag);
-    window.addEventListener("pointercancel", finishDrag);
-    window.addEventListener("resize", relayout);
-  }
+  telegramNotifyTime.value = "10:00";
+  syncScheduleFields();
 
-  load().then(function () {
-    mountSettingsBoard();
-  }).catch(function () {
+  var initialPanel = "holiday";
+  try {
+    var saved = localStorage.getItem("settingsPanel");
+    if (saved && panels.some(function (panel) { return panel.getAttribute("data-panel") === saved; })) {
+      initialPanel = saved;
+    }
+  } catch (e) {}
+  showPanel(initialPanel);
+
+  load().catch(function () {
     showError("설정을 불러오지 못했습니다.");
-    mountSettingsBoard();
   });
 })();

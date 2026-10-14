@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>메일 - 내 다이어리</title>
   <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon"/>
 </head>
 <body class="min-h-full">
   <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -51,6 +52,9 @@
           <div class="mail-list-actions">
             <input id="mail-search" class="mail-search" type="search" placeholder="제목·보낸사람 검색" autocomplete="off"/>
             <button id="mail-refresh" class="ks-btn" type="button">받기</button>
+          </div>
+          <div id="mail-loading" class="mail-loading" hidden>
+            <div class="mail-loading-bar"></div>
           </div>
         </div>
         <p id="mail-error" class="mail-error" hidden></p>

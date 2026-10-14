@@ -1,7 +1,11 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { createCardUsage, createEvent, createMail, createSchedule, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
+import { cancelTelegramOutbox, createCardUsage, createEvent, createMail, createSchedule, createTelegramOutbox, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTelegramOutbox, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
 import { getHolidays } from "./holidays.js";
 import { addDays, buildReminderMessage, eventsOn, isNotifyWindow, kstToday, normalizeEvents, schedulesOn } from "./logic.js";
+import { sendTelegramMessage } from "./telegram.js";
+import { ensureTelegramScheduler, processTelegramOutbox, TelegramScheduler } from "./telegram-scheduler.js";
+
+export { TelegramScheduler };
 
 const EVENTS_KEY = "events";
 
@@ -83,23 +87,7 @@ async function reminderFor(env, today) {
 }
 
 async function sendTelegram(env, text) {
-  const telegram = await getTelegramConfig(env);
-  if (!telegram.token || !telegram.username) return { ok: false, status: 0, error: "missing_credentials" };
-  const response = await fetch(`https://api.telegram.org/bot${telegram.token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: telegram.username,
-      text,
-      disable_web_page_preview: true,
-    }),
-  });
-  const body = await response.json().catch(() => ({}));
-  return {
-    ok: response.ok && body.ok === true,
-    status: response.status,
-    error: body.description || body.error_code || "",
-  };
+  return sendTelegramMessage(env, text);
 }
 
 export async function runReminder(env, today = kstToday(), options = {}) {
@@ -128,7 +116,7 @@ export async function runReminder(env, today = kstToday(), options = {}) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(request) });
 
@@ -512,6 +500,71 @@ export default {
       }
     }
 
+    if (url.pathname === "/telegram/outbox" && request.method === "GET") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        const items = await listTelegramOutbox(env);
+        return json({ ok: true, items }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/telegram/send" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      const message = String(body?.message || body?.body || "").trim();
+      if (!message) return json({ ok: false, reason: "empty_message" }, 400, request);
+      const scheduled = body?.scheduled !== false && body?.scheduled !== "false" && body?.scheduled !== 0;
+      try {
+        if (!scheduled) {
+          const result = await sendTelegramMessage(env, message);
+          if (!result.ok) {
+            return json({ ok: false, reason: result.error || "telegram_failed" }, 502, request);
+          }
+          const resultItem = await createTelegramOutbox(env, {
+            body: message,
+            scheduledAt: new Date().toISOString(),
+            status: "sent",
+          });
+          return json({ ok: true, sent: true, item: resultItem }, 200, request);
+        }
+        const scheduledAt = body?.scheduledAt || body?.scheduled_at;
+        if (!scheduledAt) return json({ ok: false, reason: "missing_scheduled_at" }, 400, request);
+        const when = new Date(scheduledAt);
+        if (Number.isNaN(when.getTime())) return json({ ok: false, reason: "invalid_scheduled_at" }, 400, request);
+        const item = await createTelegramOutbox(env, { body: message, scheduledAt: when.toISOString() });
+        if (!item) return json({ ok: false }, 400, request);
+        if (ctx && typeof ctx.waitUntil === "function") {
+          ctx.waitUntil(ensureTelegramScheduler(env).catch((error) => {
+            console.error("telegram scheduler ensure failed", error && error.message ? error.message : error);
+          }));
+        } else {
+          await ensureTelegramScheduler(env).catch(() => {});
+        }
+        return json({ ok: true, sent: false, item }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const outboxMatch = url.pathname.match(/^\/telegram\/outbox\/(\d+)$/);
+    if (outboxMatch && request.method === "DELETE") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        const item = await cancelTelegramOutbox(env, outboxMatch[1]);
+        if (!item) return json({ ok: false }, 404, request);
+        return json({ ok: true, item }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
     if (url.pathname === "/health") return json({ ok: true, database: isDatabaseConfigured(env) }, 200, request);
     return json({ ok: false }, 404, request);
   },
@@ -522,6 +575,16 @@ export default {
         syncMail(env, "").catch((error) => {
           console.error("mail auto-sync failed", error && error.message ? error.message : error);
         }),
+      );
+      return;
+    }
+    if (event.cron === "* * * * *") {
+      ctx.waitUntil(
+        processTelegramOutbox(env)
+          .then(() => ensureTelegramScheduler(env))
+          .catch((error) => {
+            console.error("telegram outbox cron failed", error && error.message ? error.message : error);
+          }),
       );
       return;
     }

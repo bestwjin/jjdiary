@@ -1,13 +1,14 @@
 name = "nae-diary-notify"
 main = "src/index.js"
 compatibility_date = "2026-09-28"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
 
-# Neon connection string. Set with:
+# Aiven Postgres connection string. Set with:
 # wrangler secret put DATABASE_URL
-# postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+# postgresql://user:password@host:port/defaultdb?sslmode=require
 #
 # 공공데이터포털 특일정보(KASI) 인증키. Set with:
 # wrangler secret put KASI_SERVICE_KEY
@@ -16,6 +17,18 @@ SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
 binding = "DIARY"
 id = "390c3350adfe4146b52fc960a9c872a0"
 
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "18381dcb0fe94af88fce259ea50550c6"
+
+[[durable_objects.bindings]]
+name = "TELEGRAM_SCHEDULER"
+class_name = "TelegramScheduler"
+
+[[migrations]]
+tag = "v1-telegram-scheduler"
+new_sqlite_classes = ["TelegramScheduler"]
+
 [triggers]
-# 5분마다 확인 후, 설정한 알림 시간(KST)에 발송
-crons = ["*/5 * * * *", "*/10 * * * *"]
+# 5분: 알림 / 10분: 메일 / 1분: 텔레그램 예약 백업(1초 단위는 Durable Object)
+crons = ["* * * * *", "*/5 * * * *", "*/10 * * * *"]

@@ -402,12 +402,25 @@
     return { ok: true, message: data.message || "", imported: Number(data.imported) || 0 };
   }
 
-  document.getElementById("mail-refresh").addEventListener("click", async function () {
+  var refreshBtn = document.getElementById("mail-refresh");
+  var loadingEl = document.getElementById("mail-loading");
+
+  function setMailLoading(on) {
+    loadingEl.hidden = !on;
+    refreshBtn.disabled = on;
+    refreshBtn.textContent = on ? "받는 중" : "받기";
+  }
+
+  refreshBtn.addEventListener("click", async function () {
+    if (refreshBtn.disabled) return;
     showError("");
+    setMailLoading(true);
     try {
       await syncInbox();
     } catch (err) {
       showError("메일 받기에 실패했습니다.");
+    } finally {
+      setMailLoading(false);
     }
   });
 

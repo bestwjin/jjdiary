@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>설정 - 내 다이어리</title>
   <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon"/>
 </head>
 <body class="min-h-full">
   <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -17,187 +18,240 @@
       </div>
       <p id="settings-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
       <p id="settings-ok" class="text-sm mb-4" style="color:#0c8f55" hidden></p>
-      <div id="settings-board" class="settings-board">
-        <section class="settings-card" data-zone="holiday" aria-labelledby="settings-holiday-title">
-          <div class="settings-card-head">
-            <span class="dash-grip" aria-hidden="true"></span>
-            <h2 id="settings-holiday-title">공휴일 연동</h2>
+      <div class="todo-layout settings-layout">
+        <aside class="todo-filter-side settings-nav" aria-label="설정 메뉴">
+          <div class="todo-filter-block">
+            <h2 class="todo-filter-title">메뉴</h2>
+            <nav id="settings-nav" class="settings-nav-list" role="tablist" aria-label="설정 항목">
+              <button type="button" class="settings-nav-item is-on" role="tab" aria-selected="true" data-panel="holiday">공휴일 연동</button>
+              <button type="button" class="settings-nav-item" role="tab" aria-selected="false" data-panel="telegram">텔레그램 연동</button>
+              <button type="button" class="settings-nav-item" role="tab" aria-selected="false" data-panel="telegram-send">텔레그램 발송</button>
+              <button type="button" class="settings-nav-item" role="tab" aria-selected="false" data-panel="telegram-history">텔레그램 발송내역</button>
+              <button type="button" class="settings-nav-item" role="tab" aria-selected="false" data-panel="mail">메일 연동</button>
+            </nav>
           </div>
-          <div class="settings-card-body">
-          <p class="settings-help">공공데이터포털 특일정보 API 일반 인증키를 저장합니다. 스케쥴 달력의 공휴일 표시에 사용됩니다.</p>
-          <form id="settings-holiday-form" class="settings-form">
-            <label class="todo-label" for="settings-kasi-key">공휴일 연동 인증키</label>
-            <input id="settings-kasi-key" type="password" autocomplete="off" spellcheck="false" placeholder="인증키를 입력하세요"/>
-            <div class="settings-actions">
-              <button id="settings-kasi-toggle" class="ks-btn" type="button">표시</button>
-              <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+        </aside>
+        <section class="settings-main-pane" aria-label="설정 상세">
+          <section class="settings-panel settings-card" data-panel="holiday" role="tabpanel" aria-labelledby="settings-holiday-title">
+            <div class="settings-card-head">
+              <h2 id="settings-holiday-title">공휴일 연동</h2>
             </div>
-          </form>
-          </div>
-        </section>
-        <section class="settings-card" data-zone="telegram" aria-labelledby="settings-telegram-title">
-          <div class="settings-card-head">
-            <span class="dash-grip" aria-hidden="true"></span>
-            <h2 id="settings-telegram-title">텔레그램 연동</h2>
-          </div>
-          <div class="settings-card-body">
-          <p class="settings-help">봇 token과, 알림을 받을 본인 chat id(또는 @username)를 저장합니다. 봇 username이 아니라 수신자 계정이어야 하며, 먼저 해당 봇과 대화를 시작해 주세요.</p>
-          <form id="settings-telegram-form" class="settings-form">
-            <label class="todo-label" for="settings-telegram-token">token</label>
-            <input id="settings-telegram-token" type="password" autocomplete="off" spellcheck="false" placeholder="봇 token"/>
-            <label class="todo-label" for="settings-telegram-username">chat id / username</label>
-            <input id="settings-telegram-username" type="text" autocomplete="off" spellcheck="false" placeholder="예: 123456789 또는 my_id"/>
-            <label class="todo-label" for="settings-telegram-notify-time">알림 시간</label>
-            <input id="settings-telegram-notify-time" type="time" step="60" required/>
-            <div class="settings-actions">
-              <button id="settings-telegram-toggle" class="ks-btn" type="button">표시</button>
-              <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+            <div class="settings-card-body">
+              <p class="settings-help">공공데이터포털 특일정보 API 일반 인증키를 저장합니다. 스케쥴 달력의 공휴일 표시에 사용됩니다.</p>
+              <form id="settings-holiday-form" class="settings-form">
+                <label class="todo-label" for="settings-kasi-key">공휴일 연동 인증키</label>
+                <input id="settings-kasi-key" type="password" autocomplete="off" spellcheck="false" placeholder="인증키를 입력하세요"/>
+                <div class="settings-actions">
+                  <button id="settings-kasi-toggle" class="ks-btn" type="button">표시</button>
+                  <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+                </div>
+              </form>
             </div>
-          </form>
-          </div>
-        </section>
-        <section class="settings-card" data-zone="mail" aria-labelledby="settings-mail-title">
-          <div class="settings-card-head">
-            <span class="dash-grip" aria-hidden="true"></span>
-            <h2 id="settings-mail-title">메일 연동</h2>
-          </div>
-          <div class="settings-card-body">
-          <p class="settings-help">다음·다음 웍스·네이버·Gmail을 각각 연동할 수 있습니다. 비밀번호는 계정 비밀번호가 아니라 <strong>앱 비밀번호</strong>를 입력하세요.</p>
-          <form id="settings-mail-form" class="settings-form settings-form-mail">
-            <div class="mail-provider" data-provider="daum">
-              <div class="mail-provider-head">
-                <h3>다음</h3>
-                <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
-              </div>
-              <p class="settings-help">IMAP imap.daum.net:993 / SMTP smtp.daum.net:465</p>
-              <label class="todo-label">메일 주소</label>
-              <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@daum.net"/>
-              <label class="todo-label">표시 이름</label>
-              <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">IMAP 사용자</label>
-                  <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">IMAP 앱 비밀번호</label>
-                  <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
-                </div>
-              </div>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">SMTP 사용자</label>
-                  <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">SMTP 앱 비밀번호</label>
-                  <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
-                </div>
-              </div>
-            </div>
+          </section>
 
-            <div class="mail-provider" data-provider="works">
-              <div class="mail-provider-head">
-                <h3>다음 스마트워크</h3>
-                <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
-              </div>
-              <p class="settings-help">회사메일 수신함은 개인 다음과 별도입니다. 메일 주소는 <strong>회사메일</strong>, IMAP 사용자는 <strong>Daum ID</strong>(예: bestwjin)를 넣으세요. 서버는 imap.daum.net · 비밀번호는 앱 비밀번호.</p>
-              <label class="todo-label">메일 주소</label>
-              <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="wjlee@jacobsoft.co.kr"/>
-              <label class="todo-label">표시 이름</label>
-              <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">IMAP 사용자 (Daum ID)</label>
-                  <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="예: bestwjin"/>
-                </div>
-                <div>
-                  <label class="todo-label">IMAP 앱 비밀번호</label>
-                  <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="다음 앱 비밀번호와 동일"/>
-                </div>
-              </div>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">SMTP 사용자</label>
-                  <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 Daum ID"/>
-                </div>
-                <div>
-                  <label class="todo-label">SMTP 앱 비밀번호</label>
-                  <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
-                </div>
-              </div>
+          <section class="settings-panel settings-card" data-panel="telegram" role="tabpanel" aria-labelledby="settings-telegram-title" hidden>
+            <div class="settings-card-head">
+              <h2 id="settings-telegram-title">텔레그램 연동</h2>
             </div>
+            <div class="settings-card-body">
+              <p class="settings-help">봇 token과, 알림을 받을 본인 chat id(또는 @username)를 저장합니다. 봇 username이 아니라 수신자 계정이어야 하며, 먼저 해당 봇과 대화를 시작해 주세요.</p>
+              <form id="settings-telegram-form" class="settings-form">
+                <label class="todo-label" for="settings-telegram-token">token</label>
+                <input id="settings-telegram-token" type="password" autocomplete="off" spellcheck="false" placeholder="봇 token"/>
+                <label class="todo-label" for="settings-telegram-username">chat id / username</label>
+                <input id="settings-telegram-username" type="text" autocomplete="off" spellcheck="false" placeholder="예: 123456789 또는 my_id"/>
+                <label class="todo-label" for="settings-telegram-notify-time">알림 시간</label>
+                <input id="settings-telegram-notify-time" type="time" step="60" required/>
+                <div class="settings-actions">
+                  <button id="settings-telegram-toggle" class="ks-btn" type="button">표시</button>
+                  <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+                </div>
+              </form>
+            </div>
+          </section>
 
-            <div class="mail-provider" data-provider="naver">
-              <div class="mail-provider-head">
-                <h3>네이버</h3>
-                <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
-              </div>
-              <p class="settings-help">IMAP imap.naver.com:993 / SMTP smtp.naver.com:587</p>
-              <label class="todo-label">메일 주소</label>
-              <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@naver.com"/>
-              <label class="todo-label">표시 이름</label>
-              <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">IMAP 사용자</label>
-                  <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">IMAP 앱 비밀번호</label>
-                  <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
-                </div>
-              </div>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">SMTP 사용자</label>
-                  <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">SMTP 앱 비밀번호</label>
-                  <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
-                </div>
-              </div>
+          <section class="settings-panel settings-card" data-panel="telegram-send" role="tabpanel" aria-labelledby="settings-telegram-send-title" hidden>
+            <div class="settings-card-head">
+              <h2 id="settings-telegram-send-title">텔레그램 발송</h2>
             </div>
+            <div class="settings-card-body">
+              <p class="settings-help">저장된 텔레그램 연동 정보로 메시지를 보냅니다. 예약전송을 켜면 지정한 시각(초 단위)에 발송됩니다.</p>
+              <form id="settings-telegram-send-form" class="settings-form">
+                <label class="todo-label" for="settings-telegram-message">메시지</label>
+                <textarea id="settings-telegram-message" rows="6" maxlength="4000" placeholder="보낼 메시지를 입력하세요" required></textarea>
+                <label class="settings-check">
+                  <input id="settings-telegram-scheduled" type="checkbox" checked/>
+                  예약전송
+                </label>
+                <div id="settings-telegram-schedule-wrap">
+                  <label class="todo-label" for="settings-telegram-schedule-at">예약 시각</label>
+                  <input id="settings-telegram-schedule-at" type="datetime-local" step="1"/>
+                </div>
+                <div class="settings-actions">
+                  <button class="ks-btn ks-btn-primary" type="submit">발송</button>
+                </div>
+              </form>
+            </div>
+          </section>
 
-            <div class="mail-provider" data-provider="gmail">
-              <div class="mail-provider-head">
-                <h3>Gmail</h3>
-                <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+          <section class="settings-panel settings-card" data-panel="telegram-history" role="tabpanel" aria-labelledby="settings-telegram-history-title" hidden>
+            <div class="settings-card-head">
+              <h2 id="settings-telegram-history-title">텔레그램 발송내역</h2>
+            </div>
+            <div class="settings-card-body">
+              <p class="settings-help">바로 발송·예약 발송·실패·취소 내역을 확인할 수 있습니다. 예약·실패 건은 여기서 취소할 수 있습니다.</p>
+              <div class="settings-actions">
+                <button id="settings-telegram-outbox-refresh" class="ks-btn" type="button">새로고침</button>
               </div>
-              <p class="settings-help">IMAP imap.gmail.com:993 / SMTP smtp.gmail.com:587 · Google 계정 2단계 인증 후 앱 비밀번호 필요</p>
-              <label class="todo-label">메일 주소</label>
-              <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@gmail.com"/>
-              <label class="todo-label">표시 이름</label>
-              <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">IMAP 사용자</label>
-                  <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">IMAP 앱 비밀번호</label>
-                  <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
-                </div>
-              </div>
-              <div class="settings-grid-2">
-                <div>
-                  <label class="todo-label">SMTP 사용자</label>
-                  <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
-                </div>
-                <div>
-                  <label class="todo-label">SMTP 앱 비밀번호</label>
-                  <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
-                </div>
+              <div class="telegram-outbox">
+                <ul id="settings-telegram-outbox" class="telegram-outbox-list"></ul>
+                <p id="settings-telegram-outbox-empty" class="settings-help" hidden>아직 발송·예약 내역이 없습니다.</p>
               </div>
             </div>
+          </section>
 
-            <div class="settings-actions">
-              <button id="settings-mail-toggle" class="ks-btn" type="button">표시</button>
-              <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+          <section class="settings-panel settings-card" data-panel="mail" role="tabpanel" aria-labelledby="settings-mail-title" hidden>
+            <div class="settings-card-head">
+              <h2 id="settings-mail-title">메일 연동</h2>
             </div>
-          </form>
-          </div>
+            <div class="settings-card-body">
+              <p class="settings-help">다음·다음 웍스·네이버·Gmail을 각각 연동할 수 있습니다. 비밀번호는 계정 비밀번호가 아니라 <strong>앱 비밀번호</strong>를 입력하세요.</p>
+              <form id="settings-mail-form" class="settings-form settings-form-mail">
+                <div class="mail-provider" data-provider="daum">
+                  <div class="mail-provider-head">
+                    <h3>다음</h3>
+                    <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+                  </div>
+                  <p class="settings-help">IMAP imap.daum.net:993 / SMTP smtp.daum.net:465</p>
+                  <label class="todo-label">메일 주소</label>
+                  <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@daum.net"/>
+                  <label class="todo-label">표시 이름</label>
+                  <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">IMAP 사용자</label>
+                      <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">IMAP 앱 비밀번호</label>
+                      <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
+                    </div>
+                  </div>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">SMTP 사용자</label>
+                      <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">SMTP 앱 비밀번호</label>
+                      <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mail-provider" data-provider="works">
+                  <div class="mail-provider-head">
+                    <h3>다음 스마트워크</h3>
+                    <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+                  </div>
+                  <p class="settings-help">회사메일 수신함은 개인 다음과 별도입니다. 메일 주소는 <strong>회사메일</strong>, IMAP 사용자는 <strong>Daum ID</strong>(예: bestwjin)를 넣으세요. 서버는 imap.daum.net · 비밀번호는 앱 비밀번호.</p>
+                  <label class="todo-label">메일 주소</label>
+                  <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="wjlee@jacobsoft.co.kr"/>
+                  <label class="todo-label">표시 이름</label>
+                  <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">IMAP 사용자 (Daum ID)</label>
+                      <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="예: bestwjin"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">IMAP 앱 비밀번호</label>
+                      <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="다음 앱 비밀번호와 동일"/>
+                    </div>
+                  </div>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">SMTP 사용자</label>
+                      <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 Daum ID"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">SMTP 앱 비밀번호</label>
+                      <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mail-provider" data-provider="naver">
+                  <div class="mail-provider-head">
+                    <h3>네이버</h3>
+                    <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+                  </div>
+                  <p class="settings-help">IMAP imap.naver.com:993 / SMTP smtp.naver.com:587</p>
+                  <label class="todo-label">메일 주소</label>
+                  <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@naver.com"/>
+                  <label class="todo-label">표시 이름</label>
+                  <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">IMAP 사용자</label>
+                      <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">IMAP 앱 비밀번호</label>
+                      <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
+                    </div>
+                  </div>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">SMTP 사용자</label>
+                      <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">SMTP 앱 비밀번호</label>
+                      <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mail-provider" data-provider="gmail">
+                  <div class="mail-provider-head">
+                    <h3>Gmail</h3>
+                    <label class="settings-check"><input type="checkbox" data-field="enabled"/> 사용</label>
+                  </div>
+                  <p class="settings-help">IMAP imap.gmail.com:993 / SMTP smtp.gmail.com:587 · Google 계정 2단계 인증 후 앱 비밀번호 필요</p>
+                  <label class="todo-label">메일 주소</label>
+                  <input data-field="address" type="email" autocomplete="off" spellcheck="false" placeholder="you@gmail.com"/>
+                  <label class="todo-label">표시 이름</label>
+                  <input data-field="displayName" type="text" autocomplete="off" spellcheck="false" placeholder="이름"/>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">IMAP 사용자</label>
+                      <input data-field="imapUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">IMAP 앱 비밀번호</label>
+                      <input data-field="imapPassword" type="password" autocomplete="off" spellcheck="false" placeholder="앱 비밀번호"/>
+                    </div>
+                  </div>
+                  <div class="settings-grid-2">
+                    <div>
+                      <label class="todo-label">SMTP 사용자</label>
+                      <input data-field="smtpUser" type="text" autocomplete="off" spellcheck="false" placeholder="비우면 메일 주소"/>
+                    </div>
+                    <div>
+                      <label class="todo-label">SMTP 앱 비밀번호</label>
+                      <input data-field="smtpPassword" type="password" autocomplete="off" spellcheck="false" placeholder="비우면 IMAP과 동일"/>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-actions">
+                  <button id="settings-mail-toggle" class="ks-btn" type="button">표시</button>
+                  <button class="ks-btn ks-btn-primary" type="submit">저장</button>
+                </div>
+              </form>
+            </div>
+          </section>
         </section>
       </div>
     </div>

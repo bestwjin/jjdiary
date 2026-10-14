@@ -598,17 +598,38 @@ html.theme-dark .dash-digital-date{color:#9aa3c7}
 .dash-resize[data-edge="se"]::after{content:"";position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid #9aa3c7;border-bottom:2px solid #9aa3c7}
 html.theme-dark .dash-widget.is-magnet{box-shadow:0 0 0 2px #9eb0ff}
 html.theme-dark .dash-resize[data-edge="se"]::after{border-right-color:#9eb0ff;border-bottom-color:#9eb0ff}
-.settings-board{position:relative;width:100%;min-height:480px}
-.settings-canvas{position:relative;width:100%}
-.settings-card{max-width:none;width:100%;background:#fff;border:1px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 10px 30px rgba(70,84,170,.08);padding:0;overflow:hidden;display:flex;flex-direction:column}
-.settings-card-head{display:flex;align-items:center;gap:0;padding:14px 18px 8px;cursor:grab;touch-action:none;flex:none}
+.settings-layout{flex:1;min-height:0}
+.settings-nav-list{display:flex;flex-direction:column;gap:6px}
+.settings-nav-item{width:100%;height:36px;padding:0 10px;border:1px solid #d9def2;border-radius:10px;background:#fff;color:#2a3160;font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
+.settings-nav-item:hover{background:#f5f7ff;border-color:#b8c1ec}
+.settings-nav-item:focus-visible{outline:none;border-color:#4458c4;box-shadow:0 0 0 3px rgba(68,88,196,.16)}
+.settings-nav-item.is-on{background:#4458c4;border-color:#4458c4;color:#fff}
+.settings-main-pane{display:flex;flex-direction:column;min-width:0;min-height:0}
+.settings-panel[hidden]{display:none !important}
+.settings-card{max-width:none;width:100%;height:100%;background:#fff;border:1px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 10px 30px rgba(70,84,170,.08);padding:0;overflow:hidden;display:flex;flex-direction:column}
+.settings-card-head{display:flex;align-items:center;gap:0;padding:14px 18px 8px;flex:none}
 .settings-card-head h2{margin:0;font-size:16px;font-weight:750;color:#2a3160}
 .settings-card-body{flex:1;min-height:0;overflow:auto;padding:0 18px 18px}
 .settings-help{margin:0 0 16px;font-size:13px;line-height:1.5;color:#6d7394}
 .settings-form{display:flex;flex-direction:column;gap:8px}
 .settings-form .todo-label{margin:0}
-.settings-form input{width:100%;height:40px;padding:0 12px;border:1px solid #d9def2;border-radius:10px;background:#fff;color:#2a3160;font-size:14px}
-.settings-form input:focus{outline:none;border-color:#4458c4;box-shadow:0 0 0 3px rgba(68,88,196,.16)}
+.settings-form input,.settings-form textarea{width:100%;padding:0 12px;border:1px solid #d9def2;border-radius:10px;background:#fff;color:#2a3160;font-size:14px;font:inherit}
+.settings-form input{height:40px}
+.settings-form textarea{min-height:120px;padding:10px 12px;resize:vertical;line-height:1.45}
+.settings-form input:focus,.settings-form textarea:focus{outline:none;border-color:#4458c4;box-shadow:0 0 0 3px rgba(68,88,196,.16)}
+.telegram-outbox{margin-top:18px;padding-top:14px;border-top:1px solid #e5e7f2}
+.telegram-outbox-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.telegram-outbox-item{padding:12px;border:1px solid #e4e7f2;border-radius:12px;background:#f8fafc}
+.telegram-outbox-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:12px;color:#64748b}
+.telegram-outbox-status{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:750;background:#e2e8f0;color:#334155}
+.telegram-outbox-status.is-pending{background:#dbeafe;color:#1d4ed8}
+.telegram-outbox-status.is-sending{background:#fef3c7;color:#b45309}
+.telegram-outbox-status.is-sent{background:#dcfce7;color:#15803d}
+.telegram-outbox-status.is-failed{background:#fee2e2;color:#b91c1c}
+.telegram-outbox-status.is-cancelled{background:#e5e7eb;color:#6b7280}
+.telegram-outbox-body{margin:0;white-space:pre-wrap;font-size:13px;line-height:1.45;color:#1e293b}
+.telegram-outbox-error{margin:6px 0 0;font-size:12px;color:#b91c1c}
+.telegram-outbox-item .ks-btn{margin-top:8px}
 .settings-actions{display:flex;gap:8px;margin-top:4px}
 .settings-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .settings-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#4b5563;margin:2px 0 6px}
@@ -631,8 +652,16 @@ html.theme-dark .mail-field select{background:#12162a;border-color:rgba(255,255,
 html.theme-dark .settings-card{background:#1c2238;border-color:rgba(255,255,255,.08);box-shadow:none}
 html.theme-dark .settings-card-head h2{color:#e8ebff}
 html.theme-dark .settings-help{color:#9aa3c7}
-html.theme-dark .settings-form input{background:#151a2c;border-color:rgba(255,255,255,.14);color:#e8ebff}
+html.theme-dark .settings-form input,html.theme-dark .settings-form textarea{background:#151a2c;border-color:rgba(255,255,255,.14);color:#e8ebff}
+html.theme-dark .telegram-outbox{border-top-color:rgba(255,255,255,.08)}
+html.theme-dark .telegram-outbox-item{background:#12162a;border-color:rgba(255,255,255,.1)}
+html.theme-dark .telegram-outbox-body{color:#e8ebff}
+html.theme-dark .telegram-outbox-meta{color:#9aa3c7}
 html.theme-dark .settings-check{color:#c8cce0}
+html.theme-dark .settings-nav-item{background:#1c2238;border-color:rgba(255,255,255,.14);color:#e8ebff}
+html.theme-dark .settings-nav-item:hover{background:#242b4a;border-color:rgba(255,255,255,.22);color:#fff}
+html.theme-dark .settings-nav-item.is-on{background:#4458c4;border-color:#4458c4;color:#fff}
+html.theme-dark .settings-nav-item:focus-visible{border-color:#7c8adf;box-shadow:0 0 0 3px rgba(124,138,223,.25)}
 .mail-page{display:grid;grid-template-columns:220px minmax(280px,360px) minmax(0,1fr);gap:0;height:100vh;min-height:640px;margin-left:0;padding-left:0;background:transparent;box-sizing:border-box}
 .mail-nav,.mail-list-pane,.mail-detail-pane{background:#fff;border:1px solid #e4e7f2;min-height:0;overflow:hidden}
 .mail-nav{display:flex;flex-direction:column;padding:18px 14px;border-radius:0;border-right:0;background:linear-gradient(180deg,#f7f8fd 0%,#eef1fb 100%)}
@@ -648,7 +677,12 @@ html.theme-dark .settings-check{color:#c8cce0}
 .mail-account-addr{margin-top:6px;font-size:12px;line-height:1.4;color:#475569;word-break:break-all}
 .mail-account-link{display:inline-block;margin-top:8px;font-size:12px;color:#2563eb;text-decoration:none}
 .mail-list-pane{display:flex;flex-direction:column;border-right:0}
-.mail-list-head{display:flex;flex-direction:column;gap:10px;padding:16px 16px 12px;border-bottom:1px solid #eef0f7}
+.mail-list-head{display:flex;flex-direction:column;gap:10px;padding:16px 16px 12px;border-bottom:1px solid #eef0f7;position:relative}
+.mail-loading{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:#e7ecf8}
+.mail-loading-bar{height:100%;width:35%;border-radius:99px;background:#4458c4;animation:mail-loading 1s ease-in-out infinite}
+@keyframes mail-loading{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+html.theme-dark .mail-loading{background:rgba(255,255,255,.08)}
+html.theme-dark .mail-loading-bar{background:#8ea0ef}
 .mail-list-title{margin:0;font-size:18px;font-weight:800;color:#0f172a}
 .mail-list-actions{display:flex;gap:8px}
 .mail-search{flex:1;min-width:0;height:34px;padding:0 12px;border:1px solid #d9def2;border-radius:10px;background:#f8fafc;color:#0f172a;font-size:13px}
