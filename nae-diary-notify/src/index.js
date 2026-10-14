@@ -1,5 +1,5 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { cancelTelegramOutbox, createCardUsage, createEvent, createMail, createSchedule, createTelegramOutbox, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTelegramOutbox, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
+import { cancelTelegramOutbox, createCardUsage, createEvent, createMail, createSchedule, createTelegramOutbox, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listHomeData, listMail, listSchedules, listTelegramOutbox, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
 import { getHolidays } from "./holidays.js";
 import { addDays, buildReminderMessage, eventsOn, isNotifyWindow, kstToday, normalizeEvents, schedulesOn } from "./logic.js";
 import { sendTelegramMessage } from "./telegram.js";
@@ -179,6 +179,15 @@ export default {
         const event = await updateEvent(env, eventMatch[1], body);
         if (!event) return json({ ok: false }, 404, request);
         return json({ ok: true, event }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/home" && request.method === "GET") {
+      try {
+        const data = await listHomeData(env);
+        return json({ ok: true, ...data }, 200, request);
       } catch (error) {
         return dbError(error, request);
       }
