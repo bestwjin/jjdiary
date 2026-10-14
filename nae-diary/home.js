@@ -753,16 +753,11 @@
     });
   }
 
-  loadJson("/home").then(function (data) {
-    render(data.todos || [], Array.isArray(data.schedules) ? data.schedules : null);
-  }).catch(function () {
-    // Fallback for older Worker deploys without /home
-    return Promise.all([
-      loadJson("/todos"),
-      loadJson("/schedules").catch(function () { return null; }),
-    ]).then(function (pair) {
-      render(pair[0].todos || [], pair[1] ? pair[1].schedules || [] : null);
-    });
+  Promise.all([
+    loadJson("/todos"),
+    loadJson("/schedules").catch(function () { return null; }),
+  ]).then(function (pair) {
+    render(pair[0].todos || [], pair[1] ? pair[1].schedules || [] : null);
   }).catch(function () {
     count.textContent = "";
     error.hidden = false;

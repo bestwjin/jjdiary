@@ -3,10 +3,6 @@ main = "src/index.js"
 compatibility_date = "2026-09-28"
 compatibility_flags = ["nodejs_compat"]
 
-# Place the Worker near the Aiven Postgres host to cut DB round-trips.
-[placement]
-host = "kindserp-kindserp.g.aivencloud.com:25384"
-
 [vars]
 SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
 

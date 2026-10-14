@@ -66,8 +66,10 @@ async function ensureTelegramOutboxTable(sql) {
 
 async function ensureSchema(sql) {
   const root = globalThis;
-  // Warm isolate: skip DDL. Schema is created once per isolate cold start.
-  if (root.__diarySchemaReady) return;
+  if (root.__diarySchemaReady) {
+    await ensureTelegramOutboxTable(sql);
+    return;
+  }
   if (!root.__diarySchema) {
     root.__diarySchema = (async () => {
       await sql`CREATE TABLE IF NOT EXISTS events (
@@ -174,12 +176,11 @@ function databaseUrl(env) {
   return env.HYPERDRIVE?.connectionString || env.DATABASE_URL || "";
 }
 
-function createSql(connectionString, usingHyperdrive) {
+function createSql(connectionString) {
   return postgres(connectionString, {
-    // Hyperdrive already pools at the origin; keep the Worker-side pool small.
-    max: usingHyperdrive ? 5 : 1,
-    idle_timeout: usingHyperdrive ? 60 : 20,
-    connect_timeout: 10,
+    max: 1,
+    idle_timeout: 20,
+    connect_timeout: 15,
     fetch_types: false,
   });
 }
@@ -187,16 +188,12 @@ function createSql(connectionString, usingHyperdrive) {
 async function withDb(env, fn) {
   const connectionString = databaseUrl(env);
   if (!connectionString) throw databaseError();
-  const usingHyperdrive = Boolean(env.HYPERDRIVE?.connectionString);
-  const sql = createSql(connectionString, usingHyperdrive);
+  const sql = createSql(connectionString);
   try {
     await ensureSchema(sql);
     return await fn(sql);
   } finally {
-    // Ending every request adds latency; Hyperdrive owns the real origin pool.
-    if (!usingHyperdrive) {
-      await sql.end({ timeout: 5 });
-    }
+    await sql.end({ timeout: 5 });
   }
 }
 
@@ -355,25 +352,6 @@ export async function listTodos(env) {
     const rows = await sql`SELECT id, title, tag, requester, ai_tool, work_content, files, priority, progress_status, done, created_at FROM todos
       ORDER BY done ASC, CASE priority WHEN '높음' THEN 0 WHEN '낮음' THEN 2 ELSE 1 END, id DESC`;
     return rows.map(mapTodo);
-  });
-}
-
-export async function listHomeData(env) {
-  return withDb(env, async (sql) => {
-    const [todoRows, scheduleRows] = await Promise.all([
-      sql`SELECT id, title, tag, requester, ai_tool, work_content, files, priority, progress_status, done, created_at FROM todos
-        ORDER BY done ASC, CASE priority WHEN '높음' THEN 0 WHEN '낮음' THEN 2 ELSE 1 END, id DESC`,
-      sql`SELECT id, title, schedule_date, schedule_time, memo, priority, all_day FROM schedules
-        ORDER BY schedule_date,
-          CASE WHEN all_day THEN 0 ELSE 1 END,
-          schedule_time,
-          CASE priority WHEN '높음' THEN 0 WHEN '낮음' THEN 2 ELSE 1 END,
-          id`,
-    ]);
-    return {
-      todos: todoRows.map(mapTodo),
-      schedules: scheduleRows.map(mapSchedule),
-    };
   });
 }
 

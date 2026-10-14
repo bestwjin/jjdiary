@@ -273,20 +273,34 @@
       clearMailBadge();
       return;
     }
-    // Worker cron already syncs IMAP every 10 minutes. Page loads only hit the DB
-    // inbox list so badge checks stay light.
+    var imported = 0;
+    try {
+      var syncRes = await fetch(MAIL_API + "/mail/sync", {
+        method: "POST",
+        headers: MAIL_HEADERS,
+        body: "{}",
+      });
+      var syncData = await syncRes.json().catch(function () { return {}; });
+      if (syncRes.ok) imported = Number(syncData.imported) || 0;
+    } catch (error) {}
+
     try {
       var messages = await loadInboxMessages();
       ensureVisitBaseline(messages);
-      if (hasNewSinceVisit(messages)) {
+      if (imported > 0 || hasNewSinceVisit(messages)) {
         markMailBadge();
-        await notifyNewMail(messages, {});
+        await notifyNewMail(messages, { count: imported || undefined });
       } else if (readBadgeFlag()) {
         paintMailBadge(true);
       } else {
         paintMailBadge(false);
       }
-    } catch (error) {}
+    } catch (error) {
+      if (imported > 0) {
+        markMailBadge();
+        await notifyNewMail([], { count: imported });
+      }
+    }
   }
 
   function refreshMailBadgeFromStorage() {
