@@ -195,21 +195,21 @@
       var tr = document.createElement("tr");
       tr.className = item.settled ? "is-settled" : "";
       tr.innerHTML =
-        "<td>" +
+        '<td data-label="사용일">' +
         escapeHtml(item.usedDate) +
-        "</td><td>" +
+        '</td><td data-label="사용처">' +
         escapeHtml(item.merchant) +
-        '</td><td class="is-num">' +
+        '</td><td class="is-num" data-label="금액">' +
         money(item.amount) +
-        "</td><td>" +
+        '</td><td data-label="사용내역">' +
         escapeHtml(item.purpose) +
-        "</td><td>" +
+        '</td><td data-label="구분">' +
         escapeHtml(item.category) +
-        '</td><td><span class="card-settle ' +
+        '</td><td data-label="정산"><span class="card-settle ' +
         (item.settled ? "is-on" : "") +
         '">' +
         (item.settled ? "완료" : "미정산") +
-        "</span></td><td>" +
+        '</span></td><td data-label="비고">' +
         escapeHtml(item.note) +
         "</td>";
       tr.addEventListener("click", function () {

@@ -365,7 +365,8 @@
     });
     var y = 0;
     var x = 0;
-    var totalW = Math.min(280, Math.max(MIN_W, Math.round(canvasWidth * 0.22)));
+    var narrow = canvasWidth < 760;
+    var totalW = narrow ? canvasWidth : Math.min(280, Math.max(MIN_W, Math.round(canvasWidth * 0.22)));
     var rowH = 168;
     stats.forEach(function (widget) {
       rowH = Math.max(rowH, measureWidget(widget.el, totalW));
@@ -375,32 +376,36 @@
       x += widget.rect.w + GAP;
     });
     if (clocks.length) {
-      var remain = Math.max(0, canvasWidth - x);
-      var clockW = Math.max(
-        MIN_W,
-        Math.floor((remain - GAP * (clocks.length - 1)) / clocks.length)
-      );
-      if (x + MIN_W > canvasWidth) {
+      var need = MIN_W * clocks.length + GAP * (clocks.length - 1);
+      if (x > 0 && x + need > canvasWidth) {
         x = 0;
         y += rowH + GAP;
-        remain = canvasWidth;
-        clockW = Math.max(
-          MIN_W,
-          Math.floor((remain - GAP * (clocks.length - 1)) / clocks.length)
-        );
       }
-      clocks.forEach(function (widget) {
-        rowH = Math.max(rowH, measureWidget(widget.el, clockW));
-      });
-      clocks.forEach(function (widget, index) {
-        var w = index === clocks.length - 1 ? Math.max(MIN_W, canvasWidth - x) : clockW;
-        widget.rect = { x: x, y: y, w: w, h: rowH };
-        x += widget.rect.w + GAP;
-      });
-      stats.forEach(function (widget) {
-        if (widget.rect.y === y) widget.rect.h = rowH;
-      });
-      y += rowH + GAP;
+      var room = Math.max(0, canvasWidth - x);
+      var clockW = Math.floor((room - GAP * (clocks.length - 1)) / clocks.length);
+      if (clockW < MIN_W) {
+        clocks.forEach(function (widget) {
+          var w = canvasWidth;
+          var h = Math.max(96, measureWidget(widget.el, w));
+          widget.rect = { x: 0, y: y, w: w, h: h };
+          y += h + GAP;
+        });
+      } else {
+        var clockRowH = rowH;
+        clocks.forEach(function (widget) {
+          clockRowH = Math.max(clockRowH, measureWidget(widget.el, clockW));
+        });
+        clocks.forEach(function (widget, index) {
+          var w = index === clocks.length - 1 ? Math.max(clockW, canvasWidth - x) : clockW;
+          if (x + w > canvasWidth) w = Math.max(MIN_W, canvasWidth - x);
+          widget.rect = { x: x, y: y, w: w, h: clockRowH };
+          x += w + GAP;
+        });
+        stats.forEach(function (widget) {
+          if (widget.rect.y === y) widget.rect.h = clockRowH;
+        });
+        y += clockRowH + GAP;
+      }
     } else if (stats.length) {
       y += rowH + GAP;
     }
@@ -496,7 +501,8 @@
     function relayout() {
       var saved = readLayout();
       var width = canvasWidth();
-      if (saved.custom && saved.items.clock && saved.items["clock-digital"]) applySaved(widgets, width, saved);
+      var narrow = width < 760;
+      if (!narrow && saved.custom && saved.items.clock && saved.items["clock-digital"]) applySaved(widgets, width, saved);
       else arrangeWidgets(widgets, width);
       paint();
     }
@@ -517,6 +523,7 @@
 
     canvas.addEventListener("pointerdown", function (event) {
       if (event.button !== 0) return;
+      if (window.matchMedia("(max-width: 759px)").matches) return;
       var handle = event.target.closest(".dash-resize");
       var widgetEl = event.target.closest(".dash-widget");
       if (!widgetEl) return;

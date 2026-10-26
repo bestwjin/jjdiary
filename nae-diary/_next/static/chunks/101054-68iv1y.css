@@ -10,6 +10,8 @@
 html.theme-dark{.cal-day:hover{background-color:#312e81;border-color:#818cf8;box-shadow:0 8px 20px rgba(0,0,0,.35)}.cal-add{background:rgba(99,102,241,.95)}.cal-add:hover{background:#818cf8}}
 
 .mac-dock{position:fixed;z-index:50;left:0;top:0;bottom:0;width:48px;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:0;background:linear-gradient(100deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.06) 16%,rgba(255,255,255,0) 40%),radial-gradient(ellipse 130% 42% at 50% -12%,rgba(198,210,255,.78),transparent 60%),radial-gradient(ellipse 80% 30% at 80% 110%,rgba(92,110,190,.45),transparent 64%),linear-gradient(180deg,#3a4d92 0%,#243468 40%,#171e40 100%);border:0;border-right:1px solid rgba(255,255,255,.16);box-shadow:inset -1px 0 0 rgba(255,255,255,.28),inset 1px 0 0 rgba(255,255,255,.1)}
+.mac-dock-bar{display:contents}
+.mac-dock-arrow{display:none}
 .mac-dock-item{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;text-decoration:none;color:#eef1ff;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease}
 .mac-dock-badge{position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:999px;background:#ef4444;border:2px solid #fff;box-shadow:0 0 0 1px rgba(239,68,68,.25);pointer-events:none;z-index:2}
 .mac-dock-icon{font-size:20px;line-height:1;display:block}
@@ -58,7 +60,11 @@ html.theme-dark{.mac-dock{background:linear-gradient(100deg,rgba(255,255,255,.18
 .todo-delete{border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px}
 .todo-label{grid-column:1/-1;margin:8px 0 0;font-size:12px;font-weight:700;color:#4b5563}
 .todo-editor{grid-column:1/-1;border:1px solid #e5e7eb;border-radius:8px;background:#fff;overflow:hidden}
-.wysiwyg-bar{display:flex;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
+.wysiwyg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:4px;border-bottom:1px solid #e5e7eb;background:#f8fafc}
+.wysiwyg-color{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:28px;min-width:28px;padding:0 6px;border:1px solid #cbd8df;border-radius:5px;background:#fff;cursor:pointer;overflow:hidden}
+.wysiwyg-color:hover{background:#eef1fa;border-color:#b7c2e6}
+.wysiwyg-color-mark{font-size:13px;font-weight:800;color:#34515c;border-bottom:3px solid #dc2626;line-height:1;pointer-events:none}
+.wysiwyg-color input[type=color]{position:absolute;inset:0;opacity:0;border:0;padding:0;margin:0;cursor:pointer;width:100%;height:100%}
 .ks-btn{box-sizing:border-box;height:32px;padding:0 12px;border-radius:6px;border:1px solid #d5dced;background:#fff;color:#2c3558;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
 .ks-btn:hover{background:#eef1fa;border-color:#b7c2e6}
 .ks-btn-primary{background:#3c4f9a;border-color:#34468a;color:#fff}
@@ -171,6 +177,9 @@ h1.text-gray-800,h1.text-4xl,h1.text-2xl{color:#2a3160}
 .wysiwyg-bar{background:#f6f7fd;border-bottom-color:#e6eaf8}
 .wysiwyg-bar button{border-color:#d9def2;border-radius:8px;color:#3a448e;font-weight:600}
 .wysiwyg-bar button:hover{background:#eef1ff;border-color:#c5cef0}
+.wysiwyg-color{border-color:#d9def2;border-radius:8px}
+.wysiwyg-color:hover{background:#eef1ff;border-color:#c5cef0}
+.wysiwyg-color-mark{color:#3a448e}
 .todo-editor,.todo-file-cat{border-color:#e3e7f6;border-radius:12px}
 .todo-file-add{color:#4458c4}
 @media (max-width:640px){.mac-dock{width:42px}.mac-dock-item{width:34px;height:34px;border-radius:10px}body{padding-left:42px}.mac-dock-icon,.mac-dock-icon svg{width:26px;height:26px}}
@@ -855,3 +864,136 @@ html.theme-dark .card-scan-status{color:#9aa3c7}
 html.theme-dark .card-scan-status.is-done{color:#34d399}
 html.theme-dark .card-scan-preview{background:#12162a;border-color:rgba(255,255,255,.1)}
 @media (max-width:900px){.card-layout{grid-template-columns:1fr}.card-side{position:static}}
+
+@media (max-width:760px){
+  body{padding-left:0;padding-bottom:0;display:flex;flex-direction:column}
+  .min-h-screen{flex:1 0 auto;width:100%;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+  .min-h-screen>.container{padding:12px 12px 18px}
+  h1.text-4xl,h1.text-2xl{font-size:1.45rem;line-height:1.3}
+  .mac-dock-bar{position:fixed;z-index:50;left:0;right:0;top:auto;bottom:0;margin:0;display:flex;align-items:center;box-sizing:border-box;height:76px;padding:0 6px;border-top:1px solid #e7e7eb;background:rgba(255,255,255,.94);box-shadow:0 -10px 28px rgba(42,49,96,.1);backdrop-filter:blur(16px);transform:none}
+  .mac-dock-arrow{display:flex;align-items:center;justify-content:center;align-self:center;flex:0 0 26px;width:26px;height:26px;margin:0;padding:0;border:0;border-radius:999px;background:rgba(42,49,96,.07);color:#3c446e;box-shadow:inset 0 0 0 .5px rgba(42,49,96,.14);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .mac-dock-arrow svg{width:14px;height:14px;display:block}
+  .mac-dock-arrow[hidden]{display:none}
+  .mac-dock-arrow.is-off{opacity:.3}
+  .mac-dock{position:relative;top:auto;right:auto;bottom:auto;left:auto;z-index:auto;width:auto;height:auto;align-self:stretch;flex:1 1 auto;min-width:0;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:8px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;touch-action:pan-x;padding:6px 4px;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;scrollbar-width:none}
+  .mac-dock::-webkit-scrollbar{display:none}
+  .mac-dock-item{flex:0 0 64px;width:64px;height:64px;max-width:none;border-radius:16px;scroll-snap-align:center}
+  .mac-dock-icon,.mac-dock-icon svg{width:44px;height:44px}
+  .mac-dock-rule{width:1px;height:28px;margin:0;flex:none}
+  .mac-dock-theme{margin:0;align-self:center;flex:0 0 52px;width:52px;height:52px;max-width:none;scroll-snap-align:center}
+  .mac-dock-theme .mac-dock-icon,.mac-dock-theme .mac-dock-icon svg{width:26px;height:26px}
+  .mac-dock-item[aria-current=page]{background:rgba(0,120,212,.12);color:#24328f}
+  .mac-dock-item[aria-current=page]::after{left:50%;right:auto;top:3px;bottom:auto;width:16px;height:3px;transform:translateX(-50%);border:0;border-radius:99px;background:#0078d4}
+  .mac-tip{display:none}
+  .todo-toast{left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .todo-head,.todo-head:has(.todo-head-actions){display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:10px}
+  .todo-head-lead,.todo-head-actions{width:100%;min-width:0;justify-content:flex-start}
+  .todo-head-actions{grid-column:auto;flex-wrap:wrap}
+  .todo-head-actions>.ks-btn,.todo-head-actions>.todo-add-btn{flex:1 1 auto;justify-content:center}
+  .todo-search{flex:1;width:auto;min-width:0;height:40px;font-size:16px}
+  .todo-add-btn,.ks-btn{min-height:36px;height:auto}
+  .todo-head #todo-count{white-space:normal}
+  .todo-layout{gap:10px}
+  .todo-filter-side{padding:12px;gap:12px}
+  .todo-month-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));overflow:visible}
+  .todo-month-filter{width:100%;padding:0 2px}
+  .todo-tag-filters{display:flex;flex-wrap:wrap;overflow:visible}
+  .todo-tag-filter{flex:none;width:auto;padding:0 10px}
+  .todo-tag-filter.is-all{grid-column:auto}
+  .todo-row{align-items:flex-start;gap:8px;padding:12px}
+  .todo-main{flex:1 1 calc(100% - 30px);min-width:0;flex-direction:column;align-items:stretch;gap:6px}
+  .todo-line{flex-wrap:wrap;row-gap:4px}
+  .todo-title{order:-1;flex:1 1 100%;white-space:normal;font-size:15px;line-height:1.4}
+  .todo-meta{white-space:normal}
+  .todo-actions{flex:1 0 100%;justify-content:flex-end}
+  .todo-detail{margin-left:0}
+  .todo-file-item{flex-wrap:wrap}
+  .todo-file-name,.todo-file-note{flex-basis:100%;max-width:100%;white-space:normal}
+  .todo-dialog,.sched-dialog{width:min(640px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 20px);border-radius:16px;padding:14px}
+  .todo-form{grid-template-columns:1fr 1fr;gap:8px}
+  .todo-form>*{grid-column:1 / -1}
+  .todo-form input,.todo-form select,.sched-form input,.sched-form textarea,.sched-form select,.settings-form input,.settings-form textarea,.card-filters select,.mail-search,.mail-field input,.mail-field textarea,.mail-field select{font-size:16px}
+  .todo-form input,.todo-form select{min-height:42px}
+  #todo-status,#todo-priority,#todo-tag,#todo-requester{grid-column:auto}
+  #todo-submit{grid-column:1 / -1;min-height:42px}
+  #todo-form:has(#todo-cancel:not([hidden])) #todo-submit,#todo-form:has(#todo-cancel:not([hidden])) #todo-cancel{grid-column:auto}
+  .todo-carry-date,#todo-carry{grid-column:auto;min-height:42px}
+  .notion-head{flex-wrap:wrap;align-items:flex-start}
+  .notion-preview{padding:12px}
+  .sched-toolbar{display:block;width:100%;max-width:100%}
+  .sched-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;justify-items:center;gap:8px;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+  .sched-label{grid-column:1 / -1;grid-row:1;width:100%;text-align:center;font-size:17px}
+  #sched-prev,#cal-prev{grid-column:1;grid-row:2}
+  #sched-next,#cal-next{grid-column:2;grid-row:2}
+  #sched-today,#cal-today{grid-column:3;grid-row:2}
+  #cal-add{grid-column:1 / -1;grid-row:3}
+  .sched-nav .ks-btn-quiet{border-color:#d9def2;background:#fff;color:#2a3160}
+  .sched-side{max-height:none;overflow:visible}
+  .sched-side-list{overflow:visible}
+  .card-filters{width:100%}
+  .card-filters select{flex:1;min-width:0;height:40px}
+  .card-toolbar{flex-direction:column;align-items:stretch;width:100%}
+  .sched-day{min-height:44px;padding:3px 2px;gap:2px}
+  .sched-num,.sched-week span{font-size:11px}
+  .sched-holiday-name,.sched-more{display:none}
+  .sched-chip{height:5px;padding:0;font-size:0;line-height:0;border-radius:99px}
+  .sched-board{order:-1;padding:10px}
+  .sched-dialog .sched-time-row,.sched-period,.sched-priority{flex-wrap:wrap}
+  .adm-board{order:-1;padding:8px}
+  .adm-detail{max-height:none;padding:12px}
+  .adm-detail-title{font-size:17px}
+  .adm-day{min-height:48px;padding:3px 2px}
+  .adm-num{font-size:11px}
+  .adm-event{padding:1px 3px}
+  .adm-event-title{display:none}
+  .adm-event-school{font-size:9px}
+  .card-limit-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .card-limit-list>div{padding:8px}
+  .card-limit-list dd{font-size:16px}
+  .card-board{overflow:visible;padding:10px}
+  .card-table{min-width:0;display:block}
+  .card-table thead{display:none}
+  .card-table tbody{display:flex;flex-direction:column;gap:10px}
+  .card-table tbody tr{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0;padding:12px 14px;border:1px solid #e8ebf5;border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(70,84,170,.06)}
+  .card-table td{display:block;width:auto;border:0;padding:0}
+  .card-table td:empty{display:none}
+  .card-table td[data-label="사용처"]{order:1;flex:1 1 auto;font-size:15px;font-weight:800}
+  .card-table td[data-label="금액"]{order:2;margin-left:auto;font-weight:800}
+  .card-table td[data-label="사용일"]{order:3;flex:1 0 100%;font-size:12px;color:#6d7394}
+  .card-table td[data-label="사용내역"]{order:4;flex:1 0 100%;color:#4b5563}
+  .card-table td[data-label="구분"]:not(:empty){order:5;display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:#e6e9ff;color:#343e86;font-size:11px;font-weight:750}
+  .card-table td[data-label="정산"]{order:6;margin-left:auto}
+  .card-table td[data-label="비고"]{order:7;flex:1 0 100%;font-size:12px;color:#6d7394}
+  .settings-nav{padding:10px}
+  .settings-nav .todo-filter-title{display:none}
+  .settings-nav-list{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+  .settings-nav-item{width:auto;flex:none;white-space:nowrap;border-radius:999px}
+  .settings-card-head,.settings-card-body{padding-left:14px;padding-right:14px}
+  .settings-grid-2{grid-template-columns:1fr}
+  .mail-page{padding:10px;gap:10px}
+  .mail-nav{padding:12px}
+  .mail-account-switch{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mail-folders{flex-direction:row;overflow-x:auto;margin-top:10px;gap:6px;scrollbar-width:none}
+  .mail-folder{width:auto;flex:none;height:34px;padding:0 12px;border-radius:999px;background:#fff}
+  .mail-reader,.mail-compose{padding:14px 12px}
+  .mail-reader-head,.mail-compose-head{flex-wrap:wrap}
+  .mail-reader-subject{font-size:18px}
+  .mail-reader-actions{width:100%;justify-content:flex-end}
+  .mail-field,.mail-reader-meta div{grid-template-columns:58px minmax(0,1fr)}
+  .mail-detail-pane{min-height:320px}
+  .dash-resize{display:none}
+  .dash-item{flex-wrap:wrap}
+  .dash-item .todo-meta{flex:1 0 100%;white-space:normal;padding-left:0}
+}
+@media (max-width:760px){
+  html.theme-dark .mac-dock-bar{background:rgba(18,22,42,.94);border-top:1px solid rgba(255,255,255,.1);box-shadow:0 -10px 28px rgba(0,0,0,.35)}
+  html.theme-dark .mac-dock-arrow{background:rgba(255,255,255,.1);color:#f4f6ff;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.16)}
+  html.theme-dark .mac-dock{background:transparent;border:0;box-shadow:none}
+  html.theme-dark .mac-dock-item[aria-current=page]{background:rgba(255,255,255,.1);color:#e8ebff}
+  html.theme-dark .sched-nav .ks-btn-quiet{background:#1c2238;border-color:rgba(255,255,255,.14);color:#e8ebff}
+  html.theme-dark .card-table tbody tr{background:#1c2238;border-color:rgba(255,255,255,.08);box-shadow:none}
+  html.theme-dark .card-table td[data-label="사용일"],html.theme-dark .card-table td[data-label="비고"]{color:#9aa3c7}
+  html.theme-dark .card-table td[data-label="사용내역"]{color:#d7dcf3}
+  html.theme-dark .card-table td[data-label="구분"]:not(:empty){background:#2c3568;color:#d9defc}
+  html.theme-dark .mail-folder{background:#1c2238}
+}

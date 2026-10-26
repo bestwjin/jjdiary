@@ -332,7 +332,11 @@
         if (!dragging || dragging === el) return;
         event.preventDefault();
         var rect = el.getBoundingClientRect();
-        var after = event.clientY > rect.top + rect.height / 2;
+        var dockBox = nav.getBoundingClientRect();
+        var horizontal = dockBox.width > dockBox.height;
+        var after = horizontal
+          ? event.clientX > rect.left + rect.width / 2
+          : event.clientY > rect.top + rect.height / 2;
         nav.insertBefore(dragging, after ? el.nextSibling : el);
       });
       el.addEventListener("dragend", function () {
@@ -396,7 +400,51 @@
     });
     enableDrag(nav);
     nav.appendChild(createThemeToggle());
-    document.body.appendChild(nav);
+    var bar = document.createElement("div");
+    bar.className = "mac-dock-bar";
+    function chevron(direction) {
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("aria-hidden", "true");
+      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", direction === "prev" ? "M14.25 6.25 8.5 12l5.75 5.75" : "M9.75 6.25 15.5 12l-5.75 5.75");
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", "1.75");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(path);
+      return svg;
+    }
+    var prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "mac-dock-arrow is-prev";
+    prev.setAttribute("aria-label", "이전 메뉴");
+    prev.appendChild(chevron("prev"));
+    var next = document.createElement("button");
+    next.type = "button";
+    next.className = "mac-dock-arrow is-next";
+    next.setAttribute("aria-label", "다음 메뉴");
+    next.appendChild(chevron("next"));
+    function paintArrows() {
+      var max = Math.max(0, nav.scrollWidth - nav.clientWidth);
+      var overflow = max > 4;
+      prev.hidden = !overflow;
+      next.hidden = !overflow;
+      prev.classList.toggle("is-off", nav.scrollLeft <= 2);
+      next.classList.toggle("is-off", nav.scrollLeft >= max - 2);
+    }
+    prev.addEventListener("click", function () {
+      nav.scrollBy({ left: -Math.max(140, Math.round(nav.clientWidth * 0.72)), behavior: "smooth" });
+    });
+    next.addEventListener("click", function () {
+      nav.scrollBy({ left: Math.max(140, Math.round(nav.clientWidth * 0.72)), behavior: "smooth" });
+    });
+    nav.addEventListener("scroll", paintArrows, { passive: true });
+    window.addEventListener("resize", paintArrows);
+    bar.append(prev, nav, next);
+    document.body.appendChild(bar);
+    requestAnimationFrame(paintArrows);
     if (path === "/mail") clearMailBadge();
     else refreshMailBadgeFromStorage();
   }

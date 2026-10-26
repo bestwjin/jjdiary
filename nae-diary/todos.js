@@ -796,13 +796,34 @@
     return part("month") + "월 " + part("day") + "일 등록.";
   }
 
+  function normalizeCssColor(value) {
+    var raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^#[0-9a-fA-F]{3}$/.test(raw) || /^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
+    var rgb = raw.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+\s*)?\)$/i);
+    if (!rgb) return "";
+    function toHex(part) {
+      var n = Math.max(0, Math.min(255, Number(part) || 0));
+      return n.toString(16).padStart(2, "0");
+    }
+    return "#" + toHex(rgb[1]) + toHex(rgb[2]) + toHex(rgb[3]);
+  }
+
+  function extractTextColor(el) {
+    var fromAttr = normalizeCssColor(el.getAttribute("color"));
+    if (fromAttr) return fromAttr;
+    var style = el.getAttribute("style") || "";
+    var match = style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
+    return match ? normalizeCssColor(match[1]) : "";
+  }
+
   function editorHtml(value) {
     var text = String(value || "");
     if (!text.trim()) return "";
     if (!/<[a-z][\s\S]*>/i.test(text)) {
       text = text.split(/\r?\n/).map(function (line) { return "<p>" + escapeHtml(line) + "</p>"; }).join("");
     }
-    var allowed = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, UL: 1, OL: 1, LI: 1, DIV: 1, H1: 1, H2: 1, H3: 1 };
+    var allowed = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, UL: 1, OL: 1, LI: 1, DIV: 1, H1: 1, H2: 1, H3: 1, SPAN: 1, FONT: 1 };
     var doc = new DOMParser().parseFromString(text, "text/html");
     function clean(node) {
       Array.from(node.childNodes).forEach(function (child) {
@@ -814,7 +835,22 @@
           child.remove();
           return;
         }
+        var color = extractTextColor(child);
         Array.from(child.attributes).forEach(function (attr) { child.removeAttribute(attr.name); });
+        if (child.tagName === "FONT" || (child.tagName === "SPAN" && !color)) {
+          var span = child.tagName === "FONT" ? doc.createElement("span") : null;
+          if (span) {
+            if (color) span.setAttribute("style", "color:" + color);
+            while (child.firstChild) span.appendChild(child.firstChild);
+            child.replaceWith(span);
+            clean(span);
+            return;
+          }
+          while (child.firstChild) node.insertBefore(child.firstChild, child);
+          child.remove();
+          return;
+        }
+        if (color) child.setAttribute("style", "color:" + color);
         clean(child);
       });
     }
@@ -965,12 +1001,69 @@
     document.execCommand("insertHTML", false, "<" + listTag + "><li><br></li></" + listTag + ">");
   }
 
-  document.querySelectorAll(".wysiwyg-bar button").forEach(function (button) {
+  var savedEditorRange = null;
+
+  function captureEditorSelection() {
+    var selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    var range = selection.getRangeAt(0);
+    if (!workInput.contains(range.commonAncestorContainer)) return;
+    savedEditorRange = range.cloneRange();
+  }
+
+  function restoreEditorSelection() {
+    workInput.focus();
+    if (!savedEditorRange) return;
+    var selection = window.getSelection();
+    if (!selection) return;
+    selection.removeAllRanges();
+    selection.addRange(savedEditorRange);
+  }
+
+  function applyFontColor(color) {
+    var value = normalizeCssColor(color);
+    if (!value) return;
+    restoreEditorSelection();
+    document.execCommand("styleWithCSS", false, true);
+    document.execCommand("foreColor", false, value);
+    if (fontColorInput) fontColorInput.value = value;
+    if (fontColorSwatch) fontColorSwatch.style.borderBottomColor = value;
+  }
+
+  var fontColorInput = document.getElementById("todo-font-color");
+  var fontColorReset = document.getElementById("todo-font-color-reset");
+  var fontColorSwatch = document.querySelector(".wysiwyg-color-mark");
+  if (fontColorSwatch && fontColorInput) {
+    fontColorSwatch.style.borderBottomColor = fontColorInput.value || "#dc2626";
+  }
+
+  document.querySelectorAll(".wysiwyg-bar button[data-cmd]").forEach(function (button) {
     button.addEventListener("mousedown", function (event) { event.preventDefault(); });
     button.addEventListener("click", function () {
       applyCommand(button.getAttribute("data-cmd"));
     });
   });
+
+  if (fontColorInput) {
+    fontColorInput.addEventListener("mousedown", function () {
+      captureEditorSelection();
+    });
+    fontColorInput.addEventListener("input", function () {
+      applyFontColor(fontColorInput.value);
+    });
+    fontColorInput.addEventListener("change", function () {
+      applyFontColor(fontColorInput.value);
+    });
+  }
+  if (fontColorReset) {
+    fontColorReset.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+      captureEditorSelection();
+    });
+    fontColorReset.addEventListener("click", function () {
+      applyFontColor("#2a3160");
+    });
+  }
 
   var selectionCopyButton = null;
   var selectionCopyText = "";
