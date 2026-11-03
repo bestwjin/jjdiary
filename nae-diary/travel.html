@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full antialiased">
+<head>
+  <script>try{var root=document.documentElement;function wantDark(){var t=localStorage.getItem("theme");return t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)}function applyTheme(){root.classList.toggle("theme-dark",wantDark())}applyTheme();new MutationObserver(function(){if(root.classList.contains("theme-dark")!==wantDark())applyTheme()}).observe(root,{attributes:true,attributeFilter:["class"]})}catch(e){}</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>여행계획 - 내 다이어리</title>
+  <link rel="stylesheet" href="/_next/static/chunks/101054-68iv1y.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon"/>
+</head>
+<body class="min-h-full">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div class="container todo-page mx-auto px-4 py-8" style="flex:1;display:flex;flex-direction:column;width:100%">
+      <div class="todo-head">
+        <div class="todo-head-lead">
+          <h1 class="todo-heading text-gray-800 dark:text-white">여행계획</h1>
+          <p id="trip-count" class="text-gray-600 dark:text-gray-300">여행을 불러오는 중</p>
+        </div>
+        <div class="todo-head-actions">
+          <button id="trip-add" class="ks-btn ks-btn-primary" type="button">새 여행</button>
+        </div>
+      </div>
+      <p id="trip-error" class="text-sm mb-4" style="color:#dc2626" hidden></p>
+      <div class="trip-layout">
+        <aside class="trip-side" aria-label="여행 목록">
+          <div class="trip-side-head">
+            <h2>여행</h2>
+          </div>
+          <div id="trip-list" class="trip-list"></div>
+          <p id="trip-empty" class="trip-empty" hidden>아직 여행이 없습니다.</p>
+        </aside>
+        <section class="trip-main" aria-label="여행 일정">
+          <div id="trip-detail-empty" class="trip-detail-empty">여행을 선택하거나 새 여행을 만드세요</div>
+          <div id="trip-detail" hidden>
+            <header class="trip-main-head">
+              <div>
+                <h2 id="trip-title"></h2>
+                <p id="trip-meta"></p>
+              </div>
+              <div class="trip-main-actions">
+                <button id="trip-edit" class="ks-btn" type="button">수정</button>
+                <button id="trip-delete" class="ks-btn ks-btn-danger" type="button">삭제</button>
+              </div>
+            </header>
+            <form id="stop-form" class="trip-stop-form">
+              <label>날짜<input id="stop-date" type="date" required/></label>
+              <label>시간<input id="stop-time" type="time" required/></label>
+              <label class="trip-stop-title">계획<input id="stop-title" type="text" maxlength="200" placeholder="이 시간에 할 일" required autocomplete="off"/></label>
+              <label class="trip-stop-memo">메모<input id="stop-memo" type="text" maxlength="1000" placeholder="메모" autocomplete="off"/></label>
+              <div class="trip-stop-actions">
+                <button id="stop-save" class="ks-btn ks-btn-primary" type="submit">추가</button>
+                <button id="stop-cancel" class="ks-btn" type="button" hidden>취소</button>
+              </div>
+            </form>
+            <p id="trip-day-note" class="trip-day-note" hidden></p>
+            <div id="trip-days" class="trip-days"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <dialog id="trip-dialog" class="todo-dialog sched-dialog">
+    <form id="trip-form" class="sched-form">
+      <h2 id="trip-form-heading" class="todo-heading">새 여행</h2>
+      <input id="trip-name" type="text" maxlength="80" placeholder="여행 이름" required autocomplete="off"/>
+      <input id="trip-place" type="text" maxlength="80" placeholder="장소" autocomplete="off"/>
+      <div class="sched-period">
+        <label class="todo-label" for="trip-start">시작일</label>
+        <input id="trip-start" type="date" required/>
+        <label class="todo-label" for="trip-end">종료일</label>
+        <input id="trip-end" type="date" required/>
+      </div>
+      <textarea id="trip-memo" maxlength="1000" placeholder="메모"></textarea>
+      <div class="sched-actions">
+        <button id="trip-save" class="ks-btn ks-btn-primary" type="submit">저장</button>
+        <button id="trip-close" class="ks-btn" type="button">닫기</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="/dock.js"></script>
+  <script src="/travel.js"></script>
+</body>
+</html>

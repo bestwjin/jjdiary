@@ -35,6 +35,10 @@
   var toInput = document.getElementById("mail-to");
   var subjectInput = document.getElementById("mail-subject");
   var bodyInput = document.getElementById("mail-body");
+  var translateBtn = document.getElementById("mail-translate");
+  var translateSeq = 0;
+  var translationCache = {};
+  var translatedView = null;
 
   function showError(message) {
     errorEl.hidden = !message;
@@ -133,6 +137,189 @@
     bodyEl.textContent = plain;
   }
 
+  function resetTranslation() {
+    translateSeq += 1;
+    translatedView = null;
+    translateBtn.hidden = true;
+    translateBtn.disabled = false;
+    translateBtn.textContent = "번역";
+  }
+
+  function decodeEntities(value) {
+    return String(value || "")
+      .replace(/&#(\d+);/g, function (_, code) { return String.fromCharCode(Number(code)); })
+      .replace(/&#x([0-9a-f]+);/gi, function (_, code) { return String.fromCharCode(parseInt(code, 16)); })
+      .replace(/&quot;/g, "\"")
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&");
+  }
+
+  function detectSourceLang(text) {
+    if (/[\u3040-\u30ff]/.test(text)) return "ja";
+    if (/[\u0400-\u04FF]/.test(text)) return "ru";
+    if (/[\u4e00-\u9fff]/.test(text)) return "zh-CN";
+    return "en";
+  }
+
+  function needsKorean(text) {
+    var core = String(text || "").trim();
+    if (core.length < 2) return false;
+    if (/^https?:\/\/\S+$/i.test(core)) return false;
+    if (/^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}$/.test(core)) return false;
+    if (/^[\d\s.,:/\-+%$₩#()]+$/.test(core)) return false;
+    var hangul = (core.match(/[가-힣]/g) || []).length;
+    var foreign = (core.match(/[A-Za-z\u00C0-\u024F\u0400-\u04FF\u3040-\u30ff\u4e00-\u9fff]/g) || []).length;
+    if (!foreign) return false;
+    return hangul <= foreign;
+  }
+
+  function splitKeepSpace(value) {
+    var match = String(value || "").match(/^(\s*)([\s\S]*?)(\s*)$/);
+    return { lead: match[1], core: match[2], tail: match[3] };
+  }
+
+  function chunkText(text, maxBytes) {
+    var encoder = new TextEncoder();
+    if (encoder.encode(text).length <= maxBytes) return [text];
+    var chunks = [];
+    var rest = text;
+    while (rest) {
+      if (encoder.encode(rest).length <= maxBytes) {
+        chunks.push(rest);
+        break;
+      }
+      var end = rest.length;
+      var slice = rest;
+      while (encoder.encode(slice).length > maxBytes && end > 1) {
+        end = Math.max(1, Math.floor(end * 0.85));
+        slice = rest.slice(0, end);
+      }
+      var cut = Math.max(slice.lastIndexOf("\n"), slice.lastIndexOf(". "), slice.lastIndexOf(" "), slice.lastIndexOf("。"));
+      if (cut > 20) slice = rest.slice(0, cut + 1);
+      chunks.push(slice);
+      rest = rest.slice(slice.length);
+    }
+    return chunks;
+  }
+
+  function translatePiece(text) {
+    var key = detectSourceLang(text) + "\n" + text;
+    if (translationCache[key]) return Promise.resolve(translationCache[key]);
+    var url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text) + "&langpair=" + encodeURIComponent(detectSourceLang(text) + "|ko");
+    return fetch(url).then(function (response) {
+      if (!response.ok) throw new Error("translate");
+      return response.json();
+    }).then(function (data) {
+      var translated = data && data.responseData && data.responseData.translatedText;
+      if (!translated || data.responseStatus !== 200 || /MYMEMORY WARNING/i.test(translated) || data.quotaFinished) {
+        var quota = data && (data.quotaFinished || /MYMEMORY WARNING/i.test(translated || ""));
+        throw new Error(quota ? "quota" : "translate");
+      }
+      translated = decodeEntities(translated);
+      translationCache[key] = translated;
+      return translated;
+    });
+  }
+
+  function translateText(text) {
+    var chunks = chunkText(text, 420);
+    return Promise.all(chunks.map(translatePiece)).then(function (parts) {
+      return parts.join("");
+    });
+  }
+
+  function mapPool(items, limit, fn) {
+    var index = 0;
+    var results = new Array(items.length);
+    function worker() {
+      if (index >= items.length) return Promise.resolve();
+      var current = index++;
+      return Promise.resolve(fn(items[current], current)).then(function (value) {
+        results[current] = value;
+        return worker();
+      });
+    }
+    var workers = [];
+    var count = Math.min(limit, items.length);
+    for (var i = 0; i < count; i++) workers.push(worker());
+    return Promise.all(workers).then(function () { return results; });
+  }
+
+  function readerTextRoot() {
+    var bodyEl = document.getElementById("mail-reader-body");
+    var iframe = bodyEl.querySelector("iframe");
+    if (!iframe) return Promise.resolve(bodyEl);
+    if (iframe.contentDocument && iframe.contentDocument.body) return Promise.resolve(iframe.contentDocument.body);
+    return new Promise(function (resolve) {
+      iframe.addEventListener("load", function () {
+        resolve(iframe.contentDocument && iframe.contentDocument.body ? iframe.contentDocument.body : bodyEl);
+      }, { once: true });
+    });
+  }
+
+  function collectTextNodes(root) {
+    var doc = root.ownerDocument || document;
+    var walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        var tag = parent.tagName;
+        if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") return NodeFilter.FILTER_REJECT;
+        if (!needsKorean(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    var nodes = [];
+    var node;
+    while ((node = walker.nextNode())) nodes.push(node);
+    return nodes;
+  }
+
+  function restoreTranslation() {
+    if (!translatedView) return;
+    document.getElementById("mail-reader-subject").textContent = translatedView.subject;
+    translatedView.nodes.forEach(function (entry) {
+      entry.node.nodeValue = entry.value;
+    });
+    var iframe = document.querySelector("#mail-reader-body iframe");
+    if (iframe) resizeMailHtmlFrame(iframe);
+    translatedView = null;
+    translateBtn.disabled = false;
+    translateBtn.textContent = "번역";
+  }
+
+  function showTranslated(subjectEl, nodes, translations) {
+    var subjectBefore = subjectEl.textContent;
+    var originals = nodes.map(function (node) { return node.nodeValue; });
+    var changed = false;
+    if (translations[0]) {
+      var subjectParts = splitKeepSpace(subjectBefore);
+      subjectEl.textContent = subjectParts.lead + translations[0] + subjectParts.tail;
+      changed = true;
+    }
+    nodes.forEach(function (node, index) {
+      var translated = translations[index + 1];
+      if (!translated) return;
+      var parts = splitKeepSpace(originals[index]);
+      node.nodeValue = parts.lead + translated + parts.tail;
+      changed = true;
+    });
+    if (!changed) return false;
+    translatedView = {
+      subject: subjectBefore,
+      nodes: nodes.map(function (node, index) {
+        return { node: node, value: originals[index] };
+      }),
+    };
+    var iframe = document.querySelector("#mail-reader-body iframe");
+    if (iframe) resizeMailHtmlFrame(iframe);
+    translateBtn.disabled = false;
+    translateBtn.textContent = "원문";
+    return true;
+  }
+
   function updateCounts() {
     Object.keys(folders).forEach(function (folder) {
       var el = document.querySelector('[data-count="' + folder + '"]');
@@ -199,7 +386,32 @@
     });
   }
 
+  var pageEl = document.querySelector(".mail-page");
+  var mobileMail = window.matchMedia("(max-width: 760px)");
+
+  function mailScreenOpen() {
+    return !reader.hidden || !compose.hidden;
+  }
+
+  function syncMailScreen() {
+    pageEl.classList.toggle("is-reading", mobileMail.matches && mailScreenOpen());
+  }
+
+  function rememberReading() {
+    if (!mobileMail.matches || (history.state && history.state.mailReading)) return;
+    history.pushState({ mailReading: true }, "");
+  }
+
+  function exitReading() {
+    if (mobileMail.matches && history.state && history.state.mailReading) {
+      history.back();
+      return;
+    }
+    showDetailEmpty();
+  }
+
   function showDetailEmpty() {
+    resetTranslation();
     composing = false;
     draftId = null;
     selectedId = null;
@@ -207,10 +419,12 @@
     reader.hidden = true;
     compose.hidden = true;
     paintList();
+    syncMailScreen();
   }
 
   function openCompose(opts) {
     opts = opts || {};
+    resetTranslation();
     composing = true;
     draftId = opts.id || null;
     selectedId = null;
@@ -227,7 +441,9 @@
     subjectInput.value = opts.subject || "";
     bodyInput.value = opts.body || "";
     paintList();
-    toInput.focus();
+    rememberReading();
+    syncMailScreen();
+    if (!mobileMail.matches) toInput.focus();
   }
 
   async function openMessage(id) {
@@ -236,12 +452,14 @@
       if (String(row.id) === String(id)) item = row;
     });
     if (!item) return;
+    resetTranslation();
     composing = false;
     draftId = null;
     selectedId = item.id;
     detailEmpty.hidden = true;
     compose.hidden = true;
     reader.hidden = false;
+    translateBtn.hidden = item.folder !== "inbox";
     document.getElementById("mail-reader-subject").textContent = item.subject || "(제목 없음)";
     document.getElementById("mail-reader-from").textContent = item.fromAddr || "";
     document.getElementById("mail-reader-to").textContent = item.toAddr || "";
@@ -249,6 +467,8 @@
       formatDate(item.createdAt) + (item.account ? " · " + (accountLabels[item.account] || item.account) : "");
     setMailReaderBody(document.getElementById("mail-reader-body"), item);
     paintList();
+    rememberReading();
+    syncMailScreen();
     if (!item.isRead && item.folder === "inbox") {
       try {
         var response = await fetch(API + "/mail/" + item.id, {
@@ -341,7 +561,68 @@
     openCompose({});
   });
 
-  document.getElementById("mail-compose-close").addEventListener("click", showDetailEmpty);
+  document.getElementById("mail-back").addEventListener("click", exitReading);
+  document.getElementById("mail-compose-close").addEventListener("click", exitReading);
+  window.addEventListener("popstate", function () {
+    if (!mobileMail.matches || (history.state && history.state.mailReading)) return;
+    if (!mailScreenOpen()) return;
+    showDetailEmpty();
+  });
+  window.addEventListener("resize", syncMailScreen);
+
+  translateBtn.addEventListener("click", function () {
+    if (translateBtn.disabled) return;
+    if (translatedView) {
+      restoreTranslation();
+      return;
+    }
+    var seq = translateSeq;
+    var id = selectedId;
+    var subjectEl = document.getElementById("mail-reader-subject");
+    translateBtn.disabled = true;
+    translateBtn.textContent = "번역 중";
+    readerTextRoot().then(function (root) {
+      if (seq !== translateSeq || String(selectedId) !== String(id)) return null;
+      var nodes = collectTextNodes(root);
+      var subjectCore = needsKorean(subjectEl.textContent) ? splitKeepSpace(subjectEl.textContent).core : "";
+      var jobs = [subjectCore].concat(nodes.map(function (node) {
+        return splitKeepSpace(node.nodeValue).core;
+      }));
+      var unique = [];
+      jobs.forEach(function (text) {
+        if (text && unique.indexOf(text) < 0) unique.push(text);
+      });
+      if (!unique.length) {
+        translateBtn.disabled = false;
+        translateBtn.textContent = "한국어";
+        setTimeout(function () {
+          if (translateBtn.textContent === "한국어" && !translatedView) translateBtn.textContent = "번역";
+        }, 1200);
+        return null;
+      }
+      return mapPool(unique, 4, function (text) {
+        return translateText(text).catch(function (err) {
+          if (err && err.message === "quota") throw err;
+          return null;
+        });
+      }).then(function (values) {
+        if (seq !== translateSeq || String(selectedId) !== String(id)) return;
+        var map = {};
+        unique.forEach(function (text, index) { map[text] = values[index]; });
+        var translations = jobs.map(function (text) { return text ? (map[text] || null) : null; });
+        if (!showTranslated(subjectEl, nodes, translations)) {
+          translateBtn.disabled = false;
+          translateBtn.textContent = "번역";
+          showError("번역에 실패했습니다.");
+        }
+      });
+    }).catch(function (err) {
+      if (seq !== translateSeq) return;
+      translateBtn.disabled = false;
+      translateBtn.textContent = "번역";
+      showError(err && err.message === "quota" ? "번역 한도를 초과했습니다. 잠시 후 다시 시도하세요." : "번역에 실패했습니다.");
+    });
+  });
 
   document.getElementById("mail-reply").addEventListener("click", function () {
     var item = null;
@@ -372,7 +653,7 @@
         });
         if (!response.ok) throw new Error("trash");
       }
-      showDetailEmpty();
+      exitReading();
       await loadMessages();
     } catch (err) {
       showError("메일을 삭제하지 못했습니다.");
@@ -456,7 +737,7 @@
       document.querySelectorAll(".mail-folder").forEach(function (el) {
         el.classList.toggle("is-active", el.dataset.folder === "drafts");
       });
-      showDetailEmpty();
+      exitReading();
       await loadMessages();
     } catch (err) {
       showError("임시저장에 실패했습니다.");
@@ -484,7 +765,7 @@
       document.querySelectorAll(".mail-folder").forEach(function (el) {
         el.classList.toggle("is-active", el.dataset.folder === "sent");
       });
-      showDetailEmpty();
+      exitReading();
       await loadMessages();
     } catch (err) {
       showError(err.message === "settings" ? "설정에서 해당 계정 연동 정보를 먼저 입력하세요." : "메일 전송에 실패했습니다. 연동 설정을 확인하세요.");

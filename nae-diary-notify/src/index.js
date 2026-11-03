@@ -1,5 +1,5 @@
 import builtinEvents from "./builtin-events.json" with { type: "json" };
-import { cancelTelegramOutbox, createCardUsage, createEvent, createMail, createSchedule, createTelegramOutbox, createTodo, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTelegramOutbox, listTodos, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo } from "./db.js";
+import { cancelTelegramOutbox, createCardUsage, createEvent, createMail, createSchedule, createTelegramOutbox, createTodo, createTravelStop, createTravelTrip, deleteCardUsage, deleteEvent, deleteMail, deleteSchedule, deleteTodo, deleteTravelStop, deleteTravelTrip, getAppSettings, getTelegramConfig, importCardUsages, isDatabaseConfigured, listCardUsages, listEvents, listMail, listSchedules, listTelegramOutbox, listTodos, listTravel, migrateEvents, syncMail, updateAppSettings, updateCardUsage, updateEvent, updateMail, updateSchedule, updateTodo, updateTravelStop, updateTravelTrip } from "./db.js";
 import { getHolidays } from "./holidays.js";
 import { addDays, buildReminderMessage, eventsOn, isNotifyWindow, kstToday, normalizeEvents, schedulesOn } from "./logic.js";
 import { sendTelegramMessage } from "./telegram.js";
@@ -378,6 +378,96 @@ export default {
         const schedule = await createSchedule(env, body);
         if (!schedule) return json({ ok: false }, 400, request);
         return json({ ok: true, schedule }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/travel" && request.method === "GET") {
+      try {
+        const trips = await listTravel(env);
+        return json({ ok: true, trips }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    if (url.pathname === "/travel" && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const trip = await createTravelTrip(env, body);
+        if (!trip) return json({ ok: false }, 400, request);
+        return json({ ok: true, trip }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const travelStopMatch = url.pathname.match(/^\/travel\/stops\/(\d+)$/);
+    if (travelStopMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          const ok = await deleteTravelStop(env, travelStopMatch[1]);
+          if (!ok) return json({ ok: false }, 404, request);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const stop = await updateTravelStop(env, travelStopMatch[1], body);
+        if (!stop) return json({ ok: false }, 400, request);
+        return json({ ok: true, stop }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const travelStopCreate = url.pathname.match(/^\/travel\/trips\/(\d+)\/stops$/);
+    if (travelStopCreate && request.method === "POST") {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false }, 400, request);
+      }
+      try {
+        const stop = await createTravelStop(env, travelStopCreate[1], body);
+        if (!stop) return json({ ok: false }, 400, request);
+        return json({ ok: true, stop }, 200, request);
+      } catch (error) {
+        return dbError(error, request);
+      }
+    }
+
+    const travelTripMatch = url.pathname.match(/^\/travel\/trips\/(\d+)$/);
+    if (travelTripMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      if (!authorized(request, env)) return json({ ok: false }, 401, request);
+      try {
+        if (request.method === "DELETE") {
+          const ok = await deleteTravelTrip(env, travelTripMatch[1]);
+          if (!ok) return json({ ok: false }, 404, request);
+          return json({ ok: true }, 200, request);
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return json({ ok: false }, 400, request);
+        }
+        const trip = await updateTravelTrip(env, travelTripMatch[1], body);
+        if (!trip) return json({ ok: false }, 400, request);
+        return json({ ok: true, trip }, 200, request);
       } catch (error) {
         return dbError(error, request);
       }

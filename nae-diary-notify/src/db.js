@@ -66,12 +66,21 @@ async function ensureTelegramOutboxTable(sql) {
 
 async function ensureSchema(sql) {
   const root = globalThis;
-  if (root.__diarySchemaReady) {
-    await ensureTelegramOutboxTable(sql);
-    return;
-  }
+  if (root.__diarySchemaReady) return;
   if (!root.__diarySchema) {
     root.__diarySchema = (async () => {
+      // Schema already exists in production. Probe once per isolate instead of
+      // re-running dozens of DDL statements (slow / can hit Worker subrequest limits).
+      try {
+        await sql`SELECT 1 FROM todos LIMIT 1`;
+        await sql`SELECT 1 FROM telegram_outbox LIMIT 1`;
+        await sql`SELECT 1 FROM travel_trips LIMIT 1`;
+        await sql`SELECT 1 FROM travel_stops LIMIT 1`;
+        root.__diarySchemaReady = true;
+        return;
+      } catch {
+        // Fall through and create missing tables.
+      }
       await sql`CREATE TABLE IF NOT EXISTS events (
         id BIGINT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -162,6 +171,23 @@ async function ensureSchema(sql) {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
       await sql`CREATE INDEX IF NOT EXISTS card_usages_date_idx ON card_usages (used_date DESC, id DESC)`;
+      await sql`CREATE TABLE IF NOT EXISTS travel_trips (
+        id BIGINT PRIMARY KEY,
+        title TEXT NOT NULL,
+        place TEXT NOT NULL DEFAULT '',
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        memo TEXT NOT NULL DEFAULT ''
+      )`;
+      await sql`CREATE TABLE IF NOT EXISTS travel_stops (
+        id BIGINT PRIMARY KEY,
+        trip_id BIGINT NOT NULL,
+        stop_date DATE NOT NULL,
+        stop_time TEXT NOT NULL DEFAULT '',
+        title TEXT NOT NULL,
+        memo TEXT NOT NULL DEFAULT ''
+      )`;
+      await sql`CREATE INDEX IF NOT EXISTS travel_stops_trip_idx ON travel_stops (trip_id, stop_date, stop_time, id)`;
       await ensureTelegramOutboxTable(sql);
       root.__diarySchemaReady = true;
     })().catch((error) => {
@@ -507,6 +533,151 @@ export async function deleteSchedule(env, id) {
   if (!Number.isInteger(scheduleId)) return false;
   return withDb(env, async (sql) => {
     const rows = await sql`DELETE FROM schedules WHERE id = ${scheduleId} RETURNING id`;
+    return rows.length > 0;
+  });
+}
+
+function newRowId() {
+  return Date.now() * 1000 + Math.floor(Math.random() * 1000);
+}
+
+export function cleanTrip(input) {
+  if (!input || typeof input !== "object") return null;
+  const title = String(input.title || "").trim().slice(0, 80);
+  const startDate = typeof input.startDate === "string" ? input.startDate.slice(0, 10) : "";
+  const endDate = typeof input.endDate === "string" ? input.endDate.slice(0, 10) : "";
+  if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) return null;
+  if (endDate < startDate) return null;
+  return {
+    title,
+    place: String(input.place || "").trim().slice(0, 80),
+    startDate,
+    endDate,
+    memo: String(input.memo || "").trim().slice(0, 1000),
+  };
+}
+
+export function cleanTravelStop(input) {
+  if (!input || typeof input !== "object") return null;
+  const date = typeof input.date === "string" ? input.date.slice(0, 10) : "";
+  const time = String(input.time || "").trim().slice(0, 5);
+  const title = String(input.title || "").trim().slice(0, 200);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time) || !title) return null;
+  return {
+    date,
+    time,
+    title,
+    memo: String(input.memo || "").trim().slice(0, 1000),
+  };
+}
+
+function mapTrip(row) {
+  return {
+    id: Number(row.id),
+    title: row.title,
+    place: row.place || "",
+    startDate: dateText(row.start_date),
+    endDate: dateText(row.end_date),
+    memo: row.memo || "",
+  };
+}
+
+function mapStop(row) {
+  return {
+    id: Number(row.id),
+    tripId: Number(row.trip_id),
+    date: dateText(row.stop_date),
+    time: String(row.stop_time || "").slice(0, 5),
+    title: row.title,
+    memo: row.memo || "",
+  };
+}
+
+export async function listTravel(env) {
+  return withDb(env, async (sql) => {
+    const trips = await sql`SELECT id, title, place, start_date, end_date, memo FROM travel_trips ORDER BY start_date, id`;
+    const stops = await sql`SELECT id, trip_id, stop_date, stop_time, title, memo FROM travel_stops ORDER BY stop_date, stop_time, id`;
+    const byTrip = new Map();
+    for (const row of stops) {
+      const tripId = Number(row.trip_id);
+      if (!byTrip.has(tripId)) byTrip.set(tripId, []);
+      byTrip.get(tripId).push(mapStop(row));
+    }
+    return trips.map((row) => ({ ...mapTrip(row), stops: byTrip.get(Number(row.id)) || [] }));
+  });
+}
+
+export async function createTravelTrip(env, input) {
+  const trip = cleanTrip(input);
+  if (!trip) return null;
+  const id = newRowId();
+  return withDb(env, async (sql) => {
+    const rows = await sql`INSERT INTO travel_trips (id, title, place, start_date, end_date, memo)
+      VALUES (${id}, ${trip.title}, ${trip.place}, ${trip.startDate}, ${trip.endDate}, ${trip.memo})
+      RETURNING id, title, place, start_date, end_date, memo`;
+    return { ...mapTrip(rows[0]), stops: [] };
+  });
+}
+
+export async function updateTravelTrip(env, id, input) {
+  const trip = cleanTrip(input);
+  const tripId = Number(id);
+  if (!trip || !Number.isInteger(tripId)) return null;
+  return withDb(env, async (sql) => {
+    const rows = await sql`UPDATE travel_trips
+      SET title = ${trip.title}, place = ${trip.place}, start_date = ${trip.startDate}, end_date = ${trip.endDate}, memo = ${trip.memo}
+      WHERE id = ${tripId}
+      RETURNING id, title, place, start_date, end_date, memo`;
+    if (!rows[0]) return null;
+    const stops = await sql`SELECT id, trip_id, stop_date, stop_time, title, memo FROM travel_stops
+      WHERE trip_id = ${tripId} ORDER BY stop_date, stop_time, id`;
+    return { ...mapTrip(rows[0]), stops: stops.map(mapStop) };
+  });
+}
+
+export async function deleteTravelTrip(env, id) {
+  const tripId = Number(id);
+  if (!Number.isInteger(tripId)) return false;
+  return withDb(env, async (sql) => {
+    await sql`DELETE FROM travel_stops WHERE trip_id = ${tripId}`;
+    const rows = await sql`DELETE FROM travel_trips WHERE id = ${tripId} RETURNING id`;
+    return rows.length > 0;
+  });
+}
+
+export async function createTravelStop(env, tripId, input) {
+  const stop = cleanTravelStop(input);
+  const id = Number(tripId);
+  if (!stop || !Number.isInteger(id)) return null;
+  const stopId = newRowId();
+  return withDb(env, async (sql) => {
+    const trips = await sql`SELECT id FROM travel_trips WHERE id = ${id} LIMIT 1`;
+    if (!trips.length) return null;
+    const rows = await sql`INSERT INTO travel_stops (id, trip_id, stop_date, stop_time, title, memo)
+      VALUES (${stopId}, ${id}, ${stop.date}, ${stop.time}, ${stop.title}, ${stop.memo})
+      RETURNING id, trip_id, stop_date, stop_time, title, memo`;
+    return mapStop(rows[0]);
+  });
+}
+
+export async function updateTravelStop(env, id, input) {
+  const stop = cleanTravelStop(input);
+  const stopId = Number(id);
+  if (!stop || !Number.isInteger(stopId)) return null;
+  return withDb(env, async (sql) => {
+    const rows = await sql`UPDATE travel_stops
+      SET stop_date = ${stop.date}, stop_time = ${stop.time}, title = ${stop.title}, memo = ${stop.memo}
+      WHERE id = ${stopId}
+      RETURNING id, trip_id, stop_date, stop_time, title, memo`;
+    return rows[0] ? mapStop(rows[0]) : null;
+  });
+}
+
+export async function deleteTravelStop(env, id) {
+  const stopId = Number(id);
+  if (!Number.isInteger(stopId)) return false;
+  return withDb(env, async (sql) => {
+    const rows = await sql`DELETE FROM travel_stops WHERE id = ${stopId} RETURNING id`;
     return rows.length > 0;
   });
 }

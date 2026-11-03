@@ -39,6 +39,11 @@
       icon: appIcon("dock-sched", "#FB7185", "#9F1239", '<rect x="7.2" y="8.4" width="17.6" height="15.2" rx="2.6" fill="#fff"/><rect x="7.2" y="8.4" width="17.6" height="4.4" fill="#FFE4E6"/><rect x="11" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="19.3" y="6.2" width="1.7" height="3.8" rx=".8" fill="#fff"/><rect x="10.2" y="15.4" width="5.2" height="1.7" rx=".6" fill="#9F1239"/><rect x="10.2" y="18.6" width="9.2" height="1.7" rx=".6" fill="#9F1239"/>')
     },
     {
+      href: "/travel",
+      label: "여행계획",
+      icon: appIcon("dock-travel", "#FB923C", "#C2410C", '<rect x="12.2" y="7.2" width="7.6" height="3.6" rx="1.5" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="8" y="10.2" width="16" height="13.4" rx="2.2" fill="#fff"/><rect x="8" y="14.8" width="16" height="2.2" fill="#FDBA74"/><rect x="14.4" y="14.2" width="3.2" height="3.4" rx=".7" fill="#C2410C"/>')
+    },
+    {
       href: "/cards",
       label: "법카사용",
       icon: appIcon("dock-card", "#34D399", "#065F46", '<rect x="6.5" y="10" width="19" height="12.5" rx="2.4" fill="#fff"/><rect x="6.5" y="13.2" width="19" height="3.2" fill="#A7F3D0"/><rect x="9" y="18.2" width="7" height="1.8" rx=".6" fill="#065F46"/><rect x="17.5" y="18.2" width="5" height="1.8" rx=".6" fill="#065F46"/>')
@@ -62,6 +67,7 @@
 
   function currentPath() {
     var path = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
+    if (path === "/index") path = "/";
     return path || "/";
   }
 
@@ -434,17 +440,38 @@
       prev.classList.toggle("is-off", nav.scrollLeft <= 2);
       next.classList.toggle("is-off", nav.scrollLeft >= max - 2);
     }
+    function centerCurrent() {
+      var current = nav.querySelector("[aria-current=page]");
+      var mobile = window.matchMedia("(max-width:760px)").matches;
+      if (!mobile || !current) {
+        nav.style.paddingLeft = "";
+        nav.style.paddingRight = "";
+        return;
+      }
+      var pad = Math.max(0, Math.round((nav.clientWidth - current.offsetWidth) / 2));
+      nav.style.paddingLeft = pad + "px";
+      nav.style.paddingRight = pad + "px";
+      var navRect = nav.getBoundingClientRect();
+      var itemRect = current.getBoundingClientRect();
+      var delta = (itemRect.left + itemRect.width / 2) - (navRect.left + navRect.width / 2);
+      if (Math.abs(delta) > 1) nav.scrollLeft += delta;
+    }
     prev.addEventListener("click", function () {
       nav.scrollBy({ left: -Math.max(140, Math.round(nav.clientWidth * 0.72)), behavior: "smooth" });
     });
     next.addEventListener("click", function () {
       nav.scrollBy({ left: Math.max(140, Math.round(nav.clientWidth * 0.72)), behavior: "smooth" });
     });
+    function layoutDock() {
+      paintArrows();
+      centerCurrent();
+      paintArrows();
+    }
     nav.addEventListener("scroll", paintArrows, { passive: true });
-    window.addEventListener("resize", paintArrows);
+    window.addEventListener("resize", layoutDock);
     bar.append(prev, nav, next);
     document.body.appendChild(bar);
-    requestAnimationFrame(paintArrows);
+    requestAnimationFrame(layoutDock);
     if (path === "/mail") clearMailBadge();
     else refreshMailBadgeFromStorage();
   }

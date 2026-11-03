@@ -6,10 +6,12 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 SYNC_TOKEN = "575dc6f9f6eafc1d4246ca0c4991655e"
 
-# Aiven Postgres connection string. Set with:
+# Supabase Postgres (Seoul / ap-northeast-2) connection string. Set with:
 # wrangler secret put DATABASE_URL
-# postgresql://user:password@host:port/defaultdb?sslmode=require
+# Prefer Session pooler (port 5432) — Direct db.*.supabase.co is often IPv6-only.
+# postgresql://postgres.[ref]:password@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?sslmode=require
 #
+# Hyperdrive binding below should point at the same Supabase origin.
 # 공공데이터포털 특일정보(KASI) 인증키. Set with:
 # wrangler secret put KASI_SERVICE_KEY
 
